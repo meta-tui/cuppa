@@ -24,3 +24,9 @@ type Project struct {
 	// Notes list what the generator could not do, one line each.
 	Notes []string
 }
+
+// generatedSuffix ends the name of a generated page, component or master file
+// in the slice layout (<page>.cuppa.go, as .pb.go is protobuf's): hand-written
+// files sit beside them, and the name says which are Cuppa's. It is valid Go
+// and is not a GOOS, GOARCH or _test suffix.
+const generatedSuffix = ".cuppa.go"

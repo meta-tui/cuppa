@@ -213,7 +213,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			}
 			out = addImport(out, alias, module+"/"+componentsDir+"/"+pkg)
 		}
-		p.Files[dirs[i]+"/"+pkgNames[i]+".go"] = tidy(out, &p)
+		p.Files[dirs[i]+"/"+pkgNames[i]+generatedSuffix] = tidy(out, &p)
 		hasContainers[i] = hasContainer(s)
 	}
 
@@ -223,7 +223,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			return p, fmt.Errorf("slices: the master: %w", err)
 		}
 		out = addImport(out, "cuppa", module+"/"+runtimeDir)
-		p.Files[componentsDir+"/"+masterPackage+"/"+masterPackage+".go"] = tidy(out, &p)
+		p.Files[componentsDir+"/"+masterPackage+"/"+masterPackage+generatedSuffix] = tidy(out, &p)
 	}
 
 	componentFiles := make([]string, 0, len(components))
@@ -238,7 +238,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			return p, fmt.Errorf("slices: component %s: %w", pkg, err)
 		}
 		out = addImport(out, "cuppa", module+"/"+runtimeDir)
-		p.Files[componentsDir+"/"+pkg+"/"+pkg+".go"] = tidy(out, &p)
+		p.Files[componentsDir+"/"+pkg+"/"+pkg+generatedSuffix] = tidy(out, &p)
 	}
 
 	names := map[string]bool{}

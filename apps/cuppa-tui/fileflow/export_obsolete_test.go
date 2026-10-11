@@ -27,7 +27,7 @@ func exportedWithTwoPages(t *testing.T) (f *Flow, settings string) {
 		t.Fatalf("the first export writes: %v", f.Modal().Lines())
 	}
 	press(f, true, false)
-	left := filepath.Join(app, "pages", "settings", "settings.go")
+	left := filepath.Join(app, "pages", "settings", "settings.cuppa.go")
 	if _, err := os.Stat(left); err != nil {
 		t.Fatalf("the page was not written: %v", err)
 	}
@@ -42,7 +42,7 @@ func TestExportAsksBeforeDeletingTheFilesOfARemovedPage(t *testing.T) {
 	f.ExportGoSource()
 	press(f, true, false) // Export
 	text := stripped(strings.Join(f.Modal().Lines(), "\n"))
-	if !strings.Contains(text, "Delete Go files") || !strings.Contains(text, "settings.go") {
+	if !strings.Contains(text, "Delete Go files") || !strings.Contains(text, "settings.cuppa.go") {
 		t.Fatalf("the files to delete are listed: %s", text)
 	}
 	if _, err := os.Stat(left); err != nil {

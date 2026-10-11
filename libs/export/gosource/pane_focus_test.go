@@ -16,7 +16,7 @@ func focusPaneScreen() design.Document {
 		Props: map[string]string{"title": "Entries", "color": "212", "blurColor": "240"},
 		Bind:  map[string]string{"focused": "Focus"}})
 	doc.Add(design.Node{Component: "lipgloss.rows", Name: "Entries", Rect: design.Rect{X: 1, Y: 1, W: 38, H: 6},
-		Props: map[string]string{"columns": "Name:20:fg=#e5e7eb,Size", "rows": "one,1;two,2", "styles": "selected,normal"},
+		Props: map[string]string{"columns": "Name:20:fg=#e5e7eb,Size", "rows": "one,1;two,2", "styles": "selected,normal", "blurColor": "51"},
 		Bind:  map[string]string{"rows": "List", "focused": "Focus"}})
 	return doc
 }
@@ -43,8 +43,8 @@ func TestAFocusPane(t *testing.T) {
 	if !strings.Contains(off, "38;5;240") {
 		t.Errorf("a pane without focus keeps the focused border:\n%q", off)
 	}
-	if !strings.Contains(off, "38;5;212") {
-		t.Errorf("the selected row is not accent text:\n%q", off)
+	if !strings.Contains(off, "38;5;51") {
+		t.Errorf("the selected row is not drawn in the blur colour:\n%q", off)
 	}
 }
 `

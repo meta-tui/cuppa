@@ -164,7 +164,46 @@ func (f *Flow) writeExport(dir string, s design.ExportSettings, project gosource
 		return
 	}
 	f.status = "Exported Go source to " + dir
+	plan := gosource.PlanMod(dir, project)
+	if plan.Empty() {
+		f.exported(dir, s, project, keep, "")
+		return
+	}
+	var lines []string
+	for _, a := range plan.Add {
+		lines = append(lines, "add     "+a)
+	}
+	for _, r := range plan.Remove {
+		lines = append(lines, "remove  "+r)
+	}
+	body := fmt.Sprintf("The components of the design changed what %s needs:\n\n%s\n\ngo.sum is made by go mod tidy, which needs the network.", filepath.Join(dir, "go.mod"), strings.Join(lines, "\n"))
+	f.show(confirm.New("Update go.mod", body, "Update go.mod", "Update and tidy", "Skip"), func(o modal.Outcome) {
+		note := "go.mod was left as it is; run go mod tidy when you are ready."
+		switch o.Button {
+		case "Update go.mod", "Update and tidy":
+			if err := gosource.ApplyMod(dir, plan); err != nil {
+				note = "go.mod was not updated: " + err.Error()
+				break
+			}
+			note = "go.mod was updated; run go mod tidy to update go.sum."
+			if o.Button == "Update and tidy" {
+				if out, err := gosource.Tidy(dir); err != nil {
+					note = "go.mod was updated, go mod tidy failed:\n" + err.Error() + "\n" + out
+				} else {
+					note = "go.mod was updated and go mod tidy made go.sum."
+				}
+			}
+		}
+		f.exported(dir, s, project, keep, note)
+	})
+}
+
+// exported says what an export wrote, with a note about go.mod when there is one.
+func (f *Flow) exported(dir string, s design.ExportSettings, project gosource.Project, keep []string, modNote string) {
 	body := fmt.Sprintf("Written to %s\n\n", dir)
+	if modNote != "" {
+		body += modNote + "\n\n"
+	}
 	if s.Library {
 		body += "Your module imports the pages from " + s.Module + "."
 	} else {

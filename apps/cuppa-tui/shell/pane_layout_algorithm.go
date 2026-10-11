@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"github.com/meta-tui/cuppa/apps/cuppa-tui/inspector"
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/tools"
 	"github.com/meta-tui/cuppa/libs/document/design"
 )
@@ -49,8 +50,8 @@ func computeLayout(w, h, palW, insW int) layout {
 	return layout{
 		tools:     design.Rect{X: 0, Y: 1, W: pal, H: toolRows},
 		palette:   design.Rect{X: 0, Y: 1 + toolRows, W: pal, H: max(body-toolRows, 0)},
-		options:   design.Rect{X: pal + 1, Y: 1, W: stageW, H: 1},
-		stage:     design.Rect{X: pal + 1, Y: 2, W: stageW, H: max(body-1, 1)},
+		options:   design.Rect{X: pal + 1, Y: 1, W: stageW, H: inspector.ContextRows},
+		stage:     design.Rect{X: pal + 1, Y: 1 + inspector.ContextRows, W: stageW, H: max(body-inspector.ContextRows, 1)},
 		inspector: design.Rect{X: pal + 1 + stageW + 1, Y: 1, W: ins, H: body},
 	}
 }

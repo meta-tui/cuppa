@@ -1,6 +1,7 @@
 package shell
 
 import (
+	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
@@ -34,15 +35,27 @@ func TestEnterOnTheCanvasFocusesTheDetailsAndRightStepsANumber(t *testing.T) {
 	t.Fatal("no stop changed the x position with Right")
 }
 
-func TestTabWalksTheDetailsAndEnterPressesAButton(t *testing.T) {
+func TestTabWalksTheContextBarAndEnterPressesAButton(t *testing.T) {
 	m := newShell(t)
 	place(t, m, 5)
 	send(m, key('4', tea.ModAlt))
 	m.render()
-	// First stop is [Undo]: Enter undoes the placement.
+	// The first stop is the name in the bar above the canvas: Enter types it.
 	send(m, key(tea.KeyEnter, 0))
+	if !m.ins.Editing() {
+		t.Fatal("Enter on the name should start editing it")
+	}
+	send(m, key(tea.KeyEscape, 0))
+	// The [Delete] button of the bar removes the placed component.
+	for i := 0; i < 40 && len(m.Editor().Document().Nodes) > 0; i++ {
+		send(m, key(tea.KeyTab, 0))
+		m.render()
+		if strings.Contains(m.ins.Current(), "Delete") {
+			send(m, key(tea.KeyEnter, 0))
+		}
+	}
 	if n := len(m.Editor().Document().Nodes); n != 0 {
-		t.Fatalf("Enter on [Undo] left %d components", n)
+		t.Fatalf("Tab and Enter on [Delete] left %d components", n)
 	}
 }
 

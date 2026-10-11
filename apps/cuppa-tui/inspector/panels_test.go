@@ -68,18 +68,18 @@ func TestPanelsStayPutWhenTheSelectionChanges(t *testing.T) {
 
 func TestClickingAHeaderClosesAndOpensItsPanel(t *testing.T) {
 	m, _, _ := setup(t, "lipgloss.box")
-	if rowOf(plainLines(m), "[Duplicate]") < 0 {
-		t.Fatal("Arrange starts open")
+	if rowOf(plainLines(m), "[ ] Draggable") < 0 {
+		t.Fatal("Behaviour starts open")
 	}
-	clickText(t, m, "▾ Arrange", "Arrange")
+	clickText(t, m, "▾ Behaviour", "Behaviour")
 	m.Handle(pointer.Event{Phase: pointer.Up, Left: true})
 	lines := plainLines(m)
-	if rowOf(lines, "[Duplicate]") >= 0 || rowOf(lines, "▸ Arrange") < 0 {
-		t.Fatalf("Arrange should be closed:\n%s", strings.Join(lines, "\n"))
+	if rowOf(lines, "[ ] Draggable") >= 0 || rowOf(lines, "▸ Behaviour") < 0 {
+		t.Fatalf("Behaviour should be closed:\n%s", strings.Join(lines, "\n"))
 	}
-	clickText(t, m, "▸ Arrange", "Arrange")
+	clickText(t, m, "▸ Behaviour", "Behaviour")
 	m.Handle(pointer.Event{Phase: pointer.Up, Left: true})
-	if rowOf(plainLines(m), "[Duplicate]") < 0 {
+	if rowOf(plainLines(m), "[ ] Draggable") < 0 {
 		t.Fatal("clicking again opens it")
 	}
 }
@@ -91,15 +91,15 @@ func TestDraggingAHeaderResizesThePanelAboveIt(t *testing.T) {
 		m.state(id).want = panelDefaults[id].want
 	}
 	lines := plainLines(m)
-	props, arrange := rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Arrange")
+	props, arrange := rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Behaviour")
 	before := arrange - props - 1
 	m.Handle(pointer.Event{X: 3, Y: arrange, Phase: pointer.Down, Left: true})
-	m.Handle(pointer.Event{X: 3, Y: arrange + 3, Phase: pointer.Move, Held: true})
-	m.Handle(pointer.Event{X: 3, Y: arrange + 3, Phase: pointer.Up, Left: true})
+	m.Handle(pointer.Event{X: 3, Y: arrange + 2, Phase: pointer.Move, Held: true})
+	m.Handle(pointer.Event{X: 3, Y: arrange + 2, Phase: pointer.Up, Left: true})
 	lines = plainLines(m)
-	props, arrange = rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Arrange")
-	if got := arrange - props - 1; got != before+3 {
-		t.Fatalf("Properties is %d rows tall, want %d", got, before+3)
+	props, arrange = rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Behaviour")
+	if got := arrange - props - 1; got != before+2 {
+		t.Fatalf("Properties is %d rows tall, want %d", got, before+2)
 	}
 	if rowOf(lines, "▾ Properties") < 0 {
 		t.Fatal("dragging a header must not close the panel")
@@ -112,7 +112,6 @@ func TestEachPanelScrollsInsideItself(t *testing.T) {
 	m.SetSize(32, 40)
 	st := m.state(panelProperties)
 	st.want, st.closed = 4, false
-	m.state(panelDetails).want = 8
 	lines := plainLines(m)
 	props := rowOf(lines, "▾ Properties")
 	first := lines[props+1]
@@ -124,7 +123,7 @@ func TestEachPanelScrollsInsideItself(t *testing.T) {
 	if got := rowOf(lines, "▾ Layers"); got < 0 {
 		t.Fatal("the other panels stay where they were")
 	}
-	if m.state(panelDetails).scroll != 0 {
+	if m.state(panelBehaviour).scroll != 0 {
 		t.Error("only the panel under the pointer scrolls")
 	}
 }

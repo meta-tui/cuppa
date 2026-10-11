@@ -1,7 +1,6 @@
 package inspector
 
 import (
-	"fmt"
 	"slices"
 	"strconv"
 	"strings"
@@ -108,6 +107,10 @@ func plain(s string) string { return s }
 // height that scrolls inside itself.
 func (m *Model) Lines() []string {
 	b := &builder{focus: m.focusStop()}
+	if b.focus >= 0 {
+		// The contextual bar comes first in the keyboard order.
+		b.focus -= m.ctxStops
+	}
 	title := theme.Title(" DETAILS")
 	if m.focused {
 		title = theme.Selected(" DETAILS ")
@@ -163,7 +166,9 @@ func (m *Model) Lines() []string {
 	return lines
 }
 
-// panelSpecs are the panels to show for what is selected.
+// panelSpecs are the panels to show for what is selected. What the selection
+// is and where (name, place, size) and what is done to it (order, copy, group)
+// are in the contextual bar above the canvas.
 func (m *Model) panelSpecs() []panelSpec {
 	layers := panelSpec{id: panelLayers, title: "Layers", fill: m.layers, trash: true}
 	n, ok := m.ed.Primary()
@@ -178,20 +183,13 @@ func (m *Model) panelSpecs() []panelSpec {
 			layers,
 		}
 	case len(m.ed.Selected()) > 1:
-		return []panelSpec{
-			{id: panelDetails, title: "Details", fill: m.group},
-			{id: panelArrange, title: "Arrange", fill: m.arrangePanel},
-			layers,
-		}
+		return []panelSpec{layers}
 	}
-	specs := []panelSpec{{id: panelDetails, title: "Details", fill: func(b *builder) { m.single(b, n) }}}
-	if def, ok := m.cat.Get(n.Component); ok && len(def.Props) > 0 {
-		specs = append(specs, panelSpec{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }})
+	return []panelSpec{
+		{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }},
+		{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
+		layers,
 	}
-	return append(specs,
-		panelSpec{id: panelArrange, title: "Arrange", fill: m.arrangePanel},
-		panelSpec{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
-		layers)
 }
 
 // panelHeader is the line that names a panel: an arrow that says whether it
@@ -268,37 +266,6 @@ func (m *Model) messageRow(b *builder) {
 	}
 }
 
-func (m *Model) group(b *builder) {
-	b.text(theme.Bold(fmt.Sprintf(" %d selected", len(m.ed.Selected())))).end()
-	m.messageRow(b)
-}
-
-func (m *Model) single(b *builder, n design.Node) {
-	b.text(" ").add(theme.Dim("Name  "), nil)
-	m.editable(b, "name", n.Name, n.Name)
-	b.end()
-	b.text(" ").add(theme.Dim("Type  "), nil).text(n.Component).end()
-	m.changeRow(b, n)
-	if n.Locked {
-		b.text(" " + theme.Faded("Locked: unlock it in Layers to edit")).end()
-	}
-	l := n.Layout
-	m.numeric(b, n.ID, "X", "x", n.Rect.X, l.X)
-	m.numeric(b, n.ID, "Y", "y", n.Rect.Y, l.Y)
-	m.numeric(b, n.ID, "W", "w", n.Rect.W, l.W)
-	m.numeric(b, n.ID, "H", "h", n.Rect.H, l.H)
-	doc := m.ed.Document()
-	b.text(fmt.Sprintf(" Layer %d of %d", doc.Index(n.ID)+1, len(doc.Nodes))).end()
-	m.messageRow(b)
-}
-
-// arrangePanel is the order, copy and group buttons and the snap checkbox.
-func (m *Model) arrangePanel(b *builder) {
-	m.order(b)
-	m.actions(b)
-	m.snapRow(b)
-}
-
 // behaviourPanel is what the person using the exported program may do with
 // the component, and when it is shown and what a click on it raises.
 func (m *Model) behaviourPanel(b *builder, n design.Node) {
@@ -318,53 +285,16 @@ func (m *Model) editable(b *builder, field, value, initial string) {
 	b.add(value, func() { m.startEdit(field, initial) })
 }
 
-// numeric is one geometry row: [-] value [+] and a unit button. A value that
-// follows the canvas shows its expression ("50%", "100% - 10"); the button
-// switches the axis between fixed cells and a percentage of the canvas.
-func (m *Model) numeric(b *builder, id design.NodeID, label, field string, v int, expression string) {
-	shown, initial := fmt.Sprintf("%4d", v), strconv.Itoa(v)
-	if expression != "" {
-		shown, initial = fmt.Sprintf("%4s", expression), expression
-	}
-	b.text(" " + theme.Dim(label+"  "))
-	b.addMouse(theme.Button("[-]", true), func() { m.nudge(field, -1) }).text(" ")
-	if m.editing == field {
-		b.text(m.buf + "█")
-	} else {
-		b.addStep(theme.Bold(shown), func() { m.startEdit(field, initial) },
-			func(d int) { m.nudge(field, d) })
-	}
-	b.text(" ").addMouse(theme.Button("[+]", true), func() { m.nudge(field, 1) })
-	unit := "[%]"
-	if expression != "" {
-		unit = "[#]"
-	}
-	b.text(" ").add(theme.Button(unit, true), func() { m.report(m.ed.ToggleLayoutUnit(id, field)) })
-	b.end()
-}
-
-func (m *Model) order(b *builder) {
-	b.text(" ").
-		add(theme.Button("[Front]", true), func() { m.ed.Reorder(editor.BringToFront) }).text(" ").
-		add(theme.Button("[Fwd]", true), func() { m.ed.Reorder(editor.BringForward) }).end()
-	b.text(" ").
-		add(theme.Button("[Bwd]", true), func() { m.ed.Reorder(editor.SendBackward) }).text(" ").
-		add(theme.Button("[Back]", true), func() { m.ed.Reorder(editor.SendToBack) }).end()
-}
-
-func (m *Model) actions(b *builder) {
-	b.text(" ").
-		add(theme.Button("[Duplicate]", true), func() { m.ed.Duplicate() }).text(" ").
-		add(theme.Button("[Delete]", true), func() { m.ed.Delete() }).end()
-	b.text(" ").
-		add(theme.Button("[Group]", m.ed.CanGroup()), func() { m.ed.Group() }).text(" ").
-		add(theme.Button("[Ungroup]", m.ed.CanUngroup()), func() { m.ed.Ungroup() }).end()
-}
-
 // properties lists the component-specific properties from the catalog schema.
 func (m *Model) properties(b *builder, n design.Node) {
+	m.changeRow(b, n)
+	if n.Locked {
+		b.text(" " + theme.Faded("Locked: unlock it in Layers to edit")).end()
+	}
+	m.messageRow(b)
 	def, ok := m.cat.Get(n.Component)
 	if !ok || len(def.Props) == 0 {
+		b.text(" " + theme.Faded("No properties.")).end()
 		return
 	}
 	doc := m.ed.Document()

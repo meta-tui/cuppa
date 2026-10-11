@@ -9,9 +9,7 @@ type panelID string
 
 // The panels of the bar, in the order they can appear.
 const (
-	panelDetails    panelID = "details"
 	panelProperties panelID = "properties"
-	panelArrange    panelID = "arrange"
 	panelBehaviour  panelID = "behaviour"
 	panelCanvas     panelID = "canvas"
 	panelTheme      panelID = "theme"
@@ -37,9 +35,7 @@ type panelDefault struct {
 }
 
 var panelDefaults = map[panelID]panelDefault{
-	panelDetails:    {want: 8, min: 3},
-	panelProperties: {want: 10, min: 3},
-	panelArrange:    {want: 5, min: 2},
+	panelProperties: {want: 12, min: 3},
 	panelBehaviour:  {want: 4, min: 2},
 	panelCanvas:     {want: 5, min: 2},
 	panelTheme:      {want: 8, min: 3},

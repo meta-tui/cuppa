@@ -34,6 +34,9 @@ type region struct {
 	// header is set on a panel's header: a click opens or closes the panel and
 	// a drag moves the edge above it.
 	header panelID
+	// ctx is set on a span of the contextual bar, which the keyboard reaches
+	// before the panels.
+	ctx bool
 }
 
 // Model is the inspector pane.
@@ -43,6 +46,10 @@ type Model struct {
 	w, h    int
 	focused bool
 	regions []region
+	// ctx are the spans of the contextual bar (line 0 or 1) and ctxStops how
+	// many keyboard stops they are.
+	ctx      []region
+	ctxStops int
 	// stop is the keyboard stop that has the focus and stops how many there
 	// were at the last render.
 	stop, stops int

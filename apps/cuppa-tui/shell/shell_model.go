@@ -421,7 +421,12 @@ func (m *Model) mouse(e pointer.Event) {
 			m.say(m.tb.Tool().Name() + " tool")
 		}
 	case inOptions:
-		m.tb.HandleBar(e.Translate(m.layout.options.X, m.layout.options.Y))
+		local := e.Translate(m.layout.options.X, m.layout.options.Y)
+		if m.tb.Tool() == tools.Select {
+			m.ins.HandleContext(local)
+		} else {
+			m.tb.HandleBar(local)
+		}
 	case inStage:
 		switch {
 		case m.dragging != "":
@@ -642,6 +647,15 @@ func (m *Model) nudge(k tea.Key) {
 	}
 }
 
+// contextLines is the bar above the canvas: the selection's controls with the
+// select tool, the options of the drawing tool otherwise.
+func (m *Model) contextLines(w int) []string {
+	if m.tb.Tool() == tools.Select {
+		return m.ins.Context(w)
+	}
+	return []string{m.tb.BarLine(w), theme.Fit("", w)}
+}
+
 // View implements tea.Model.
 func (m *Model) View() tea.View {
 	v := tea.NewView(m.render())
@@ -658,7 +672,7 @@ func (m *Model) render() string {
 	l := m.layout
 	m.stg.SetCursor(m.curX, m.curY, len(m.ed.Selected()) == 0 && (m.focus == inStage || m.focus == inPalette))
 	pal := append(m.tb.Lines(l.tools.W, false)[:l.tools.H], m.pal.Lines()...)
-	stg := append([]string{m.tb.BarLine(l.options.W)}, m.stg.Lines()...)
+	stg := append(m.contextLines(l.options.W), m.stg.Lines()...)
 	ins := m.ins.Lines()
 	left, right := m.separator(leftDivider), m.separator(rightDivider)
 	out := make([]string, 0, m.h)

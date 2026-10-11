@@ -15,9 +15,16 @@ func (m *Model) focusStop() int {
 	return m.stop
 }
 
-// stopRegions are the regions the keyboard stops on, in reading order.
+// stopRegions are the regions the keyboard stops on, in reading order: the
+// contextual bar, then the panels.
 func (m *Model) stopRegions() []region {
 	var out []region
+	for _, r := range m.ctx {
+		if !r.mouseOnly {
+			r.ctx = true
+			out = append(out, r)
+		}
+	}
 	for _, r := range m.regions {
 		if !r.mouseOnly {
 			out = append(out, r)
@@ -88,7 +95,7 @@ func (m *Model) NavKey(name string) bool {
 	default:
 		return false
 	}
-	if now := m.stopRegions(); m.stop < len(now) {
+	if now := m.stopRegions(); m.stop < len(now) && !now[m.stop].ctx {
 		m.reveal(now[m.stop].y)
 	}
 	return true

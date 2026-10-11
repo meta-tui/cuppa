@@ -23,15 +23,15 @@ Node.Props       pages    "Overview,Colours,Keys"   page names, in order
                  exclusive "true"                   panels: opening one closes the others (accordion)
 Member node      Node.In   = container id
                  Node.Page = page index
-                 Node.At   = position of the member inside its page body
 ```
 
 - Members stay ordinary top-level nodes, so selecting, moving, properties,
   layers, undo and the exports work as for any component. `Rect` is the
-  position on the canvas and is kept up to date by the editor from the
-  container and `At`; the member's own position is `At`, relative to the origin
-  of its page's body. Moving the container moves its members; a member can be
-  dragged anywhere inside the page body (it is kept inside).
+  position on the canvas, as for every node. A member moves with its page's
+  body: when the container is moved or resized, or a section opens or closes
+  and the body moves, the editor moves the members of that page by the same
+  distance (`container.Moves`). A member can be dragged anywhere inside the
+  page body (it is kept inside).
 - A member is drawn, hit by the pointer and exported only while its page is
   shown (tabs: `active`; panels: the section is in `open`). That is derived and
   separate from the eye of the layer list, which only the person sets.
@@ -55,8 +55,9 @@ Member node      Node.In   = container id
 ## Consequences
 
 - Nothing that already edits top-level nodes changes: only drawing, hit testing
-  and export learn that a member may be inactive.
-- `Rect` of a member is derived data. It is saved (so older readers show the
-  design) but recomputed from `At` on load.
+  and export learn that a member may be inactive, and that a member is drawn
+  right after its container (`container.Order`).
+- A member is not a child in the file: it is a node with `in` and `page`, so
+  files without containers and older readers are unchanged.
 - Nesting deeper than one level is not supported; a page holding a container is
   done by composing a saved component.

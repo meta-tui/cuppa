@@ -2,6 +2,7 @@
 package scene
 
 import (
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/catalog/definition"
 	"github.com/meta-tui/cuppa/libs/document/design"
 	"github.com/meta-tui/cuppa/libs/document/drawlayer"
@@ -81,6 +82,8 @@ var painters = map[string]painter{
 	"lipgloss.keybar":         paintKeybar,
 	"lipgloss.progressline":   paintProgressLine,
 	"lipgloss.slot":           paintSlot,
+	"cuppa.tabs":              paintTabPages,
+	"cuppa.panels":            paintPanelStack,
 	"lipgloss.colourpicker":   paintColourPicker,
 	"community.dropdown":      paintDropdown,
 	"community.promptinput":  paintPromptInput,
@@ -109,8 +112,9 @@ func RenderWith(doc design.Document, cat Catalog, override func(design.Node) *gr
 			}
 		}
 	}
-	for _, n := range doc.Nodes {
-		if n.Hidden {
+	for _, i := range container.Order(doc) {
+		n := doc.Nodes[i]
+		if n.Hidden || !container.Visible(doc, n) {
 			continue
 		}
 		if doc.Effects.Shadow && n.Component != drawlayer.Component {

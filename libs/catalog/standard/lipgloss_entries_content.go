@@ -21,6 +21,8 @@ func lipglossEntries() []definition.Definition {
 				colorProp("titleColor", "Title colour (empty: the border's)", ""),
 				boolProp("titleBold", "Title in bold", true),
 				colorProp("rightColor", "Right label colour", "240"),
+				boolProp("focused", "Has focus (false: the border takes the blurred colour)", true),
+				colorProp("blurColor", "Border colour without focus", "240"),
 			},
 		},
 		{
@@ -71,6 +73,7 @@ func lipglossEntries() []definition.Definition {
 				textProp("cellstyles", "Cell styles (given by the program)", ""),
 				intProp("gap", "Spaces between columns", 0, 0, 8),
 				colorProp("color", "Colour", "212"),
+				boolProp("focused", "Has focus (false: a selected row is accent text, not inverted)", true),
 			},
 		},
 		{

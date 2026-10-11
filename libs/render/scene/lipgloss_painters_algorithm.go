@@ -14,7 +14,23 @@ func fg(color string) grid.Style { return grid.Style{Fg: color} }
 
 var dim = grid.Style{Fg: "240"}
 
+// blurredBox is the box's props as drawn: a box without focus (the "focused"
+// prop is false) takes its blurred colour and loses its gradient.
+func blurredBox(p Props) Props {
+	if p.Str("focused") != "false" {
+		return p
+	}
+	q := make(Props, len(p)+1)
+	for k, v := range p {
+		q[k] = v
+	}
+	q["color"] = orColour(p.Str("blurColor"), "240")
+	q["gradient"] = ""
+	return q
+}
+
 func paintBox(g *grid.Grid, p Props) {
+	p = blurredBox(p)
 	style := fg(p.Str("color"))
 	g.Box(full(g), grid.BorderNamed(p.Str("border")), style)
 	blendBorder(g, p.Str("color"), p.Str("gradient"))

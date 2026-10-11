@@ -312,6 +312,8 @@ func paintRows(g *grid.Grid, p Props) {
 		anySelBg = anySelBg || c.selBg != "" || c.selFg != "" || c.selBold
 	}
 	allRows := rowsCells(p.Str("rows"))
+	// A pane without focus shows its selected row as accent text, not inverted.
+	blurred := p.Str("focused") == "false"
 	gap := min(max(p.Int("gap", 0), 0), 8)
 	plan := newRowsPlan(columns, allRows, g.W, gap)
 	lastVisible := -1
@@ -330,7 +332,9 @@ func paintRows(g *grid.Grid, p Props) {
 			switch styles[y] {
 			case "selected":
 				isSelected = true
-				if !anySelBg {
+				if blurred {
+					base = grid.Style{Fg: accent}
+				} else if !anySelBg {
 					base = selected(accent)
 					g.Fill(design.Rect{X: 0, Y: y, W: g.W, H: 1}, ' ', base)
 				}
@@ -358,14 +362,18 @@ func paintRows(g *grid.Grid, p Props) {
 			if col.bg != "" {
 				style.Bg = paletteColour(p, col.bg)
 			}
-			if isSelected && col.selBg != "" {
-				style.Bg = paletteColour(p, col.selBg)
-			}
-			if isSelected && col.selFg != "" {
-				style.Fg = paletteColour(p, col.selFg)
-			}
-			if isSelected && col.selBold {
-				style.Bold = true
+			if isSelected && blurred {
+				style.Fg = accent
+			} else {
+				if isSelected && col.selBg != "" {
+					style.Bg = paletteColour(p, col.selBg)
+				}
+				if isSelected && col.selFg != "" {
+					style.Fg = paletteColour(p, col.selFg)
+				}
+				if isSelected && col.selBold {
+					style.Bold = true
+				}
 			}
 			if y < len(cellStyles) && i < len(cellStyles[y]) {
 				style = cellStyleOf(p, cellStyles[y][i], style)

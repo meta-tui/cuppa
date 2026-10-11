@@ -1,6 +1,6 @@
 # ADR 0013: The slice layout of an exported application
 
-Status: proposed (plan; nothing is built yet)
+Status: accepted (built; the decisions below are the ones taken)
 
 ## Context
 
@@ -110,8 +110,32 @@ flat layout byte-for-byte as it is.
 Compatibility is kept by a test that exports every example in the repository
 in both layouts and compares what they draw.
 
-## Decisions asked of the owner
+## What was built
 
-1. `main.go` at the module root (proposed) or under `cmd/<name>/`.
-2. Components by family (proposed) or one package per kind.
-3. Generated runtime in the application (proposed) or imported.
+`cuppa screens design.cuppa -o dir --layout slices -m <module>` and *File →
+Export Go source → Slices* write the layout above. It is made from the flat
+layout's generated code by a transform over the syntax tree
+(`gosource.GenerateSlices`), so a page draws what the flat screen draws; a test
+exports every example both ways and compares the drawings.
+
+- **Decisions taken:** `main.go` at the module root; components by family
+  (one package per component file: `widgets` for the community widgets, rows,
+  key bar and containers, `colourpicker`, `huh`, `glamour`, `charts`,
+  `bubbletable`, `bigtext`, `qrcode`, `image`); runtime and components
+  generated into the application.
+- **Names.** A page's own names lose the page's prefix (`HomeProps` is
+  `home.Props`, `DefaultHomeProps` is `home.Default`, `Home` is `home.View`).
+  An event type is called `<Name>Event` (`home.PickEvent`), so an event named
+  `Default` or `View` does not take a function's name. The runtime names a
+  page uses become exported and are used as `cuppa.Name`; the names a component
+  package declares are used as `colourpicker.Name`.
+- **Components.** A page imports the component packages of the kinds it uses
+  (a blank import registers them, a named one is used for their types). A
+  method a component file declares on a runtime type (a method cannot be
+  declared in another package) moves into the runtime.
+- **Exporting again.** `ReplaceProject` replaces the files Cuppa generated,
+  removes the pages that are gone, leaves any file of the person's own, and
+  writes `go.mod` and `README.md` only when they are missing. `--check` lists
+  the differences without writing.
+- **Opening again.** The design is embedded in `app/app.go`; `cuppa main.go`
+  finds it there.

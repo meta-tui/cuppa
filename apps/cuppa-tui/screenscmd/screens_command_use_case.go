@@ -22,6 +22,7 @@ import (
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
   cuppa screens <design.cuppa> -o <folder> --app
+  cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
 
 Writes one contract and one view file per design, and the shared runtime, into
 <folder> (a package of its own). Files it wrote earlier are replaced and the
@@ -32,6 +33,10 @@ of the pages and which one is shown. With --app the folder is a whole
 application instead: go.mod, main.go that runs the pages, the screens and the
 router, in an empty folder; "cuppa main.go" opens its design again.
 
+With --layout slices the application is written as a folder and a package per
+page (pages/<page>/), the router in app/, the runtime in internal/cuppa/ and
+main.go at the root of the module -m names (the design's name by default).
+
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
 can tell that the generated package is out of date.
@@ -41,7 +46,7 @@ can tell that the generated package is out of date.
 // returns the process exit code.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
-	out, pkg := "", ""
+	out, pkg, layout, module := "", "", gosource.LayoutFlat, ""
 	check, app := false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
@@ -49,6 +54,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			app = true
 		case "--check":
 			check = true
+		case "--layout":
+			i++
+			if i < len(args) {
+				layout = args[i]
+			}
+		case "-m", "--module":
+			i++
+			if i < len(args) {
+				module = args[i]
+			}
 		case "-o", "--out":
 			i++
 			if i < len(args) {
@@ -67,8 +82,15 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprint(stderr, usage)
 		return 2
 	}
+	if layout != gosource.LayoutFlat && layout != gosource.LayoutSlices {
+		_, _ = fmt.Fprintf(stderr, "cuppa screens: --layout is %s or %s\n", gosource.LayoutFlat, gosource.LayoutSlices)
+		return 2
+	}
+	if layout == gosource.LayoutSlices {
+		app = true
+	}
 	if app {
-		if err := runApp(inputs, out, stdout); err != nil {
+		if err := runApp(inputs, out, layout, module, check, stdout); err != nil {
 			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 			return 1
 		}
@@ -168,7 +190,7 @@ func designFiles(inputs []string) ([]string, error) {
 
 // runApp writes one design as a whole application: the screens of its pages,
 // the router, main.go and go.mod.
-func runApp(inputs []string, out string, stdout io.Writer) error {
+func runApp(inputs []string, out, layout, module string, check bool, stdout io.Writer) error {
 	paths, err := designFiles(inputs)
 	if err != nil {
 		return err
@@ -180,12 +202,33 @@ func runApp(inputs []string, out string, stdout io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("%s: %w", paths[0], err)
 	}
-	opts := gosource.Options{}
+	opts := gosource.Options{Module: module}
 	if data, err := format.Encode(doc); err == nil {
 		opts.Source = data
 	}
-	project := gosource.GenerateWith(doc, cupp.Adopt(standard.Default(), doc.Embedded), opts)
-	if err := gosource.Write(out, project); err != nil {
+	cat := cupp.Adopt(standard.Default(), doc.Embedded)
+	project := gosource.GenerateWith(doc, cat, opts)
+	if layout == gosource.LayoutSlices {
+		if project, err = gosource.GenerateSlices(doc, cat, opts); err != nil {
+			return err
+		}
+	}
+	if layout == gosource.LayoutSlices {
+		if check {
+			diffs := gosource.CheckProject(out, project)
+			if len(diffs) == 0 {
+				_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", out, doc.PageCount(), len(project.Files))
+				return nil
+			}
+			for _, d := range diffs {
+				_, _ = fmt.Fprintln(stdout, "  "+d)
+			}
+			return fmt.Errorf("%s is out of date with the design: run cuppa screens again", out)
+		}
+		if err := gosource.ReplaceProject(out, project); err != nil {
+			return err
+		}
+	} else if err := gosource.Write(out, project); err != nil {
 		return err
 	}
 	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\nNext: cd %s && go mod tidy && go run .\n", doc.PageCount(), len(project.Files), out, out)

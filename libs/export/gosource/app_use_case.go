@@ -20,6 +20,10 @@ type Options struct {
 	// Source is the design as the bytes of a .cuppa file. An application with
 	// pages embeds it next to its router.
 	Source []byte
+	// Module is the import path of the generated module; the slice layout
+	// needs it for the imports between its packages. Empty means the name of
+	// the design.
+	Module string
 }
 
 // gotoEvent is the name of the event a component raises when a click on it

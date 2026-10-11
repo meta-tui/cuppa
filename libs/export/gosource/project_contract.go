@@ -23,6 +23,9 @@ type Project struct {
 	Requires []string
 	// Notes list what the generator could not do, one line each.
 	Notes []string
+	// PageFiles are, by page name, the files that are the page's (the master
+	// page's are the master package's), for PageStates.
+	PageFiles map[string][]string
 }
 
 // generatedSuffix ends the name of a generated page, component or master file

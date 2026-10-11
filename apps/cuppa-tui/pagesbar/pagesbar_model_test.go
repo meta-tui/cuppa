@@ -149,3 +149,29 @@ func TestThePagesAreListedUnderTheirFolders(t *testing.T) {
 		t.Fatalf("active page = %d", ed.ActivePage())
 	}
 }
+
+func TestTheListMarksWhatTheExportDidToEachPage(t *testing.T) {
+	m, ed := fixture(t)
+	for _, name := range []string{"Colours", "Songs"} {
+		if err := ed.AddPage(name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	m.SetStates(func() map[string]string {
+		return map[string]string{"Page 1": "current", "Colours": "changed", "Songs": "new"}
+	})
+	m.Line(60, false)
+	m.toggle()
+	var labels []string
+	for _, it := range m.items {
+		if it.label == "Add page" {
+			break
+		}
+		labels = append(labels, it.label)
+	}
+	for _, want := range []string{"Page 1  ✓", "Colours  ●", "Songs  +"} {
+		if !slices.Contains(labels, want) {
+			t.Errorf("no %q in %q", want, labels)
+		}
+	}
+}

@@ -95,6 +95,10 @@ func GenerateScreensWith(docs []design.Document, cat Catalog, pkg string, opts O
 		}
 		p.Files[snake(doc.Name)+"_screen_contract.go"] = tidy(sc.contract, &p)
 		p.Files[snake(doc.Name)+"_screen_view.go"] = tidy(sc.view, &p)
+		if p.PageFiles == nil {
+			p.PageFiles = map[string][]string{}
+		}
+		p.PageFiles[doc.Name] = []string{snake(doc.Name) + "_screen_contract.go", snake(doc.Name) + "_screen_view.go"}
 		for _, l := range placed {
 			if !generated[l.Kind] {
 				p.Notes = append(p.Notes, fmt.Sprintf("%s: %s (%s) is not generated yet: it is drawn as an empty frame", doc.Name, l.Name, l.Kind))

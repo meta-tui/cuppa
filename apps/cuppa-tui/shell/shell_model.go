@@ -154,6 +154,7 @@ func New(cat *registry.Registry) *Model {
 			}
 		})
 	}, m.flow.Notice)
+	m.pg.SetStates(m.flow.PageStates)
 	return m
 }
 

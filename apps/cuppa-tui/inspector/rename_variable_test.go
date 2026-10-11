@@ -34,6 +34,7 @@ func twoLabelsSharingAColour(t *testing.T) (*Model, func(), string, string) {
 	m.Lines()
 	rename := func() {
 		clickText(t, m, "name", "Foreground")
+		clickText(t, m, "Rename", "Rename")
 		for range "Foreground" {
 			m.Key("", true, false, false)
 		}
@@ -100,6 +101,7 @@ func TestRenamingAVariableUsedOnlyHereJustRenamesIt(t *testing.T) {
 	var asked []string
 	answerWith(m, "Cancel", &asked)
 	clickText(t, m, "name", "Foreground")
+	clickText(t, m, "Rename", "Rename")
 	for range "Foreground" {
 		m.Key("", true, false, false)
 	}

@@ -67,6 +67,8 @@ Everything you draw goes into **one layer**, "Drawing", which is created by the 
 details bar, to make a bar wider or narrower. The line lights up when you hover it. The canvas keeps at least 20
 columns, and Cuppa remembers the widths for next time.
 
+**The right bar is made of panels**, like the side bar of an image editor. *Details*, *Properties*, *Arrange*, *Behaviour* and *Layers* (and, with nothing selected, *Canvas*, *Theme*, *Named colours*, *Screen keys* and *Display*) each have a header you click to close or open (Enter on the keyboard). Drag a header up or down to move the edge between it and the panel above; the last open panel takes what is left. Each panel scrolls inside its own height with the wheel, with a thin bar at its right edge, so choosing another component never moves the panels, and a component with many properties only scrolls the Properties panel. The sizes and which panels are closed are kept while Cuppa is open. Choices, the *Change* row, a colour's variable name and an input binding open a **dropdown list** under the control: click an option, or use Up, Down and Enter (Esc closes it). Left and Right on the keyboard still step through the options without opening it.
+
 **Edit details.** The right bar shows the selected component:
 
 - **X, Y, W, H**: click `[-]` / `[+]` to nudge by one cell, or click the number and type.

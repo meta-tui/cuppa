@@ -80,8 +80,6 @@ func (b *builder) end() {
 	b.cur, b.x = "", 0
 }
 
-func (b *builder) blank() { b.end() }
-
 // wrap splits text into lines of at most width cells, breaking at spaces,
 // commas and slashes, so a long list or path stays inside the pane.
 func wrap(text string, width int) []string {
@@ -91,7 +89,7 @@ func wrap(text string, width int) []string {
 // block writes text wrapped to the pane, each line indented. When act is set,
 // every wrapped line is clickable.
 func (m *Model) block(b *builder, text string, indent int, style func(string) string, act func()) {
-	for i, line := range wrap(text, m.w-indent-1) {
+	for i, line := range wrap(text, m.content()-indent-1) {
 		b.text(strings.Repeat(" ", indent))
 		// One property is one stop for the keyboard, however many lines it wraps to.
 		if i == 0 {
@@ -105,7 +103,9 @@ func (m *Model) block(b *builder, text string, indent int, style func(string) st
 
 func plain(s string) string { return s }
 
-// Lines renders the pane as exactly h lines of w cells.
+// Lines renders the pane as exactly h lines of w cells: the title and the
+// history buttons, then the panels, each a header and a body of its own
+// height that scrolls inside itself.
 func (m *Model) Lines() []string {
 	b := &builder{focus: m.focusStop()}
 	title := theme.Title(" DETAILS")
@@ -114,34 +114,139 @@ func (m *Model) Lines() []string {
 	}
 	b.text(title).end()
 	m.history(b)
-	b.blank()
-	if n, ok := m.ed.Primary(); !ok {
-		m.empty(b)
-	} else if len(m.ed.Selected()) > 1 {
-		m.group(b)
-	} else {
-		m.single(b, n)
+
+	specs := m.panelSpecs()
+	m.views = make([]panelView, len(specs))
+	for i, sp := range specs {
+		st := m.state(sp.id)
+		v := panelView{id: sp.id, start: len(b.lines), open: !st.closed}
+		m.panelHeader(b, sp, st.closed)
+		if v.open {
+			sp.fill(b)
+			v.total = len(b.lines) - v.start - 1
+		}
+		m.views[i] = v
 	}
-	m.layers(b)
-	m.total, m.regions, m.stops = len(b.lines), b.regions, b.stops
-	m.scroll = min(max(m.scroll, 0), max(m.total-m.h, 0))
-	end := min(m.scroll+m.h, len(b.lines))
-	return theme.Block(b.lines[m.scroll:end], m.w, m.h)
+	m.regions, m.stops = b.regions, b.stops
+	m.reflow()
+	m.revealSelection()
+
+	out := make([]string, 0, m.h)
+	out = append(out, b.lines[:fixedRows]...)
+	for _, v := range m.views {
+		out = append(out, b.lines[v.start])
+		if !v.open {
+			continue
+		}
+		st := m.state(v.id)
+		st.scroll = min(max(st.scroll, 0), max(v.total-v.h, 0))
+		barTop, barLen := thumb(v.h, v.total, st.scroll)
+		for r := 0; r < v.h; r++ {
+			line := ""
+			if cy, ok := m.bodyRow(v, v.top+1+r); ok {
+				line = b.lines[cy]
+			}
+			bar := " "
+			if barLen > 0 {
+				bar = theme.Faded("│")
+				if r >= barTop && r < barTop+barLen {
+					bar = theme.Dim("▐")
+				}
+			}
+			out = append(out, theme.Fit(line, m.content())+bar)
+		}
+	}
+	lines := theme.Block(out, m.w, m.h)
+	if m.menu != nil {
+		m.drawMenu(lines)
+	}
+	return lines
+}
+
+// panelSpecs are the panels to show for what is selected.
+func (m *Model) panelSpecs() []panelSpec {
+	layers := panelSpec{id: panelLayers, title: "Layers", fill: m.layers, trash: true}
+	n, ok := m.ed.Primary()
+	switch {
+	case !ok:
+		return []panelSpec{
+			{id: panelCanvas, title: "Canvas", fill: m.canvasPanel},
+			{id: panelTheme, title: "Theme", fill: m.themePanel},
+			{id: panelColours, title: "Named colours", fill: func(b *builder) { m.paletteRows(b, m.ed.Document()) }},
+			{id: panelKeys, title: "Screen keys", fill: m.keysPanel},
+			{id: panelDisplay, title: "Display", fill: m.displayPanel},
+			layers,
+		}
+	case len(m.ed.Selected()) > 1:
+		return []panelSpec{
+			{id: panelDetails, title: "Details", fill: m.group},
+			{id: panelArrange, title: "Arrange", fill: m.arrangePanel},
+			layers,
+		}
+	}
+	specs := []panelSpec{{id: panelDetails, title: "Details", fill: func(b *builder) { m.single(b, n) }}}
+	if def, ok := m.cat.Get(n.Component); ok && len(def.Props) > 0 {
+		specs = append(specs, panelSpec{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }})
+	}
+	return append(specs,
+		panelSpec{id: panelArrange, title: "Arrange", fill: m.arrangePanel},
+		panelSpec{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
+		layers)
+}
+
+// panelHeader is the line that names a panel: an arrow that says whether it
+// is open, the title and a rule. Clicking it opens or closes the panel;
+// dragging it moves the edge above it.
+func (m *Model) panelHeader(b *builder, sp panelSpec, closed bool) {
+	arrow := "▾"
+	if closed {
+		arrow = "▸"
+	}
+	width := m.content()
+	if sp.trash {
+		width -= lipgloss.Width("[Trash]") + 1
+	}
+	label := arrow + " " + sp.title
+	rule := strings.Repeat("─", max(width-lipgloss.Width(label)-2, 0))
+	id := sp.id
+	flip := func() { m.toggle(id, !m.state(id).closed) }
+	b.add(" "+theme.Bold(label)+" "+theme.Faded(rule), flip)
+	b.regions[len(b.regions)-1].header = id
+	if sp.trash {
+		b.text(" ")
+		m.trashButton(b)
+	}
+	b.end()
+}
+
+// revealSelection scrolls the layer list to the selected layer when the
+// selection has changed since the last render, so choosing a component on the
+// canvas shows its layer.
+func (m *Model) revealSelection() {
+	n, ok := m.ed.Primary()
+	var id design.NodeID
+	if ok {
+		id = n.ID
+	}
+	if id == m.lastSel {
+		return
+	}
+	m.lastSel = id
+	if id == "" {
+		return
+	}
+	doc := m.ed.Document()
+	for _, v := range m.views {
+		if v.id == panelLayers && v.open {
+			m.reveal(v.start + 1 + len(doc.Nodes) - 1 - doc.Index(id))
+		}
+	}
 }
 
 func (m *Model) history(b *builder) {
 	b.text(" ").
 		add(theme.Button("[Undo]", m.ed.CanUndo()), func() { m.ed.Undo() }).text(" ").
 		add(theme.Button("[Redo]", m.ed.CanRedo()), func() { m.ed.Redo() }).end()
-}
-
-func (m *Model) empty(b *builder) {
-	b.text(theme.Dim(" Nothing selected.")).end()
-	b.text(theme.Faded(" Drag a component from")).end()
-	b.text(theme.Faded(" the left bar onto the")).end()
-	b.text(theme.Faded(" canvas.")).end()
-	b.blank()
-	m.documentOptions(b)
 }
 
 // snapRow is the "snap to guides" checkbox.
@@ -156,13 +261,16 @@ func (m *Model) snapRow(b *builder) {
 	b.text(" ").add(theme.Button(mark+" Snap to guides", true), func() { m.snapSet(!m.snapGet()) }).end()
 }
 
+// messageRow shows what the last edit said was wrong.
+func (m *Model) messageRow(b *builder) {
+	if m.message != "" {
+		b.text(" " + lipgloss.NewStyle().Foreground(lipgloss.Color(theme.Warn)).Render(m.message)).end()
+	}
+}
+
 func (m *Model) group(b *builder) {
 	b.text(theme.Bold(fmt.Sprintf(" %d selected", len(m.ed.Selected())))).end()
-	b.blank()
-	m.order(b)
-	m.actions(b)
-	b.blank()
-	m.snapRow(b)
+	m.messageRow(b)
 }
 
 func (m *Model) single(b *builder, n design.Node) {
@@ -174,26 +282,28 @@ func (m *Model) single(b *builder, n design.Node) {
 	if n.Locked {
 		b.text(" " + theme.Faded("Locked: unlock it in Layers to edit")).end()
 	}
-	b.blank()
 	l := n.Layout
 	m.numeric(b, n.ID, "X", "x", n.Rect.X, l.X)
 	m.numeric(b, n.ID, "Y", "y", n.Rect.Y, l.Y)
 	m.numeric(b, n.ID, "W", "w", n.Rect.W, l.W)
 	m.numeric(b, n.ID, "H", "h", n.Rect.H, l.H)
-	m.behaviourRows(b, n)
-	m.screenRows(b, n)
-	b.blank()
 	doc := m.ed.Document()
 	b.text(fmt.Sprintf(" Layer %d of %d", doc.Index(n.ID)+1, len(doc.Nodes))).end()
+	m.messageRow(b)
+}
+
+// arrangePanel is the order, copy and group buttons and the snap checkbox.
+func (m *Model) arrangePanel(b *builder) {
 	m.order(b)
 	m.actions(b)
-	b.blank()
 	m.snapRow(b)
-	m.properties(b, n)
-	if m.message != "" {
-		b.blank()
-		b.text(" " + lipgloss.NewStyle().Foreground(lipgloss.Color(theme.Warn)).Render(m.message)).end()
-	}
+}
+
+// behaviourPanel is what the person using the exported program may do with
+// the component, and when it is shown and what a click on it raises.
+func (m *Model) behaviourPanel(b *builder, n design.Node) {
+	m.behaviourRows(b, n)
+	m.screenRows(b, n)
 }
 
 // editable renders a value that turns into a text box when clicked.
@@ -257,8 +367,6 @@ func (m *Model) properties(b *builder, n design.Node) {
 	if !ok || len(def.Props) == 0 {
 		return
 	}
-	b.blank()
-	b.text(theme.Bold(" Properties")).end()
 	doc := m.ed.Document()
 	effective := def.Effective(n.Props, doc.Theme, doc.Background)
 	for _, p := range def.Props {
@@ -282,8 +390,9 @@ func (m *Model) properties(b *builder, n design.Node) {
 	}
 }
 
-// bindRow shows the screen input a property is bound to, and lets it be
-// typed: a name binds the property, an empty one unbinds it.
+// bindRow shows the screen input a property is bound to. Pressing it opens
+// the inputs the design already has, to bind to one of them, unbind, or type
+// a new name.
 func (m *Model) bindRow(b *builder, n design.Node, key string) {
 	field := "bind:" + key
 	b.text("  " + theme.Faded("⇄ "))
@@ -294,9 +403,28 @@ func (m *Model) bindRow(b *builder, n design.Node, key string) {
 	name := n.Bind[key]
 	shown := name
 	if shown == "" {
-		shown = theme.Faded("input name…")
+		shown = "input…"
 	}
-	b.add(shown, func() { m.startEdit(field, name) }).end()
+	var items []menuItem
+	if name != "" {
+		items = append(items, menuItem{label: "(none)", act: func() { m.apply(field, "") }})
+	}
+	seen := map[string]bool{}
+	for _, v := range m.ed.Variables() {
+		if v.Kind != editor.VarInput || seen[v.Name] {
+			continue
+		}
+		seen[v.Name] = true
+		vn := v.Name
+		items = append(items, menuItem{label: vn, current: vn == name, act: func() { m.apply(field, vn) }})
+	}
+	label := "+ New input…"
+	if name != "" {
+		label = "✎ Rename…"
+	}
+	items = append(items, menuItem{label: label, act: func() { m.startEdit(field, name) }})
+	m.selectRow(b, shown, "Bind to input", items, nil)
+	b.end()
 }
 
 // screenRows are the two things a component says about the screen it is part
@@ -347,12 +475,14 @@ func (m *Model) propValue(b *builder, id design.NodeID, p definition.PropSpec, v
 		b.add(theme.Button(mark, true), set(next))
 	case definition.PropChoice:
 		i := slices.Index(p.Choices, value)
-		prev := p.Choices[(i+len(p.Choices)-1)%len(p.Choices)]
-		next := p.Choices[(i+1)%len(p.Choices)]
-		b.addMouse(theme.Button("◂", true), set(prev)).text(" ").
-			addStep(theme.Bold(value), set(next), func(d int) {
-				set(p.Choices[((i+d)%len(p.Choices)+len(p.Choices))%len(p.Choices)])()
-			}).text(" ").addMouse(theme.Button("▸", true), set(next))
+		count := len(p.Choices)
+		items := make([]menuItem, count)
+		for k, c := range p.Choices {
+			items[k] = menuItem{label: c, current: k == i, act: set(c)}
+		}
+		m.selectRow(b, value, p.Label, items, func(d int) {
+			set(p.Choices[((i+d)%count+count)%count])()
+		})
 	case definition.PropInt:
 		n, _ := strconv.Atoi(value)
 		b.addMouse(theme.Button("[-]", true), set(strconv.Itoa(n-1))).text(" ")
@@ -407,36 +537,30 @@ func (m *Model) behaviourRows(b *builder, n design.Node) {
 
 // changeRow offers the components that can take this one's place without
 // losing the variables bound to it (a text input for a colour picker, tabs for
-// dialog buttons). The arrows choose one, pressing its name changes the
-// component; the change is one undo step and keeps name, place, bindings and
-// the values that are valid for the new component.
+// dialog buttons). Choosing one in the list changes the component; the change
+// is one undo step and keeps name, place, bindings and the values that are
+// valid for the new component.
 func (m *Model) changeRow(b *builder, n design.Node) {
 	options := m.ed.ChangeOptions(n.ID)
 	if len(options) == 0 || n.Locked {
 		return
 	}
-	at := 0
+	items := make([]menuItem, len(options))
 	for i, d := range options {
-		if d.ID == m.changePick {
-			at = i
-		}
-	}
-	pick := options[at]
-	step := func(d int) { m.changePick = options[((at+d)%len(options)+len(options))%len(options)].ID }
-	apply := func() {
-		_, err := m.ed.ChangeComponent(n.ID, pick.ID, false)
-		m.report(err)
-		m.changePick = ""
+		id := d.ID
+		items[i] = menuItem{label: d.Name, act: func() {
+			_, err := m.ed.ChangeComponent(n.ID, id, false)
+			m.report(err)
+		}}
 	}
 	b.text(" ").add(theme.Dim("Change "), nil)
-	b.addMouse(theme.Button("◂", true), func() { step(-1) }).text(" ").
-		addStep(theme.Bold(pick.Name), apply, step).text(" ").
-		addMouse(theme.Button("▸", true), func() { step(1) }).end()
+	m.selectRow(b, "Replace with", "Replace with (keeps variables)", items, nil)
+	b.end()
 	b.text("  " + theme.Faded("keeps its variables")).end()
 }
 
-// swatchRow shows which named colour a colour property uses and steps through
-// the palette: the properties that use the same name change together, and a
+// swatchRow shows which named colour a colour property uses and lists the
+// palette: the properties that use the same name change together, and a
 // program that shows the screen can change the colour by that name.
 func (m *Model) swatchRow(b *builder, n design.Node, p definition.PropSpec) {
 	palette := m.ed.Swatches()
@@ -444,12 +568,30 @@ func (m *Model) swatchRow(b *builder, n design.Node, p definition.PropSpec) {
 	if len(palette) == 0 {
 		return
 	}
+	field := "swatchname:" + p.Key
 	b.text("  " + theme.Faded("name "))
+	if m.editing == field {
+		b.text(m.buf + "█").end()
+		return
+	}
 	at := -1
-	for i, s := range palette {
-		if used && s.Name == current {
+	items := make([]menuItem, 0, len(palette)+1)
+	for i, sw := range palette {
+		name := sw.Name
+		if used && name == current {
 			at = i
 		}
+		items = append(items, menuItem{label: name, current: used && name == current,
+			act: func() { m.report(m.ed.UseSwatch(n.ID, p.Key, name)) }})
+	}
+	rename := "+ New name…"
+	if used {
+		rename = "✎ Rename…"
+	}
+	items = append(items, menuItem{label: rename, act: func() { m.startEdit(field, current) }})
+	shown := "(none)"
+	if at >= 0 {
+		shown = palette[at].Name
 	}
 	step := func(d int) {
 		next := ((at+d)%len(palette) + len(palette)) % len(palette)
@@ -458,21 +600,6 @@ func (m *Model) swatchRow(b *builder, n design.Node, p definition.PropSpec) {
 		}
 		m.report(m.ed.UseSwatch(n.ID, p.Key, palette[next].Name))
 	}
-	shown := theme.Faded("(none)")
-	if at >= 0 {
-		shown = theme.Bold(palette[at].Name)
-	}
-	field := "swatchname:" + p.Key
-	if m.editing == field {
-		b.text(m.buf + "█").end()
-		return
-	}
-	// Clicking the name renames it; the arrows step through the palette.
-	rename := func() { m.startEdit(field, current) }
-	if at < 0 {
-		rename = func() { step(1) }
-	}
-	b.addMouse(theme.Button("◂", !n.Locked), func() { step(-1) }).text(" ").
-		addStep(shown, rename, step).text(" ").
-		addMouse(theme.Button("▸", !n.Locked), func() { step(1) }).end()
+	m.selectRow(b, shown, "Colour name", items, step)
+	b.end()
 }

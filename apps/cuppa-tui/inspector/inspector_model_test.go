@@ -20,9 +20,19 @@ func setup(t *testing.T, comp string) (*Model, *editor.Editor, design.NodeID) {
 		t.Fatal(err)
 	}
 	m := New(ed, cat)
-	m.SetSize(32, 40)
+	m.SetSize(32, 200)
+	expandAll(m)
 	m.Lines() // renders once so clickable regions exist
 	return m, ed, id
+}
+
+// expandAll opens every panel and gives it room, so a test can look at the
+// whole bar in one list of lines.
+func expandAll(m *Model) {
+	for id := range panelDefaults {
+		st := m.state(id)
+		st.closed, st.want = false, 30
+	}
 }
 
 // clickText clicks the first clickable span whose rendered line contains text.
@@ -133,7 +143,8 @@ func TestLayerButtonsAndList(t *testing.T) {
 
 func TestPropertiesEditThroughTheSchema(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, "rounded", "▸") // choice: next border
+	clickText(t, m, "rounded", "rounded") // choice: opens the list of borders
+	clickText(t, m, "  normal", "normal")
 	n, _ := ed.Document().Get(id)
 	if n.Props["border"] != "normal" {
 		t.Fatalf("border = %q", n.Props["border"])
@@ -166,7 +177,7 @@ func TestEmptyStateAndSizing(t *testing.T) {
 	m := New(ed, cat)
 	m.SetSize(30, 12)
 	lines := m.Lines()
-	if len(lines) != 12 || !strings.Contains(stripANSI(strings.Join(lines, "\n")), "Nothing selected") {
+	if len(lines) != 12 || !strings.Contains(stripANSI(strings.Join(lines, "\n")), "Canvas") {
 		t.Fatalf("empty state wrong:\n%s", strings.Join(lines, "\n"))
 	}
 }
@@ -175,7 +186,8 @@ func TestSnapCheckboxTogglesTheBoundSetting(t *testing.T) {
 	cat := standard.Default()
 	ed := editor.New(cat, design.NewDocument("t", 100, 40))
 	m := New(ed, cat)
-	m.SetSize(32, 60) // the theme section made the pane longer
+	m.SetSize(32, 200)
+	expandAll(m)
 	on := true
 	m.BindSnap(func() bool { return on }, func(v bool) { on = v })
 	m.Lines()
@@ -204,7 +216,7 @@ func TestLongTextPropertyWrapsInsidePaneAndStaysClickable(t *testing.T) {
 		if first < 0 && strings.HasPrefix(plain, "docs/,") {
 			first = y
 		}
-		if strings.Contains(plain, "commitlint.config.mjs") {
+		if strings.HasSuffix(plain, "mjs") {
 			last = y
 		}
 	}

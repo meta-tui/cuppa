@@ -31,6 +31,9 @@ type region struct {
 	label string
 	// layer is set on a layer name: pressing it can start a drag of that layer.
 	layer design.NodeID
+	// header is set on a panel's header: a click opens or closes the panel and
+	// a drag moves the edge above it.
+	header panelID
 }
 
 // Model is the inspector pane.
@@ -39,15 +42,10 @@ type Model struct {
 	cat     Catalog
 	w, h    int
 	focused bool
-	scroll  int
 	regions []region
-	total   int // content height of the last render
 	// stop is the keyboard stop that has the focus and stops how many there
 	// were at the last render.
 	stop, stops int
-
-	// changePick is the component the Change row is showing (an id), or "".
-	changePick string
 
 	editing string // field being typed into: "x", "y", "w", "h", "name" or "prop:<key>"
 	buf     string
@@ -65,11 +63,21 @@ type Model struct {
 	// first button.
 	ask Asker
 
-	// The layer list: a drag in progress, where the list starts and how long it
-	// is (content rows, set at render), and where the trash button is.
-	drag                     *layerDrag
-	layerTop, layerCount     int
-	trashY, trashX0, trashX1 int
+	// panels is what each panel remembers, views where they were drawn at the
+	// last render, press the header being held, and lastSel the layer that was
+	// selected then (a new selection is scrolled into view in the layer list).
+	panels  map[panelID]*panelState
+	views   []panelView
+	press   *headerPress
+	lastSel design.NodeID
+	// menu is the dropdown that is open, if any.
+	menu *dropdown
+
+	// The layer list: a drag in progress, how long the list is (set at render),
+	// and where the trash button is (columns; its row is the Layers header).
+	drag             *layerDrag
+	layerCount       int
+	trashX0, trashX1 int
 }
 
 // New returns an inspector editing through ed.
@@ -108,38 +116,58 @@ func (m *Model) BindThemePicker(p ThemePicker) { m.pickTheme = p }
 func (m *Model) BindColorPicker(p ColorPicker) { m.pickColor = p }
 
 // Editing reports whether a field is taking keyboard input.
-func (m *Model) Editing() bool { return m.editing != "" }
+// An open dropdown takes the keys too: Up and Down move through its options,
+// Enter chooses and Esc closes it.
+func (m *Model) Editing() bool { return m.editing != "" || m.menu != nil }
 
 // Handle processes a pointer event in pane coordinates.
 func (m *Model) Handle(e pointer.Event) {
+	if m.menu != nil {
+		m.handleMenu(e)
+		return
+	}
 	switch e.Phase {
 	case pointer.Wheel:
-		m.scroll = min(max(m.scroll+e.WheelY*2, 0), max(m.total-m.h, 0))
+		// The wheel scrolls the panel under the pointer, not the whole bar.
+		if v, ok := m.viewAt(e.Y); ok {
+			m.scrollPanel(v, e.WheelY*2)
+		}
 	case pointer.Down:
 		if !e.Left {
 			return
 		}
-		y := e.Y + m.scroll
-		for _, r := range m.regions {
-			if r.y == y && e.X >= r.x0 && e.X < r.x1 {
-				m.cancelEdit()
-				if r.layer != "" {
-					// Selecting changes what the bar shows above the list, which
-					// would slide the list out from under a drag; so a layer is
-					// selected on release, when it was not dragged.
-					m.pressLayer(r.layer, y, r.act)
+		cy, ok := m.contentY(e.Y)
+		if ok {
+			for _, r := range m.regions {
+				if r.y == cy && e.X >= r.x0 && e.X < r.x1 {
+					m.cancelEdit()
+					switch {
+					case r.layer != "":
+						// Selecting changes what the bar shows above the list, which
+						// would slide the list out from under a drag; so a layer is
+						// selected on release, when it was not dragged.
+						m.pressLayer(r.layer, e.Y, r.act)
+					case r.header != "":
+						m.pressHeader(r.header, e.Y, r.act)
+					default:
+						r.act()
+					}
 					return
 				}
-				r.act()
-				return
 			}
 		}
 		m.cancelEdit()
 	case pointer.Move:
-		if m.drag != nil && e.Held {
+		switch {
+		case m.press != nil && e.Held:
+			m.dragHeader(e)
+		case m.drag != nil && e.Held:
 			m.dragTo(e)
 		}
 	case pointer.Up:
+		if m.press != nil {
+			m.releaseHeader()
+		}
 		if m.drag != nil {
 			m.drop(e)
 		}
@@ -148,6 +176,15 @@ func (m *Model) Handle(e pointer.Event) {
 
 // Key handles typing into the field being edited.
 func (m *Model) Key(text string, backspace, enter, escape bool) {
+	if m.menu != nil {
+		switch {
+		case escape:
+			m.menu = nil
+		case enter || text == " ":
+			m.chooseMenu(m.menu.at)
+		}
+		return
+	}
 	switch {
 	case escape:
 		m.cancelEdit()
@@ -178,6 +215,15 @@ func (m *Model) commit() {
 // design follows the arrow keys; Enter then ends the edit. It reports whether
 // the field holds a number.
 func (m *Model) Step(delta int) bool {
+	if m.menu != nil {
+		// Up (a positive step) goes to the option above.
+		if delta > 0 {
+			m.menu.move(-1)
+		} else if delta < 0 {
+			m.menu.move(1)
+		}
+		return true
+	}
 	if m.editing == "" || m.editing == "background" || m.editing == "name" {
 		return false
 	}

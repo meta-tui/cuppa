@@ -11,20 +11,23 @@ import (
 	"github.com/meta-tui/cuppa/libs/document/design"
 )
 
-// documentOptions is what the pane shows when nothing is selected: the canvas
-// size, its background colour and the effects applied over the whole design.
-func (m *Model) documentOptions(b *builder) {
+// canvasPanel is the canvas size and the buttons for the usual terminal sizes.
+func (m *Model) canvasPanel(b *builder) {
 	doc := m.ed.Document()
-	b.text(theme.Bold(" Canvas")).end()
 	m.canvasNumeric(b, "W", "canvas-w", doc.Width)
 	m.canvasNumeric(b, "H", "canvas-h", doc.Height)
 	m.sizePresets(b, doc)
 	b.text(" " + theme.Faded(fmt.Sprintf("%d components", len(doc.Nodes)))).end()
-	b.blank()
+	if len(doc.Nodes) == 0 {
+		b.text(" " + theme.Faded("Drag a component from the")).end()
+		b.text(" " + theme.Faded("left bar onto the canvas.")).end()
+	}
+	m.messageRow(b)
+}
 
-	b.text(theme.Bold(" Theme")).end()
-	b.text(" " + theme.Faded("Components follow these,")).end()
-	b.text(" " + theme.Faded("unless they set their own.")).end()
+// themePanel is the colours components follow unless they set their own.
+func (m *Model) themePanel(b *builder) {
+	doc := m.ed.Document()
 	if m.pickTheme != nil {
 		b.text(" ").add(theme.Button("[Colour scheme…]", true), func() {
 			m.pickTheme(func(background string, t design.Theme) { m.report(m.ed.SetTheme(background, t)) })
@@ -40,34 +43,28 @@ func (m *Model) documentOptions(b *builder) {
 		role := c.role
 		m.themeRow(b, c.label, "theme-"+role, c.value, "component default", func(v string) error { return m.ed.SetThemeColor(role, v) })
 	}
-	b.blank()
+	b.text(" " + theme.Faded("Components follow these unless")).end()
+	b.text(" " + theme.Faded("they set their own.")).end()
+}
 
-	m.paletteRows(b, doc)
-	b.blank()
-
-	b.text(theme.Bold(" Screen keys")).end()
-	keys := design.FormatKeys(doc.Keys)
+// keysPanel is the keys the exported screen raises events for.
+func (m *Model) keysPanel(b *builder) {
+	keys := design.FormatKeys(m.ed.Document().Keys)
 	b.text(" ")
 	m.editable(b, "keys", keys, keys)
 	b.end()
 	b.text(" " + theme.Faded("key=Event:label, ...")).end()
-	b.blank()
+}
 
-	b.text(theme.Bold(" Effects")).end()
+// displayPanel is the effects over the canvas and how the terminal is shown.
+func (m *Model) displayPanel(b *builder) {
+	doc := m.ed.Document()
 	m.optionRow(b, "Grid dots", editor.EffectGrid)
 	m.optionRow(b, "Shadows", editor.EffectShadow)
 	m.optionRow(b, "Scanlines", editor.EffectScanlines)
 	m.optionRow(b, "Vignette", editor.EffectVignette)
-	b.blank()
-
-	b.text(theme.Bold(" Terminal")).end()
 	m.terminalRow(b, doc.Light)
 	m.profileRow(b, doc.Profile)
-	if m.message != "" {
-		b.blank()
-		b.text(" " + lipgloss.NewStyle().Foreground(lipgloss.Color(theme.Warn)).Render(m.message)).end()
-	}
-	b.blank()
 	m.snapRow(b)
 }
 
@@ -157,21 +154,22 @@ func (m *Model) terminalRow(b *builder, light bool) {
 	b.end()
 }
 
-// profileRow steps through the colour profiles with arrows.
+// profileRow chooses the colour profile from a list.
 func (m *Model) profileRow(b *builder, current string) {
 	at := 0
+	items := make([]menuItem, len(profiles))
 	for i, p := range profiles {
-		if p.value == current {
+		value := p.value
+		if value == current {
 			at = i
 		}
-	}
-	step := func(d int) func() {
-		return func() { m.report(m.ed.SetProfile(profiles[(at+d+len(profiles))%len(profiles)].value)) }
+		items[i] = menuItem{label: p.name, current: value == current, act: func() { m.report(m.ed.SetProfile(value)) }}
 	}
 	b.text(" " + theme.Dim("Colours  "))
-	b.addMouse(theme.Button("◂", true), step(-1)).text(" ").
-		addStep(theme.Bold(profiles[at].name), step(1), func(d int) { step(d)() }).text(" ").
-		addMouse(theme.Button("▸", true), step(1)).end()
+	m.selectRow(b, profiles[at].name, "Colours", items, func(d int) {
+		m.report(m.ed.SetProfile(profiles[((at+d)%len(profiles)+len(profiles))%len(profiles)].value))
+	})
+	b.end()
 }
 
 // optionRow is a checkbox for one canvas option.
@@ -207,7 +205,6 @@ func (m *Model) sizePresets(b *builder, doc design.Document) {
 // so the components that use a name follow it, and a Go screen exported from
 // the design exposes each one to the program.
 func (m *Model) paletteRows(b *builder, doc design.Document) {
-	b.text(theme.Bold(" Named colours")).end()
 	if len(doc.Theme.Palette) == 0 {
 		b.text(" " + theme.Faded("A colour you set on a")).end()
 		b.text(" " + theme.Faded("component is named after")).end()

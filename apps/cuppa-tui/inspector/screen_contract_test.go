@@ -9,8 +9,9 @@ import (
 func TestScreenContractRowsEditThroughTheEditor(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.label")
 
-	// A property is bound by typing the input name under it.
-	clickText(t, m, "input name", "input name")
+	// A property is bound by opening the list under it and typing a new name.
+	clickText(t, m, "⇄", "input…")
+	clickText(t, m, "New input", "New input")
 	for _, r := range "Title" {
 		m.Key(string(r), false, false, false)
 	}
@@ -44,12 +45,8 @@ func TestScreenContractRowsEditThroughTheEditor(t *testing.T) {
 	}
 
 	// An empty name unbinds.
-	clickText(t, m, "Title", "Title")
-	m.Key("", true, false, false)
-	for i := 0; i < 5; i++ {
-		m.Key("", true, false, false)
-	}
-	m.Key("", false, true, false)
+	clickText(t, m, "⇄", "Title")
+	clickText(t, m, "(none)", "(none)")
 	if n, _ = ed.Document().Get(id); len(n.Bind) != 0 {
 		t.Errorf("binding for %q kept: %v", key, n.Bind)
 	}

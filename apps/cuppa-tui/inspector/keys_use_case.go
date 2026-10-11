@@ -121,13 +121,3 @@ func (m *Model) layerKey(name string, id design.NodeID) bool {
 	}
 	return true
 }
-
-// reveal scrolls so content line y is in view.
-func (m *Model) reveal(y int) {
-	if y < m.scroll {
-		m.scroll = y
-	}
-	if m.h > 0 && y >= m.scroll+m.h {
-		m.scroll = y - m.h + 1
-	}
-}

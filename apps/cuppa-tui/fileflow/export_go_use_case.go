@@ -7,6 +7,8 @@ import (
 
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/prompt"
+	"github.com/meta-tui/cuppa/libs/cuppafile/format"
+	"github.com/meta-tui/cuppa/libs/document/design"
 	"github.com/meta-tui/cuppa/libs/export/gosource"
 )
 
@@ -23,7 +25,7 @@ func (f *Flow) ExportGoSource() {
 		if o.Canceled {
 			return
 		}
-		project := gosource.Generate(doc, f.cat)
+		project := gosource.GenerateWith(doc, f.cat, gosource.Options{Source: f.source(doc)})
 		if err := gosource.Write(o.Value, project); err != nil {
 			f.Notice("Cannot export Go source", err.Error())
 			return
@@ -35,4 +37,14 @@ func (f *Flow) ExportGoSource() {
 		}
 		f.Notice("Go source exported", body)
 	})
+}
+
+// source is the design as the bytes of a .cuppa file, for an export to carry
+// so the application can be opened again from its Go.
+func (f *Flow) source(doc design.Document) []byte {
+	data, err := format.Encode(doc)
+	if err != nil {
+		return nil
+	}
+	return data
 }

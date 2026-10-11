@@ -174,6 +174,7 @@ func (m *Model) Lines() []string {
 // are in the contextual bar above the canvas.
 func (m *Model) panelSpecs() []panelSpec {
 	layers := panelSpec{id: panelLayers, title: "Layers", fill: m.layers, trash: true}
+	pages := panelSpec{id: panelPages, title: "Pages", fill: m.pagesPanel}
 	n, ok := m.ed.Primary()
 	switch {
 	case !ok:
@@ -183,14 +184,16 @@ func (m *Model) panelSpecs() []panelSpec {
 			{id: panelColours, title: "Named colours", fill: func(b *builder) { m.paletteRows(b, m.ed.Document()) }},
 			{id: panelKeys, title: "Screen keys", fill: m.keysPanel},
 			{id: panelDisplay, title: "Display", fill: m.displayPanel},
+			pages,
 			layers,
 		}
 	case len(m.ed.Selected()) > 1:
-		return []panelSpec{layers}
+		return []panelSpec{pages, layers}
 	}
 	return []panelSpec{
 		{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }},
 		{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
+		pages,
 		layers,
 	}
 }
@@ -274,6 +277,7 @@ func (m *Model) messageRow(b *builder) {
 func (m *Model) behaviourPanel(b *builder, n design.Node) {
 	m.behaviourRows(b, n)
 	m.screenRows(b, n)
+	m.gotoRow(b, n)
 }
 
 // editable renders a value that turns into a text box when clicked.
@@ -547,18 +551,18 @@ func (m *Model) pageRows(b *builder, n design.Node) {
 	pages := container.Pages(n)
 	for i, name := range pages {
 		page := i
-		mark := theme.Faded("○")
+		mark := " "
 		if container.Shown(n, i) {
-			mark = theme.Title("◉")
+			mark = theme.Title("▸")
 		}
 		b.text(" "+mark+" ").add(theme.Bold(theme.Fit(name, max(m.content()-10, 4))), func() { m.ed.PressContainerHeader(n.ID, page) })
 		if len(pages) > 1 && !n.Locked {
-			b.text(" ").addMouse(theme.Button("[x]", true), func() { m.report(m.ed.RemovePage(n.ID, page)) })
+			b.text(" ").addMouse(theme.Button("[x]", true), func() { m.report(m.ed.RemoveContainerPage(n.ID, page)) })
 		}
 		b.end()
 	}
 	if !n.Locked {
-		b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddPage(n.ID, "")) }).end()
+		b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddContainerPage(n.ID, "")) }).end()
 	}
 }
 
@@ -584,4 +588,64 @@ func (m *Model) modeButtons(b *builder) {
 	m.modeX[0][1], m.modeX[1][0] = b.x, b.x
 	b.add(style(preview, on), func() { m.setPreview(true) })
 	m.modeX[1][1] = b.x
+}
+
+// gotoRow chooses the page a click on the component shows, from the pages of
+// the design (a design with one page has none to choose).
+func (m *Model) gotoRow(b *builder, n design.Node) {
+	names := m.ed.PageNames()
+	if len(names) < 2 {
+		return
+	}
+	items := []menuItem{{label: "(none)", current: n.Goto == "", act: func() { m.report(m.ed.SetGoto(n.ID, "")) }}}
+	for i, name := range names {
+		if i == m.ed.ActivePage() {
+			continue
+		}
+		page := name
+		items = append(items, menuItem{label: page, current: n.Goto == page, act: func() { m.report(m.ed.SetGoto(n.ID, page)) }})
+	}
+	shown := n.Goto
+	if shown == "" {
+		shown = "(none)"
+	}
+	b.text(" ").add(theme.Dim("Click goes to "), nil)
+	b.end()
+	b.text("  ")
+	m.selectRow(b, shown, "Go to page", items, nil)
+	b.end()
+}
+
+// pagesPanel lists the pages of the design: pressing a name shows that page,
+// the arrows move it, the pencil renames it and [x] deletes it with what is on
+// it. [+ Page] adds one.
+func (m *Model) pagesPanel(b *builder) {
+	names := m.ed.PageNames()
+	active := m.ed.ActivePage()
+	for i, name := range names {
+		page, pageName := i, name
+		mark := " "
+		if i == active {
+			mark = theme.Title("▸")
+		}
+		field := "pagename:" + strconv.Itoa(i)
+		b.text(" " + mark + " ")
+		if m.editing == field {
+			b.text(m.buf + "█").end()
+			continue
+		}
+		room := max(m.content()-lipgloss.Width(b.cur)-13, 4)
+		b.add(theme.Bold(theme.Fit(ansi.Truncate(name, room, "…"), room)), func() { m.ed.SwitchPage(page) })
+		if len(names) > 1 {
+			b.text(" ")
+			b.addMouse(theme.Button("↑", i > 0), func() { m.ed.MovePage(page, page-1) })
+			b.addMouse(theme.Button("↓", i < len(names)-1), func() { m.ed.MovePage(page, page+1) })
+		}
+		b.text(" ").addMouse(theme.Button("✎", true), func() { m.startEdit(field, pageName) })
+		if len(names) > 1 {
+			b.text(" ").addMouse(theme.Button("[x]", true), func() { m.report(m.ed.DeletePage(page)) })
+		}
+		b.end()
+	}
+	b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddPage("")) }).end()
 }

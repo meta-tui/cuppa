@@ -1,6 +1,7 @@
 package gosource
 
 import (
+	"encoding/base64"
 	_ "embed"
 	"fmt"
 	"sort"
@@ -147,6 +148,15 @@ var extensions = map[string]extension{
 // Generate turns doc into a Go project. The same document always gives the
 // same files.
 func Generate(doc design.Document, cat Catalog) Project {
+	return GenerateWith(doc, cat, Options{})
+}
+
+// GenerateWith is Generate with options. A design with pages is an
+// application: its screens, the router and a main.go that runs them.
+func GenerateWith(doc design.Document, cat Catalog, opts Options) Project {
+	if doc.IsPaged() {
+		return generateApp(doc, cat, opts)
+	}
 	module := Slug(doc.Name)
 	p := Project{Module: module, Files: map[string]string{}}
 	placed := leaves(doc, cat)
@@ -171,6 +181,10 @@ func Generate(doc design.Document, cat Catalog) Project {
 	p.Files["runtime.go"] = runtimeSource
 	p.Files["widgets.go"] = widgetsSource
 	p.Files["layout.go"] = layoutSource(doc, placed)
+	if len(opts.Source) > 0 {
+		// The design travels with the program, so Cuppa can open it from here.
+		p.Files["layout.go"] = strings.Replace(p.Files["layout.go"], "package main\n\n", "package main\n\n"+DesignDirective+base64.StdEncoding.EncodeToString(opts.Source)+"\n\n", 1)
+	}
 	for _, l := range placed {
 		if !generated[l.Kind] {
 			p.Notes = append(p.Notes, fmt.Sprintf("%s (%s) is not generated yet: it is drawn as an empty frame", l.Name, l.Kind))
@@ -357,3 +371,4 @@ func followsWindow(placed []leaf) bool {
 	}
 	return false
 }
+

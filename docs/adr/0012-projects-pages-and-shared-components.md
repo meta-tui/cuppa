@@ -1,113 +1,89 @@
-# ADR 0012: Projects, pages and shared components in the export
+# ADR 0012: Pages, a router, and opening an application from its Go
 
-Status: proposed
+Status: accepted
 
 ## Context
 
-An export today writes one package per design set: a `<screen>_screen_view.go`
-and `<screen>_screen_contract.go` per screen, and the runtime and the painters
-of every component the designs use as a few `cuppa_*.go` files. Inside a
-screen, each placed component is a literal (`placed{Kind: "lipgloss.box", ...}`),
-so a screen is data over a shared runtime, not repeated code. Still:
+An export wrote one screen per design: a `<screen>_screen_view.go` and a
+`<screen>_screen_contract.go` with the runtime and painters shared in a few
+`cuppa_*.go` files. Each placed component is data over that shared runtime
+(`placed{Kind: "lipgloss.box", ...}`), not repeated code. What was missing for
+an application:
 
-1. The runtime files are one flat package. An application with many screens
-   cannot import "the Cuppa box" or "the Cuppa rows" as a package of its own,
-   and every export of a different folder carries its own copy.
-2. A design is one screen. An application is several screens with moves
-   between them, and the page that is shown is state the program should be able
-   to read and set, like any other input.
-3. The only way back from the Go to the design is the `.cuppa` file kept
-   beside it. Given only the generated folder there is no way to open it.
+1. A design was one screen. An application is several, with moves between
+   them, and the page that is shown is state the program should read and set.
+2. The only way back from the Go to the design was the `.cuppa` file kept beside
+   it.
 
 ## Decision
 
-### Components are packages, screens import them
+### Pages are part of the design
 
-```
-<out>/
-  cuppa.project.json            the index (below)
-  cuppa/                        the runtime, once: fitEnv, grid, styles, events
-  cuppa/box, cuppa/rows, ...    one package per component kind used
-  screens/<screen>/             <screen>_view.go, <screen>_contract.go
-  app.go                        the router: pages, Goto, the page input
-```
+A design may be split into **pages**, each a screen of the application with
+its own components and the same canvas, theme, keys and named colours. The page
+being edited has its components in `Document.Nodes`, so every editing operation
+works on it as before; the others are kept in `Document.Pages[i].Nodes`. A
+design with one page has no `pages` in its file.
 
-A component package exports `Paint(g *Grid, props Props)` (and its own
-interaction when it has one: the colour picker, tabs, panels). Screens import
-the packages of the kinds they use and nothing else. Components a pack or
-another repo ships (the colour picker, `bubble-panels`) are imported by their
-module path instead of being copied.
+A component can **go to a page** (`Node.Goto`): a click takes the person there
+with no code, in the preview and in the exported application. It is not an
+`Event`: the router recognises the generated event (`HomeGoToSettings`) and
+changes the page itself.
 
-### Pages
+### The export is a router over the screens
 
-A project has pages; a page is one design. A component can carry a **Goto**
-action (`Node.Event = "goto:Settings"`), which the router performs without
-code from the application, and the router also exposes the page as a property
-of the contract:
+A design with pages exports one screen per page (named after the page) and a
+file `<design>_app.go`:
 
 ```go
-type AppProps struct {
-	Page string // the page shown; set it to navigate, read it to know where the user is
-	...
+type MyAppPage string                 // "Home", "Settings"
+type MyAppProps struct {
+	Page     MyAppPage                // the page shown: set it to navigate, read it to know where the user is
+	Home     HomeProps                // the props of each page
+	Settings SettingsProps
 }
+func MyApp(p MyAppProps, w, h int) Frame                                  // draws the page shown
+func MyAppHandle(p *MyAppProps, f Frame, msg tea.Msg) (MyAppEvent, bool)  // goes to pages; reports the page's own events
+func MyAppPress(p *MyAppProps, f Frame, msg tea.Msg) bool                 // tabs and panels (ADR 0011)
 ```
 
-Page selection is therefore part of the contract: the application may bind it,
-read it after a Goto, or drive it. Tabs and panels (ADR 0011) work the same
-way inside one page: their `active` and `open` state is an input.
+Page selection is therefore part of the contract: the application may bind
+`Page`, read it after a click that goes to a page, or drive it. Tabs and panels
+keep their own state the same way inside one page (`TabsActive`, `StackOpen`).
 
-### Opening an export: `main.go` is the project
+`cuppa screens design.cuppa -o dir --app`, and *File → Export Go source* for a
+design with pages, write the whole application: `go.mod`, `main.go`, the
+screens, the router and the shared runtime, in package `main`.
 
-The program's own `main.go` is the project file. It imports the screens, the
-screens import the component packages, and the pages are registered where the
-router is built:
+### Opening an application from its Go
+
+A design that was exported carries itself: the router (or, for a design with
+one page, the screen's contract or `layout.go`) has a line
 
 ```go
-package main
-
-import (
-	"github.com/acme/app/screens/colours"
-	"github.com/acme/app/screens/keys"
-	"github.com/meta-tui/cuppa/run"
-)
-
-func main() {
-	app := run.New(
-		run.Page("Colours", colours.Screen),
-		run.Page("Keys", keys.Screen),
-	)
-	app.Start()
-}
+//cuppa:design <base64 of the .cuppa file>
 ```
 
-`cuppa open main.go` reads it with `go/parser`: the imports and the `run.Page`
-calls are the list of pages, each screen's package is loaded the same way, and
-its imports are the component kinds it uses. Nothing else has to be kept in
-step, and nobody maintains a second file. What the imports cannot say (which
-component sits inside which, the page of a member of a container, the layer
-order, positions) is in a directive comment above each placed component:
+`cuppa main.go`, and *File → Open* on a `.go` file, read the design out of it:
+the file itself, or, for a `main.go` that only runs the application, the file
+beside it that carries it. The design opens as an untitled design (there is no
+`.cuppa` to save over), with all its pages, so the application's `main.go` is
+the project file. The `.cuppa` stays the source of truth: a hand edit of the
+generated Go is not read back, and `cuppa screens --check` still reports it.
 
-```go
-//cuppa:component id="n7" kind="lipgloss.rows" parent="n3" page="0" z="4"
-```
+### Not done (and why)
 
-`parent` and `page` carry ADR 0011's relationships and `z` the layer. The
-`.cuppa` files stay the source of truth and are listed next to each page
-(`//cuppa:source designs/colours.cuppa sha="…"`), so a hand edit of generated
-code is noticed by `cuppa screens --check` and the design is reopened from
-the source when it is there and from the directives when it is not.
-
-Alternatives considered: a `cuppa.project.json` index (one more file to keep
-current; kept as an optional export for tools that do not read Go) and
-comments only (no way to find the pages without scanning every file).
+Components are not split into packages of their own that screens import. The
+runtime is already written once per package and a screen only holds data over
+it, so there is no repeated component code to remove; splitting it means
+exporting the whole runtime API and a module layout for the generated
+application, which is a larger change for a smaller gain. It stays a possible
+later step, together with importing components from other repositories by
+address (see `docs/spec/cuppa-component.md`).
 
 ## Consequences
 
-- The generated code stops carrying a private copy of each component; two apps
-  exported separately share the package versions.
-- Exports are no longer one flat package: import paths and module layout
-  become part of the contract, so this needs `go.mod` handling in the export.
-- Round trip from Go alone is possible but only as far as the directives go;
-  code written by hand around the generated files is not read.
-- Existing single-package exports keep working: the multi-file layout is an
-  option of `cuppa screens` until it replaces the flat one.
+- Existing designs and exports are unchanged: one page, no router.
+- A design with pages is one `.cuppa` file; pages share the canvas size.
+- `Document.Pages` and `Document.Page` are part of the file format; older
+  readers show the page being edited and drop the others.

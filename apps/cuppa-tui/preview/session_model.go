@@ -39,19 +39,26 @@ type Session struct {
 // timers, blinking cursors); the caller runs it.
 func Start(doc design.Document, cat scene.Catalog) (*Session, tea.Cmd) {
 	s := &Session{doc: doc.Clone(), cat: cat, live: map[design.NodeID]*live{}, ed: editor.New(cat, doc)}
+	return s, tea.Batch(s.startAll()...)
+}
+
+// startAll builds the running component of every node of the page shown and
+// returns what each needs to start.
+func (s *Session) startAll() []tea.Cmd {
+	s.live = map[design.NodeID]*live{}
 	var starts []tea.Cmd
 	for _, n := range s.doc.Nodes {
 		build, ok := makers[n.Component]
 		if !ok || n.Hidden {
 			continue
 		}
-		l := build(propsOf(n, cat, s.doc), n.Rect.W, n.Rect.H)
+		l := build(propsOf(n, s.cat, s.doc), n.Rect.W, n.Rect.H)
 		s.live[n.ID] = l
 		if l.start != nil {
 			starts = append(starts, tag(n.ID, l.start))
 		}
 	}
-	return s, tea.Batch(starts...)
+	return starts
 }
 
 // propsOf is the node's properties over the catalog defaults.
@@ -155,6 +162,14 @@ func (s *Session) Press(x, y int) tea.Cmd {
 			s.ed.PressContainerHeader(top.ID, page)
 			s.doc = s.ed.Document()
 			return s.focusOn("")
+		}
+	}
+	if top, found := s.topAt(x, y); found && top.Goto != "" {
+		// A component that goes to a page takes the person there.
+		if i := s.doc.PageIndex(top.Goto); i >= 0 && s.ed.SwitchPage(i) {
+			s.doc = s.ed.Document()
+			s.focus = ""
+			return tea.Batch(s.startAll()...)
 		}
 	}
 	n, ok := s.at(x, y)

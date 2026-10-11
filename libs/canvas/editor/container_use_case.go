@@ -156,8 +156,8 @@ func (e *Editor) revealMembers() {
 	}
 }
 
-// AddPage appends a page (a tab, a section) to a container as one undo step.
-func (e *Editor) AddPage(id design.NodeID, name string) error {
+// AddContainerPage appends a page (a tab, a section) to a container as one undo step.
+func (e *Editor) AddContainerPage(id design.NodeID, name string) error {
 	c, ok := e.doc.Get(id)
 	if !ok || !c.IsContainer() {
 		return fmt.Errorf("editor: that is not a container")
@@ -176,9 +176,9 @@ func (e *Editor) AddPage(id design.NodeID, name string) error {
 	return nil
 }
 
-// RemovePage deletes a page of a container with the components on it, as one
+// RemoveContainerPage deletes a page of a container with the components on it, as one
 // undo step. A container keeps at least one page.
-func (e *Editor) RemovePage(id design.NodeID, page int) error {
+func (e *Editor) RemoveContainerPage(id design.NodeID, page int) error {
 	c, ok := e.doc.Get(id)
 	if !ok || !c.IsContainer() {
 		return fmt.Errorf("editor: that is not a container")

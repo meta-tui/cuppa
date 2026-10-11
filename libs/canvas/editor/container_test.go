@@ -150,13 +150,13 @@ func TestDeletingAContainerDeletesItsMembersAndDuplicatingCopiesThem(t *testing.
 
 func TestPagesCanBeAddedAndRemoved(t *testing.T) {
 	ed, tabs, a, b := tabsWithTwoLabels(t)
-	if err := ed.AddPage(tabs, "Keys"); err != nil {
+	if err := ed.AddContainerPage(tabs, "Keys"); err != nil {
 		t.Fatal(err)
 	}
 	if n, _ := ed.Document().Get(tabs); len(container.Pages(n)) != 3 {
 		t.Fatalf("pages = %v", container.Pages(n))
 	}
-	if err := ed.RemovePage(tabs, 0); err != nil {
+	if err := ed.RemoveContainerPage(tabs, 0); err != nil {
 		t.Fatal(err)
 	}
 	doc := ed.Document()
@@ -166,10 +166,10 @@ func TestPagesCanBeAddedAndRemoved(t *testing.T) {
 	if nb, _ := doc.Get(b); nb.Page != 0 {
 		t.Errorf("later pages move up: %+v", nb)
 	}
-	if err := ed.RemovePage(tabs, 0); err != nil {
+	if err := ed.RemoveContainerPage(tabs, 0); err != nil {
 		t.Fatal(err)
 	}
-	if err := ed.RemovePage(tabs, 0); err == nil {
+	if err := ed.RemoveContainerPage(tabs, 0); err == nil {
 		t.Error("the last page cannot be removed")
 	}
 }

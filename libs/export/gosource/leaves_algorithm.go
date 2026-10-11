@@ -135,9 +135,15 @@ func expand(nodes []design.Node, origin design.Rect, baseW, baseH, depth int, ov
 			}
 			out = append(out, expand(inner.Nodes, rect, inner.W, inner.H, depth+1, hand, cat, t)...)
 		default:
+			event := n.Event
+			if n.Goto != "" {
+				// A click goes to a page: the router turns this event into the
+				// change of page.
+				event = gotoEvent(n.Goto)
+			}
 			l := leaf{Kind: n.Component, Name: n.Name, Rect: rect, Props: props,
 				ID: n.ID, In: n.In, Page: n.Page,
-				Bind: n.Bind, ShowIf: n.ShowIf, Event: n.Event, Roles: rolesOf(n, cat), Swatches: swatchesOf(n, cat, t.theme)}
+				Bind: n.Bind, ShowIf: n.ShowIf, Event: event, Roles: rolesOf(n, cat), Swatches: swatchesOf(n, cat, t.theme)}
 			if depth > 0 {
 				l.ID, l.In = "", ""
 			}

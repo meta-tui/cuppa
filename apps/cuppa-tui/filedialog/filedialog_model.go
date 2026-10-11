@@ -25,6 +25,9 @@ type Spec struct {
 	Name string
 	// Ext is the extension (with dot) shown and appended; empty shows every file.
 	Ext string
+	// Also lists other extensions shown (and opened) besides Ext, such as the
+	// Go source of an application that carries its design.
+	Also []string
 	// Save asks for a name to write to; otherwise an existing file is picked.
 	Save bool
 }
@@ -98,7 +101,7 @@ func (m *Model) cd(dir string) {
 		switch {
 		case it.IsDir():
 			dirs = append(dirs, entry{it.Name(), true})
-		case m.spec.Ext == "" || strings.EqualFold(filepath.Ext(it.Name()), m.spec.Ext):
+		case m.spec.Ext == "" || strings.EqualFold(filepath.Ext(it.Name()), m.spec.Ext) || m.also(filepath.Ext(it.Name())):
 			files = append(files, entry{it.Name(), false})
 		}
 	}
@@ -356,4 +359,14 @@ func (m *Model) Describe() []a11y.Node {
 		nodes = append(nodes, a11y.Text(m.errMsg))
 	}
 	return append(nodes, a11y.Button("OK"), a11y.Button("Cancel"))
+}
+
+// also reports whether ext is one of the extra extensions the dialog shows.
+func (m *Model) also(ext string) bool {
+	for _, e := range m.spec.Also {
+		if strings.EqualFold(e, ext) {
+			return true
+		}
+	}
+	return false
 }

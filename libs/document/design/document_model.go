@@ -37,6 +37,11 @@ type Document struct {
 	// Embedded are copies of the user-made components the design uses, so it
 	// still draws on a computer without their packs.
 	Embedded []Embedded `json:"components,omitempty"`
+	// Pages split the design into the screens of an application; Page is the
+	// one being edited, whose components are Nodes. Empty for a design with
+	// one page. See ADR 0012.
+	Pages []Page `json:"pages,omitempty"`
+	Page  int    `json:"page,omitempty"`
 	// Seq is the counter behind generated node ids; it only ever grows.
 	Seq int `json:"seq"`
 }
@@ -146,6 +151,16 @@ func (d Document) Clone() Document {
 		nodes[i] = n.Clone()
 	}
 	d.Nodes = nodes
+	if d.Pages != nil {
+		pages := make([]Page, len(d.Pages))
+		for i, p := range d.Pages {
+			pages[i] = Page{Name: p.Name}
+			for _, n := range p.Nodes {
+				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
+			}
+		}
+		d.Pages = pages
+	}
 	d.Keys = append([]KeyBinding(nil), d.Keys...)
 	d.Theme.Palette = append([]Swatch(nil), d.Theme.Palette...)
 	if d.Embedded != nil {

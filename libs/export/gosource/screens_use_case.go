@@ -2,6 +2,7 @@ package gosource
 
 import (
 	_ "embed"
+	"encoding/base64"
 	"fmt"
 	"go/format"
 	"sort"
@@ -48,6 +49,13 @@ type input struct {
 // clicks and keys into the contract's events. pkg is the package name. The
 // package holds only generated files; see ADR 0007.
 func GenerateScreens(docs []design.Document, cat Catalog, pkg string) Project {
+	return GenerateScreensWith(docs, cat, pkg, Options{})
+}
+
+// GenerateScreensWith is GenerateScreens with options. A design with pages
+// gives one screen per page, and a router file that holds the props of the
+// pages and which one is shown (ADR 0012).
+func GenerateScreensWith(docs []design.Document, cat Catalog, pkg string, opts Options) Project {
 	pkg = strings.ToLower(strings.Join(words(pkg), ""))
 	if pkg == "" {
 		pkg = "screens"
@@ -56,7 +64,15 @@ func GenerateScreens(docs []design.Document, cat Catalog, pkg string) Project {
 	used := map[string]bool{}
 	files := map[string]bool{}
 	needs := map[string]bool{}
+	var routers []design.Document
+	var expanded []design.Document
 	for _, doc := range docs {
+		if doc.IsPaged() {
+			routers = append(routers, doc)
+		}
+		expanded = append(expanded, doc.Screens()...)
+	}
+	for _, doc := range expanded {
 		ident := pascal(doc.Name)
 		if ident == "" || used[ident] {
 			p.Notes = append(p.Notes, fmt.Sprintf("%q: its name gives no free identifier (%q); give the design a unique name", doc.Name, ident))
@@ -66,6 +82,10 @@ func GenerateScreens(docs []design.Document, cat Catalog, pkg string) Project {
 		placed := leaves(doc, cat)
 		sc := buildScreen(doc, ident, placed, cat).with(pkg)
 		p.Notes = append(p.Notes, sc.notes...)
+		if len(routers) == 0 && len(opts.Source) > 0 && len(used) == 1 {
+			// A single screen carries the design in its contract.
+			sc.contract = strings.Replace(sc.contract, "package PKG", DesignDirective+base64.StdEncoding.EncodeToString(opts.Source)+"\n\npackage PKG", 1)
+		}
 		p.Files[snake(doc.Name)+"_screen_contract.go"] = tidy(sc.contract, &p)
 		p.Files[snake(doc.Name)+"_screen_view.go"] = tidy(sc.view, &p)
 		for _, l := range placed {
@@ -85,6 +105,11 @@ func GenerateScreens(docs []design.Document, cat Catalog, pkg string) Project {
 		}
 	}
 	sort.Strings(p.Requires)
+	for _, doc := range routers {
+		name := snake(doc.Name) + "_app.go"
+		src := strings.Replace(routerSource(doc, doc.Screens(), opts), "package PKG", "package "+pkg, 1)
+		p.Files[name] = tidy(src, &p)
+	}
 	p.Files["cuppa_runtime.go"] = asPackage(runtimeSource, pkg)
 	p.Files["cuppa_widgets.go"] = asPackage(widgetsSource, pkg)
 	p.Files["cuppa_screens.go"] = asPackage(screensSource, pkg)

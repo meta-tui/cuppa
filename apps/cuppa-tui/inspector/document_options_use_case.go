@@ -129,7 +129,7 @@ func (m *Model) themeRow(b *builder, label, field, value, none string, set func(
 			m.pickColor(label, value, func(v string) { m.report(set(v)) })
 		}
 	}
-	b.text(name + swatch + " ").add(shown+theme.Faded(" ✎"), open).end()
+	b.text(name+swatch+" ").add(shown+theme.Faded(" ✎"), open).end()
 }
 
 // profiles are the colour profiles in the order the arrows step through them.
@@ -221,7 +221,7 @@ func (m *Model) paletteRows(b *builder, doc design.Document) {
 		if m.editing == "swatch:"+name {
 			b.text(m.buf + "█")
 		} else {
-			b.text(swatch + " ").add(theme.Bold(name)+" "+theme.Faded(color), open)
+			b.text(swatch+" ").add(theme.Bold(name)+" "+theme.Faded(color), open)
 		}
 		b.text(" ").addMouse(theme.Button("[x]", true), func() { m.report(m.ed.RemoveSwatch(name)) }).end()
 	}

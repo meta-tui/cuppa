@@ -2,6 +2,8 @@ package gosource
 
 import (
 	"strings"
+
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/catalog/definition"
 	"github.com/meta-tui/cuppa/libs/document/design"
 	"github.com/meta-tui/cuppa/libs/document/drawlayer"
@@ -18,6 +20,13 @@ const maxDepth = 8
 // leaf is one component the generated program places: a real component with
 // its absolute position and final property values.
 type leaf struct {
+	// ID is the node the leaf came from (top level only), In the container it
+	// is a member of and Page its page; Of is the index of the container's
+	// leaf in the list, set by leaves.
+	ID    design.NodeID
+	In    design.NodeID
+	Page  int
+	Of    int
 	Kind  string
 	Name  string
 	Rect  design.Rect
@@ -48,7 +57,29 @@ type leaf struct {
 // parts they are made of, scaled to the size they were placed at.
 func leaves(doc design.Document, cat Catalog) []leaf {
 	t := themeOf{doc.Theme, doc.Background}
-	return expand(doc.Nodes, design.Rect{W: doc.Width, H: doc.Height}, doc.Width, doc.Height, 0, nil, cat, t)
+	// A member follows its container in the list, so it is drawn above it.
+	ordered := make([]design.Node, 0, len(doc.Nodes))
+	for _, i := range container.Order(doc) {
+		ordered = append(ordered, doc.Nodes[i])
+	}
+	out := expand(ordered, design.Rect{W: doc.Width, H: doc.Height}, doc.Width, doc.Height, 0, nil, cat, t)
+	at := map[design.NodeID]int{}
+	for i, l := range out {
+		if l.ID != "" {
+			at[l.ID] = i
+		}
+	}
+	for i := range out {
+		if out[i].In == "" {
+			continue
+		}
+		if c, ok := at[out[i].In]; ok && c < i {
+			out[i].Of = c
+		} else {
+			out[i].In = ""
+		}
+	}
+	return out
 }
 
 // themeOf is the design's theme and background, which colours that components
@@ -105,7 +136,11 @@ func expand(nodes []design.Node, origin design.Rect, baseW, baseH, depth int, ov
 			out = append(out, expand(inner.Nodes, rect, inner.W, inner.H, depth+1, hand, cat, t)...)
 		default:
 			l := leaf{Kind: n.Component, Name: n.Name, Rect: rect, Props: props,
+				ID: n.ID, In: n.In, Page: n.Page,
 				Bind: n.Bind, ShowIf: n.ShowIf, Event: n.Event, Roles: rolesOf(n, cat), Swatches: swatchesOf(n, cat, t.theme)}
+			if depth > 0 {
+				l.ID, l.In = "", ""
+			}
 			if depth == 0 && (!n.Layout.IsZero() || n.Draggable || n.Resizable) {
 				l.Layout = n.Layout
 				l.Drag, l.Resize = n.Draggable, n.Resizable

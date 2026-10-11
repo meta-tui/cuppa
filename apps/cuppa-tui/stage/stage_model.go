@@ -3,6 +3,7 @@
 package stage
 
 import (
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
 	"github.com/meta-tui/cuppa/libs/canvas/editor"
@@ -146,6 +147,13 @@ func (m *Model) press(cx, cy int, additive bool) {
 		}
 	}
 	if id, ok := hittest.Node(doc, cx, cy); ok {
+		// A press on a tab or a section header does what it does in the
+		// program: shows that page, as one undo step.
+		if c, found := doc.Get(id); found && c.IsContainer() && !additive && !c.Locked {
+			if page, hit := container.HeaderAt(c, cx, cy); hit {
+				m.ed.PressContainerHeader(id, page)
+			}
+		}
 		switch {
 		case additive:
 			m.ed.Toggle(id)

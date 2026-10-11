@@ -10,7 +10,7 @@ Think Lucidchart or Figma, but for [Bubble Tea](https://github.com/charmbracelet
 
 ## What you can do
 
-- **Pick from 77 components** in the left bar: [Lip Gloss](https://github.com/charmbracelet/lipgloss) blocks, all the [Bubbles](https://github.com/charmbracelet/bubbles), [Huh](https://github.com/charmbracelet/huh) form fields, [Glamour](https://github.com/charmbracelet/glamour) markdown, [ntcharts](https://github.com/NimbleMarkets/ntcharts) charts and a set of community components.
+- **Pick from 79 components** in the left bar: [Lip Gloss](https://github.com/charmbracelet/lipgloss) blocks, all the [Bubbles](https://github.com/charmbracelet/bubbles), [Huh](https://github.com/charmbracelet/huh) form fields, [Glamour](https://github.com/charmbracelet/glamour) markdown, [ntcharts](https://github.com/NimbleMarkets/ntcharts) charts and a set of community components.
 - **Design with the mouse**: drag from the palette onto the canvas, click to select, shift-click or drag a box to select several, drag to move, drag the corners to resize. Alignment guides snap as you go.
 - **Tune the details** in the right bar: position, size, layer order, and every property of the component (titles, colours, borders, options…).
 - **Undo and redo** everything.

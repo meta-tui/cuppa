@@ -56,6 +56,10 @@ func (e *Editor) SetProp(id design.NodeID, key, value string) error {
 		return nil
 	}
 	e.apply(func() bool {
+		if n.IsContainer() {
+			// Pages and the shown page move the members with their bodies.
+			return e.setContainerProps(n, map[string]string{key: value})
+		}
 		return e.doc.Update(id, func(n *design.Node) {
 			if n.Props == nil {
 				n.Props = map[string]string{}

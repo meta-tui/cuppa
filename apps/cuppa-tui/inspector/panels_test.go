@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
 	"github.com/meta-tui/cuppa/libs/canvas/editor"
+	"github.com/meta-tui/cuppa/libs/catalog/standard"
 	"github.com/meta-tui/cuppa/libs/document/design"
 )
 

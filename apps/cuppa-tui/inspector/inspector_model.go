@@ -84,6 +84,7 @@ type Model struct {
 	// and where the trash button is (columns; its row is the Layers header).
 	drag             *layerDrag
 	layerCount       int
+	layerIDs         []design.NodeID
 	trashX0, trashX1 int
 }
 

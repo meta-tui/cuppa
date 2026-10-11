@@ -20,8 +20,22 @@ const (
 	PropExclusive = "exclusive" // panels: opening one closes the others
 )
 
-// DefaultPages is what a container starts with.
-const DefaultPages = "Page 1,Page 2"
+// Defaults are the properties a container starts with, and what it falls back
+// to for a property that is not set.
+func Defaults(component string) map[string]string {
+	if component == design.PanelsComponent {
+		return map[string]string{PropPages: "Details,Properties,Layers", PropOpen: "0,1", PropExclusive: "false"}
+	}
+	return map[string]string{PropPages: "Page 1,Page 2", PropActive: "0"}
+}
+
+// prop is a property of the container, or its default when it is not set.
+func prop(n design.Node, key string) string {
+	if v, ok := n.Props[key]; ok {
+		return v
+	}
+	return Defaults(n.Component)[key]
+}
 
 // TabBarRows is the height of the tab bar: the names and a rule under them.
 const TabBarRows = 2
@@ -29,7 +43,7 @@ const TabBarRows = 2
 // Pages are the page names of a container, never empty.
 func Pages(n design.Node) []string {
 	var out []string
-	for _, p := range strings.Split(n.Props[PropPages], ",") {
+	for _, p := range strings.Split(prop(n, PropPages), ",") {
 		if p = strings.TrimSpace(p); p != "" {
 			out = append(out, p)
 		}
@@ -42,7 +56,7 @@ func Pages(n design.Node) []string {
 
 // Active is the page a tabs container shows, kept inside its pages.
 func Active(n design.Node) int {
-	i, _ := strconv.Atoi(strings.TrimSpace(n.Props[PropActive]))
+	i, _ := strconv.Atoi(strings.TrimSpace(prop(n, PropActive)))
 	return min(max(i, 0), len(Pages(n))-1)
 }
 
@@ -50,7 +64,7 @@ func Active(n design.Node) int {
 func OpenSet(n design.Node) map[int]bool {
 	out := map[int]bool{}
 	count := len(Pages(n))
-	for _, f := range strings.Split(n.Props[PropOpen], ",") {
+	for _, f := range strings.Split(prop(n, PropOpen), ",") {
 		if i, err := strconv.Atoi(strings.TrimSpace(f)); err == nil && i >= 0 && i < count {
 			out[i] = true
 		}
@@ -59,7 +73,7 @@ func OpenSet(n design.Node) map[int]bool {
 }
 
 // Exclusive reports whether opening a section closes the others.
-func Exclusive(n design.Node) bool { return n.Props[PropExclusive] == "true" }
+func Exclusive(n design.Node) bool { return prop(n, PropExclusive) == "true" }
 
 // Shown reports whether a page of the container is shown: the active tab, or
 // an open section.

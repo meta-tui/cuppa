@@ -3,6 +3,7 @@ package inspector
 import (
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/document/design"
 )
 
@@ -37,8 +38,28 @@ func (m *Model) layers(b *builder) {
 		b.text(theme.Faded(" (none)")).end()
 		return
 	}
-	for row := 0; row < n; row++ {
-		m.layerRow(b, doc.Nodes[n-1-row], row)
+	// A container is followed by its members, indented, as a tree; with no
+	// containers this is the nodes front to back.
+	m.layerIDs = m.layerIDs[:0]
+	order := container.Order(doc)
+	var tree []design.Node
+	for k := len(order) - 1; k >= 0; k-- {
+		node := doc.Nodes[order[k]]
+		if node.In != "" {
+			continue
+		}
+		tree = append(tree, node)
+		if node.IsContainer() {
+			for j := len(order) - 1; j >= 0; j-- {
+				if member := doc.Nodes[order[j]]; member.In == node.ID {
+					tree = append(tree, member)
+				}
+			}
+		}
+	}
+	for row, node := range tree {
+		m.layerIDs = append(m.layerIDs, node.ID)
+		m.layerRow(b, node, row)
 		b.end()
 	}
 }
@@ -80,6 +101,9 @@ func (m *Model) layerRow(b *builder, node design.Node, row int) {
 	b.addMouse(lock, func() { m.ed.SetLocked(id, !node.Locked) }).text(" ")
 
 	name := node.Name
+	if node.In != "" {
+		name = "  " + name
+	}
 	rest := max(m.content()-b.x, 1)
 	var styled string
 	switch {
@@ -155,5 +179,10 @@ func (m *Model) drop(e pointer.Event) {
 		}
 		return
 	}
-	m.ed.MoveLayer(d.id, m.layerCount-1-d.row)
+	to := m.layerCount - 1 - d.row
+	if d.row < len(m.layerIDs) {
+		// The row is a place in the tree: it is the place of the layer shown there.
+		to = m.ed.Document().Index(m.layerIDs[d.row])
+	}
+	m.ed.MoveLayer(d.id, to)
 }

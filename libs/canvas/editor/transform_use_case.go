@@ -1,6 +1,9 @@
 package editor
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import (
+	"github.com/meta-tui/cuppa/libs/document/container"
+	"github.com/meta-tui/cuppa/libs/document/design"
+)
 
 // MoveSelectionBy shifts every selected node by (dx, dy), as a group, stopping
 // at the canvas edge. It does not checkpoint: drags call Checkpoint once first.
@@ -23,10 +26,16 @@ func (e *Editor) MoveSelectionBy(dx, dy int) bool {
 	if dx == 0 && dy == 0 {
 		return false
 	}
+	together := make(map[design.NodeID]bool, len(ids))
+	for _, id := range ids {
+		together[id] = true
+	}
 	for _, id := range ids {
 		before, _ := e.doc.Get(id)
 		e.doc.Update(id, func(n *design.Node) { n.Rect = n.Rect.Translate(dx, dy) })
 		e.followRect(id, before.Rect)
+		// The members that are not selected go with their container.
+		e.shiftMembers(before, together)
 	}
 	return true
 }
@@ -61,6 +70,7 @@ func (e *Editor) SetRect(id design.NodeID, r design.Rect, checkpoint bool) bool 
 	set := func() bool {
 		e.doc.Update(id, func(n *design.Node) { n.Rect = r })
 		e.followRect(id, n.Rect)
+		e.shiftMembers(n, nil)
 		return true
 	}
 	if checkpoint {
@@ -75,5 +85,13 @@ func (e *Editor) clampRect(n design.Node, r design.Rect) design.Rect {
 	minW, minH := e.minSize(n)
 	r.W = min(max(r.W, minW), e.doc.Width)
 	r.H = min(max(r.H, minH), e.doc.Height)
+	if c, ok := e.doc.Get(n.In); ok && n.In != "" && c.IsContainer() {
+		// A member stays inside the body of its page.
+		if bodies := container.Layout(c).Bodies; n.Page >= 0 && n.Page < len(bodies) && bodies[n.Page].H > 0 {
+			body := bodies[n.Page]
+			r.W, r.H = min(r.W, body.W), min(r.H, body.H)
+			return r.MoveInto(body)
+		}
+	}
 	return r.MoveInto(e.doc.Bounds())
 }

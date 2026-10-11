@@ -36,6 +36,10 @@ You can try it without releasing from Actions > Desktop release > Run workflow (
 The builds are not signed: Windows may show SmartScreen, and macOS needs right-click > Open the first time.
 Installers and signing are tracked in #68.
 
+## Installing
+
+On Windows a release started from elsewhere offers to move itself into its own folder, list itself in Settings > Apps, add a Start menu entry and open `.cuppa` files (package `install`, modelled on MVD). It asks once, and again per version when another version is installed. `--install` asks again, `--uninstall` is what Settings runs, `--moved-from=<path>` is set on the copy a move starts, which removes the old one when it has exited. A `dev` build never offers.
+
 ## Layout
 
 | | |

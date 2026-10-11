@@ -6,6 +6,7 @@ package shell
 import (
 	"fmt"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pagesbar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/liveconn"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
 	"os"
 	"path/filepath"
@@ -71,6 +72,8 @@ type Model struct {
 	// commands it asked for until Update returns them.
 	run          *preview.Session
 	pending      []tea.Cmd
+	// live is the running application the designer shows the values of.
+	live *liveconn.Conn
 	packProblems []error
 	ed           *editor.Editor
 	bar          *menubar.Model
@@ -217,7 +220,7 @@ func (m *Model) UseCommandKey() {
 }
 
 // Init implements tea.Model.
-func (m *Model) Init() tea.Cmd { return nil }
+func (m *Model) Init() tea.Cmd { return m.takePending() }
 
 // exportDoneMsg reports a finished background export.
 type exportDoneMsg struct{ err error }
@@ -244,6 +247,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.key(msg)
 	case exportDoneMsg:
 		m.flow.Finish(msg.err)
+	case liveconn.ConnectedMsg, liveconn.StateMsg, liveconn.EndedMsg:
+		m.liveMessage(msg)
 	}
 	cmd := tea.Batch(m.settle(), m.takePending())
 	m.settleAnnouncement()
@@ -255,6 +260,7 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // in step with the editor.
 func (m *Model) settle() tea.Cmd {
 	m.flow.Resolve()
+	m.bar.SetEnabled(menubar.FileDisconnect, m.live != nil)
 	m.bar.SetEnabled(menubar.EditUndo, m.ed.CanUndo())
 	m.bar.SetEnabled(menubar.EditRedo, m.ed.CanRedo())
 	hasSel := len(m.ed.Selected()) > 0
@@ -323,6 +329,10 @@ func (m *Model) perform(a menubar.Action) {
 		m.flow.SaveAs()
 	case menubar.FileQuit:
 		m.flow.Quit()
+	case menubar.FileConnect:
+		m.askConnect()
+	case menubar.FileDisconnect:
+		m.disconnect("")
 	case menubar.EditUndo:
 		m.ed.Undo()
 	case menubar.EditRedo:
@@ -780,6 +790,9 @@ func (m *Model) statusBar() string {
 			hint = fmt.Sprintf("%s  (%d,%d)  %d×%d", n.Name, n.Rect.X, n.Rect.Y, n.Rect.W, n.Rect.H) + "  ·  " + hint
 		} else if st := m.flow.Status(); st != "" {
 			hint = st + "  ·  " + hint
+		}
+		if m.live != nil {
+			hint = "live: " + m.live.App() + "  ·  " + hint
 		}
 	}
 	return theme.Fit(" "+theme.Dim(hint), m.w)

@@ -9,6 +9,8 @@ const (
 	FileOpen       Action = "file.open"
 	FileSave       Action = "file.save"
 	FileSaveAs     Action = "file.saveas"
+	FileConnect    Action = "file.connect"
+	FileDisconnect Action = "file.disconnect"
 	FileQuit       Action = "file.quit"
 	EditUndo       Action = "edit.undo"
 	EditRedo       Action = "edit.redo"
@@ -61,6 +63,9 @@ var menus = []menu{
 		{separatorLabel, "", nothing},
 		{"Save", "Ctrl+S", FileSave},
 		{"Save As…", "Ctrl+Shift+S", FileSaveAs},
+		{separatorLabel, "", nothing},
+		{"Connect…", "", FileConnect},
+		{"Disconnect", "", FileDisconnect},
 		{separatorLabel, "", nothing},
 		{"Quit", "Ctrl+Q", FileQuit},
 	}},

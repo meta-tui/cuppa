@@ -375,11 +375,17 @@ func TestExportGoSourceWritesAProjectAndSaysWhatIsMissing(t *testing.T) {
 	}
 	press(f, true, false)
 
-	// A second export into the same folder is refused and nothing is overwritten.
+	// The design now says where it goes: exporting again asks only whether to
+	// go on, and replaces what Cuppa wrote.
+	if got := ed.ExportSettings(); got.Layout != design.ExportFlat || got.Dir == "" {
+		t.Fatalf("the export folder is not in the design: %+v", got)
+	}
 	f.ExportGoSource()
-	press(f, true, false)
-	press(f, true, false) // One folder
-	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "empty folder") {
-		t.Fatal("exporting over an existing project is refused")
+	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "untitled-app") {
+		t.Fatal("exporting again names the folder")
+	}
+	press(f, true, false) // Export
+	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "Written to") {
+		t.Fatalf("exporting again writes the project: %v", f.Modal().Lines())
 	}
 }

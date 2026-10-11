@@ -161,3 +161,9 @@ organises it by feature, so the slice layout grew three options:
   one set, which is copied to each page on load.
 - `cuppa design merge a.cuppa b.cuppa -o all.cuppa [--folder page=folder]` builds
   one multi-page design from several.
+- The design file keeps the **export settings** (`export`: layout, library,
+  folder, module; #229): the folder is relative to the design file. The
+  designer's export asks once and then only confirms; `cuppa screens
+  <design.cuppa>` with no `-o` uses them, as `--check` does. The `.cuppa` stays
+  the one file that knows the structure of the program; there is no second
+  project file to drift from it.

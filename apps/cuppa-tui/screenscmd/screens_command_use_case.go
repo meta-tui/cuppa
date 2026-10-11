@@ -21,6 +21,7 @@ import (
 
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
+  cuppa screens <design.cuppa> [--check]     (to the folder and layout the design has saved)
   cuppa screens <design.cuppa> -o <folder> --app
   cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
   cuppa screens <design.cuppa> -o <folder> --layout slices --library -m <import path of the folder> [--router]
@@ -44,6 +45,10 @@ pages/<page>), the runtime in internal/cuppa and the components in
 internal/components. Everything under the folder's parent of internal/ can
 import them, and every page declares aliases of the runtime types it uses. The
 router (app/) is written only with --router. -m is the import path of <folder>.
+
+Without -o, a design that was exported from the designer is exported again to
+the folder, with the layout and the module it saved (the same as Export, Go
+source), so the one design file is all there is to remember.
 
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
@@ -88,6 +93,16 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			}
 		default:
 			inputs = append(inputs, args[i])
+		}
+	}
+	if out == "" && len(inputs) == 1 && !library && !router && layout == gosource.LayoutFlat && module == "" {
+		// No folder given: the design says where its Go source goes.
+		if handled, err := runSaved(inputs[0], check, stdout); handled {
+			if err != nil {
+				_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
+				return 1
+			}
+			return 0
 		}
 	}
 	if out == "" || len(inputs) == 0 {
@@ -256,4 +271,46 @@ func runApp(inputs []string, out, layout, module string, library, router, check 
 		_, _ = fmt.Fprintln(stdout, "note:", n)
 	}
 	return nil
+}
+
+// runSaved exports a design to where it says its Go source goes. It reports
+// false when the input is not a design that says so.
+func runSaved(path string, check bool, stdout io.Writer) (bool, error) {
+	info, err := os.Stat(path)
+	if err != nil || info.IsDir() || !strings.EqualFold(filepath.Ext(path), format.Extension) {
+		return false, nil
+	}
+	doc, err := disk.Load(path)
+	if err != nil || !doc.Export.IsSet() {
+		return false, nil
+	}
+	s := doc.Export
+	var source []byte
+	if data, err := format.Encode(doc); err == nil {
+		source = data
+	}
+	project, err := gosource.GenerateExport(doc, cupp.Adopt(standard.Default(), doc.Embedded), s, source)
+	if err != nil {
+		return true, err
+	}
+	dir := gosource.ExportDir(s, path)
+	if check {
+		diffs := gosource.CheckProject(dir, project)
+		if len(diffs) == 0 {
+			_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", dir, doc.PageCount(), len(project.Files))
+			return true, nil
+		}
+		for _, d := range diffs {
+			_, _ = fmt.Fprintln(stdout, "  "+d)
+		}
+		return true, fmt.Errorf("%s is out of date with the design: run cuppa screens again", dir)
+	}
+	if err := gosource.WriteExport(dir, s, project); err != nil {
+		return true, err
+	}
+	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\n", doc.PageCount(), len(project.Files), dir)
+	for _, n := range project.Notes {
+		_, _ = fmt.Fprintln(stdout, "note:", n)
+	}
+	return true, nil
 }

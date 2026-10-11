@@ -106,3 +106,46 @@ func TestAnIdleBarDoesNothing(t *testing.T) {
 		t.Fatal("the bar is idle while previewing")
 	}
 }
+
+// Pages with a folder are listed under it, in the order the folders first
+// appear, and a row still switches to its page.
+func TestThePagesAreListedUnderTheirFolders(t *testing.T) {
+	m, ed := fixture(t)
+	for _, name := range []string{"Colours", "Download", "Songs"} {
+		if err := ed.AddPage(name); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Page 1, Colours, Download, Songs
+	for i, folder := range map[int]string{1: "setup/colours", 2: "run/download", 3: "setup/songs"} {
+		if err := ed.SetPageFolder(i, folder); err != nil {
+			t.Fatal(err)
+		}
+	}
+	ed.SwitchPage(0)
+	m.Line(60, false)
+	m.toggle()
+	var rows []string
+	for _, it := range m.items {
+		if it.separator && it.heading != "" {
+			rows = append(rows, it.heading)
+		} else if !it.separator && it.label != "" && len(rows) > 0 && len(rows) < 20 {
+			rows = append(rows, it.label)
+		}
+		if it.label == "Add page" {
+			break
+		}
+	}
+	want := []string{"pages/", "Page 1", "setup/", "Colours", "Songs", "run/", "Download"}
+	if !slices.Equal(rows[:len(want)], want) {
+		t.Fatalf("rows = %v", rows)
+	}
+	for i, it := range m.items {
+		if it.label == "Songs" {
+			m.choose(i)
+		}
+	}
+	if ed.ActivePage() != 3 {
+		t.Fatalf("active page = %d", ed.ActivePage())
+	}
+}

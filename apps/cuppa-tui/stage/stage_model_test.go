@@ -8,6 +8,7 @@ import (
 	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
 	"github.com/meta-tui/cuppa/libs/canvas/editor"
 	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/document/design"
 )
 
@@ -233,5 +234,32 @@ func TestALightTerminalPreviewPaintsPaleCanvasAndDarkDefaultText(t *testing.T) {
 	c := light.At(2, 2)
 	if c.Fg == "" || c.Bg == "" {
 		t.Fatalf("text drawn in the terminal's own colours needs real ones on a light canvas: %+v", c)
+	}
+}
+
+// While editing, a press on a tab selects the container and leaves the page
+// alone: the person is editing a component, not using it. Pages change in the
+// preview (or from the Properties list).
+func TestPressingATabWhileEditingDoesNotChangeThePage(t *testing.T) {
+	cat := standard.Default()
+	ed := editor.New(cat, design.NewDocument("t", 80, 24))
+	id, err := ed.Add("cuppa.tabs", 5, 3)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ed.Clear()
+	m := New(ed, cat)
+	m.SetSize(80, 24)
+	n, _ := ed.Document().Get(id)
+	tab := container.Layout(n).Tabs[1]
+	x, y := tab.X0+1-m.offX, n.Rect.Y-m.offY
+	down(m, x, y)
+	m.Handle(pointer.Event{X: x, Y: y, Phase: pointer.Up, Left: true})
+	got, _ := ed.Document().Get(id)
+	if container.Active(got) != 0 {
+		t.Fatalf("active = %d: editing must not change the page", container.Active(got))
+	}
+	if !ed.IsSelected(id) {
+		t.Error("the press should select the container")
 	}
 }

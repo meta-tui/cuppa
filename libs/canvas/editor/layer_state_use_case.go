@@ -75,7 +75,12 @@ func (e *Editor) DeleteLayer(id design.NodeID) bool {
 	if !ok || n.Locked {
 		return false
 	}
-	changed := e.apply(func() bool { return e.doc.Remove(id) })
+	changed := e.apply(func() bool {
+		if n.IsContainer() {
+			e.removeMembersOf(map[design.NodeID]bool{id: true})
+		}
+		return e.doc.Remove(id)
+	})
 	if changed {
 		e.sel = e.keepSelected(func(other design.NodeID) bool { return other != id })
 	}

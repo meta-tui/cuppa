@@ -163,7 +163,7 @@ func TestLayerButtonsAndList(t *testing.T) {
 	if doc.Nodes[len(doc.Nodes)-1].ID != a {
 		t.Fatal("Front did not raise the node")
 	}
-	clickText(t, m, "Label 1", "Label 1") // layer list selects
+	clickText(t, m, "Label 1", "Label 1")                  // layer list selects
 	m.Handle(pointer.Event{Phase: pointer.Up, Left: true}) // a layer is selected when the press is released
 	if sel := ed.Selected(); len(sel) != 1 || sel[0] != b {
 		t.Fatalf("selection = %v", sel)

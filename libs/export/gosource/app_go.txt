@@ -66,6 +66,10 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		return m, nil
 	case tea.MouseClickMsg:
+		// A press on a tab or a section header shows that page.
+		if cmd, ok := m.pressHeader(msg.X, msg.Y); ok {
+			return m, cmd
+		}
 		m.take(msg.X, msg.Y)
 		return m, m.focusAt(msg.X, msg.Y)
 	case tea.MouseMotionMsg:
@@ -114,7 +118,9 @@ func (m *model) resize(w, h int) tea.Cmd {
 		if x == c.X && y == c.Y && cw == c.W && ch == c.H {
 			continue
 		}
+		oldX, oldY, oldW, oldH := c.X, c.Y, c.W, c.H
 		c.X, c.Y, c.W, c.H = x, y, cw, ch
+		m.moveMembers(i, oldX, oldY, oldW, oldH)
 		cmds = append(cmds, m.rebuild(i))
 	}
 	return tea.Batch(cmds...)
@@ -176,6 +182,7 @@ func (m *model) drag(x, y int) tea.Cmd {
 	c.Dy += c.Y - oldY
 	c.Dw += c.W - oldW
 	c.Dh += c.H - oldH
+	m.moveMembers(g.i, oldX, oldY, oldW, oldH)
 	return m.rebuild(g.i)
 }
 
@@ -184,7 +191,7 @@ func (m *model) cycle(step int) tea.Cmd {
 	n := len(m.parts)
 	for i := 1; i <= n; i++ {
 		next := ((m.focus+step*i)%n + n) % n
-		if m.parts[next].keys {
+		if m.parts[next].keys && m.shown(next) {
 			return m.setFocus(next)
 		}
 	}
@@ -210,11 +217,69 @@ func (m *model) setFocus(i int) tea.Cmd {
 func (m model) at(x, y int) int {
 	for i := len(layout) - 1; i >= 0; i-- {
 		c := layout[i]
-		if x >= c.X && x < c.X+c.W && y >= c.Y && y < c.Y+c.H {
+		if m.shown(i) && x >= c.X && x < c.X+c.W && y >= c.Y && y < c.Y+c.H {
 			return i
 		}
 	}
 	return -1
+}
+
+// shown reports whether component i is drawn: a member only while its
+// container is shown and its page is the shown tab or an open section.
+func (m model) shown(i int) bool {
+	c := layout[i]
+	if !c.Member {
+		return true
+	}
+	cont := layout[c.Of]
+	return m.shown(c.Of) && containerShown(cont.Kind, props(cont.Props), c.Page)
+}
+
+// pressHeader handles a click on a tab or a section header of a container: it
+// changes the page that is shown and moves the members with their bodies.
+func (m *model) pressHeader(x, y int) (tea.Cmd, bool) {
+	i := m.at(x, y)
+	if i < 0 || (layout[i].Kind != "cuppa.tabs" && layout[i].Kind != "cuppa.panels") {
+		return nil, false
+	}
+	c := &layout[i]
+	page, ok := containerHeaderAt(c.Kind, props(c.Props), c.W, c.H, x-c.X, y-c.Y)
+	if !ok {
+		return nil, false
+	}
+	oldX, oldY, oldW, oldH := c.X, c.Y, c.W, c.H
+	before := containerGeometry(c.Kind, props(c.Props), c.W, c.H)
+	for k, v := range containerPressed(c.Kind, props(c.Props), page) {
+		c.Props[k] = v
+	}
+	m.shiftMembers(i, before, oldX, oldY, oldW, oldH)
+	return m.rebuild(i), true
+}
+
+// moveMembers moves the members of container i after the container itself
+// moved or was resized from the old rectangle.
+func (m *model) moveMembers(i, oldX, oldY, oldW, oldH int) {
+	c := layout[i]
+	if c.Kind != "cuppa.tabs" && c.Kind != "cuppa.panels" {
+		return
+	}
+	before := containerGeometry(c.Kind, props(c.Props), oldW, oldH)
+	m.shiftMembers(i, before, oldX, oldY, oldW, oldH)
+}
+
+// shiftMembers moves each member by how far the top-left of its page's body
+// moved between before (at the old position) and now.
+func (m *model) shiftMembers(i int, before containerGeo, oldX, oldY, oldW, oldH int) {
+	c := layout[i]
+	after := containerGeometry(c.Kind, props(c.Props), c.W, c.H)
+	for j := range layout {
+		member := &layout[j]
+		if !member.Member || member.Of != i || member.Page >= len(after.bodies) || member.Page >= len(before.bodies) {
+			continue
+		}
+		member.X += (c.X + after.bodies[member.Page][0]) - (oldX + before.bodies[member.Page][0])
+		member.Y += (c.Y + after.bodies[member.Page][1]) - (oldY + before.bodies[member.Page][1])
+	}
 }
 
 func (m *model) focusAt(x, y int) tea.Cmd {
@@ -232,6 +297,9 @@ func (m model) View() tea.View {
 	}
 	layers := []*lipgloss.Layer{lipgloss.NewLayer(backdrop(w, h)).Z(0)}
 	for i, c := range layout {
+		if !m.shown(i) {
+			continue
+		}
 		layers = append(layers, lipgloss.NewLayer(m.parts[i].view()).X(c.X).Y(c.Y).Z(i+1))
 	}
 	v := tea.NewView(lipgloss.NewCompositor(layers...).Render())

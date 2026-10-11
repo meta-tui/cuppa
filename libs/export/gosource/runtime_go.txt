@@ -47,6 +47,12 @@ type placed struct {
 	// where Fit puts it, so a window resize keeps their change.
 	Drag, Resize   bool
 	Dx, Dy, Dw, Dh int
+	// Member is set on a component placed in a container: Of is the container's
+	// index in the layout and Page the page it belongs to. It is shown only
+	// while that page is.
+	Member bool
+	Of     int
+	Page   int
 }
 
 // fitEnv is what a layout expression of a screen reads besides the window: its

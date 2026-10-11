@@ -6,6 +6,13 @@ import "github.com/meta-tui/cuppa/libs/document/design"
 // components, none of them locked.
 func (e *Editor) CanGroup() bool {
 	ids := e.selectedInOrder()
+	for _, id := range ids {
+		// A container and its members are kept as they are: a group would
+		// take them out of their pages.
+		if n, ok := e.doc.Get(id); ok && (n.IsContainer() || n.In != "") {
+			return false
+		}
+	}
 	return len(ids) >= 2 && len(e.unlockedSelection()) == len(ids)
 }
 

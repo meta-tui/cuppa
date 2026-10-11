@@ -41,6 +41,22 @@ type Node struct {
 	Children []Node `json:"children,omitempty"`
 	BaseW    int    `json:"baseW,omitempty"`
 	BaseH    int    `json:"baseH,omitempty"`
+	// In names the container (cuppa.tabs, cuppa.panels) this component is a
+	// member of, and Page the page of it that shows the component; see ADR
+	// 0011. A member is drawn only while its page is shown.
+	In   NodeID `json:"in,omitempty"`
+	Page int    `json:"page,omitempty"`
+}
+
+// The container components: their pages hold the components placed in them.
+const (
+	TabsComponent   = "cuppa.tabs"
+	PanelsComponent = "cuppa.panels"
+)
+
+// IsContainer reports whether the node is a container of pages.
+func (n Node) IsContainer() bool {
+	return n.Component == TabsComponent || n.Component == PanelsComponent
 }
 
 // GroupComponent is the component id of a group.

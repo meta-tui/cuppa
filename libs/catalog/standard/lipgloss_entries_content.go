@@ -101,6 +101,31 @@ func lipglossEntries() []definition.Definition {
 			},
 		},
 		{
+			ID: "cuppa.tabs", Name: "Tab pages", Family: definition.FamilyLipgloss,
+			Description: "A bar of tabs whose pages hold components: place components on the shown page and they appear only while their tab is chosen. Pressing a tab shows its page, in the designer and in the program, with no code. Bind the active page to read or set it.",
+			DefaultSize: size(40, 12), MinSize: size(12, 4), Import: lipglossImport, Status: definition.StatusSupported,
+			Props: []definition.PropSpec{
+				textProp("pages", "Pages (comma separated)", "Page 1,Page 2"),
+				intProp("active", "Active page (from 0)", 0, 0, 40),
+				colorProp("color", "Active tab colour", "212"),
+				colorProp("mutedColor", "Other tabs colour", "245"),
+				colorProp("ruleColor", "Rule colour", "240"),
+			},
+		},
+		{
+			ID: "cuppa.panels", Name: "Panels", Family: definition.FamilyLipgloss,
+			Description: "A stack of collapsible sections, like the side bar of an image editor. Components placed on a section show only while it is open; pressing its header opens or closes it, in the designer and in the program. With Exclusive it is an accordion. Bind the open sections to read or set them.",
+			DefaultSize: size(40, 16), MinSize: size(12, 3), Import: lipglossImport, Status: definition.StatusSupported,
+			Props: []definition.PropSpec{
+				textProp("pages", "Sections (comma separated)", "Details,Properties,Layers"),
+				textProp("open", "Open sections (numbers from 0)", "0,1"),
+				boolProp("exclusive", "Only one open (accordion)", false),
+				colorProp("color", "Open header colour", "212"),
+				colorProp("mutedColor", "Closed header colour", "245"),
+				colorProp("ruleColor", "Rule colour", "240"),
+			},
+		},
+		{
 			ID: "lipgloss.slot", Name: "Model view", Family: definition.FamilyLipgloss,
 			Description: "The place of a view the program draws itself: bind the view and give it what a Bubbles model of the program rendered (a text area with its real cursor, a viewport). The design places and cuts it; its text is shown here only as a sample.",
 			DefaultSize: size(40, 6), MinSize: size(1, 1), Import: lipglossImport, Status: definition.StatusSupported,

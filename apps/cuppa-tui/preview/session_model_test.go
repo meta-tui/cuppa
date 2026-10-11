@@ -234,3 +234,25 @@ func TestEveryRealModelStartsAtItsDefaultAndMinimumSize(t *testing.T) {
 }
 
 type definition_size struct{ w, h int }
+
+// In the preview, pressing a tab shows its page and hides the others; the
+// design itself is not changed.
+func TestPressingATabInThePreviewChangesThePage(t *testing.T) {
+	cat := standard.Default()
+	doc := design.NewDocument("t", 60, 12)
+	tabs := doc.Add(design.Node{Component: "cuppa.tabs", Name: "Tabs", Rect: design.Rect{X: 2, Y: 1, W: 40, H: 8},
+		Props: map[string]string{"pages": "Alpha,Beta", "active": "0"}})
+	doc.Add(design.Node{Component: "lipgloss.label", Name: "A", In: tabs.ID, Page: 0, Rect: design.Rect{X: 4, Y: 4, W: 12, H: 1}, Props: map[string]string{"text": "ALPHA PAGE"}})
+	doc.Add(design.Node{Component: "lipgloss.label", Name: "B", In: tabs.ID, Page: 1, Rect: design.Rect{X: 4, Y: 4, W: 12, H: 1}, Props: map[string]string{"text": "BETA PAGE"}})
+	s, _ := Start(doc, cat)
+	if v := text(s.Render()); !strings.Contains(v, "ALPHA PAGE") || strings.Contains(v, "BETA PAGE") {
+		t.Fatalf("at the start:\n%s", v)
+	}
+	s.Press(14, 1) // the Beta tab
+	if v := text(s.Render()); strings.Contains(v, "ALPHA PAGE") || !strings.Contains(v, "BETA PAGE") {
+		t.Fatalf("after pressing Beta:\n%s", v)
+	}
+	if n, _ := doc.Get(tabs.ID); n.Props["active"] != "0" {
+		t.Error("the preview changed the design")
+	}
+}

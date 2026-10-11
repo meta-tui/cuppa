@@ -12,7 +12,14 @@ import (
 )
 
 //go:embed runtime_go.txt
-var runtimeSource string
+var runtimeBase string
+
+//go:embed containers_logic_go.txt
+var containersLogic string
+
+// runtimeSource is the runtime, with the arithmetic of containers that the
+// model uses to show a page and move its members.
+var runtimeSource = runtimeBase + "\n" + containersLogic
 
 //go:embed app_go.txt
 var appSource string
@@ -30,7 +37,14 @@ var qrCodeSource string
 var imageSource string
 
 //go:embed community_widgets_go.txt
-var communityWidgetsSource string
+var communityWidgetsBase string
+
+//go:embed containers_go.txt
+var containersSource string
+
+// communityWidgetsSource is community_widgets.go: the widgets and the
+// container logic they share the grid with.
+var communityWidgetsSource = communityWidgetsBase + "\n" + containersSource
 
 //go:embed huh_go.txt
 var huhSource string
@@ -48,7 +62,7 @@ var bubbleTableSource string
 // community widgets are drawn with Lip Gloss to look like the library they
 // stand for, so the generated project needs no extra module for them.
 var generated = map[string]bool{
-	"lipgloss.box": true, "lipgloss.label": true, "lipgloss.list": true, "lipgloss.swatch": true, "lipgloss.rows": true, "lipgloss.colourpicker": true, "lipgloss.keybar": true, "lipgloss.slot": true, "lipgloss.progressline": true,
+	"lipgloss.box": true, "lipgloss.label": true, "lipgloss.list": true, "lipgloss.swatch": true, "lipgloss.rows": true, "lipgloss.colourpicker": true, "lipgloss.keybar": true, "lipgloss.slot": true, "lipgloss.progressline": true, design.TabsComponent: true, design.PanelsComponent: true,
 	"bubbles.textinput": true, "bubbles.textarea": true, "bubbles.list": true, "bubbles.table": true,
 	"bubbles.viewport": true, "bubbles.paginator": true, "bubbles.spinner": true, "bubbles.progress": true,
 	"bubbles.stopwatch": true, "bubbles.timer": true, "bubbles.tree": true,
@@ -99,6 +113,8 @@ var extensions = map[string]extension{
 	"lipgloss.keybar":        {"community_widgets.go", communityWidgetsSource, ""},
 	"lipgloss.slot":          {"community_widgets.go", communityWidgetsSource, ""},
 	"lipgloss.progressline":  {"community_widgets.go", communityWidgetsSource, ""},
+	design.TabsComponent:     {"community_widgets.go", communityWidgetsSource, ""},
+	design.PanelsComponent:   {"community_widgets.go", communityWidgetsSource, ""},
 	"lipgloss.colourpicker":  {"colourpicker.go", colourPickerSource(), ""},
 	"community.dropdown":     {"community_widgets.go", communityWidgetsSource, ""},
 	"community.promptinput":  {"community_widgets.go", communityWidgetsSource, ""},
@@ -235,10 +251,17 @@ func layoutSource(doc design.Document, placed []leaf) string {
 // window, and the drag and resize the person using the program gets. It is
 // empty for a plain fixed component.
 func behaviourSource(l leaf) string {
-	if l.Layout.IsZero() && !l.Drag && !l.Resize {
-		return ""
-	}
 	var parts []string
+	if l.In != "" {
+		// A member of a container: shown only while its page is.
+		parts = append(parts, fmt.Sprintf("Member: true, Of: %d, Page: %d", l.Of, l.Page))
+	}
+	if l.Layout.IsZero() && !l.Drag && !l.Resize {
+		if len(parts) == 0 {
+			return ""
+		}
+		return ", " + strings.Join(parts, ", ")
+	}
 	if l.Drag {
 		parts = append(parts, "Drag: true")
 	}

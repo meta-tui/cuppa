@@ -2,7 +2,9 @@ package preview
 
 import (
 	tea "charm.land/bubbletea/v2"
+	"github.com/meta-tui/cuppa/libs/canvas/editor"
 	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/document/design"
 	"github.com/meta-tui/cuppa/libs/render/grid"
 	"github.com/meta-tui/cuppa/libs/render/scene"
@@ -28,12 +30,15 @@ type Session struct {
 	live    map[design.NodeID]*live
 	focus   design.NodeID
 	stopped bool
+	// ed applies a press on a tab or a section header the way the designer
+	// does, so the page changes and the members move with their bodies.
+	ed *editor.Editor
 }
 
 // Start runs doc. The returned command starts whatever needs time (spinners,
 // timers, blinking cursors); the caller runs it.
 func Start(doc design.Document, cat scene.Catalog) (*Session, tea.Cmd) {
-	s := &Session{doc: doc.Clone(), cat: cat, live: map[design.NodeID]*live{}}
+	s := &Session{doc: doc.Clone(), cat: cat, live: map[design.NodeID]*live{}, ed: editor.New(cat, doc)}
 	var starts []tea.Cmd
 	for _, n := range s.doc.Nodes {
 		build, ok := makers[n.Component]
@@ -121,7 +126,7 @@ func (s *Session) Key(msg tea.KeyPressMsg) (bool, tea.Cmd) {
 func (s *Session) cycle(back bool) tea.Cmd {
 	var order []design.NodeID
 	for _, n := range s.doc.Nodes {
-		if l := s.live[n.ID]; l != nil && l.keys {
+		if l := s.live[n.ID]; l != nil && l.keys && container.Visible(s.doc, n) {
 			order = append(order, n.ID)
 		}
 	}
@@ -144,6 +149,14 @@ func (s *Session) cycle(back bool) tea.Cmd {
 // Press is a click at canvas cell (x, y): the top-most running component there
 // takes the keyboard and gets the click. Clicking anything else clears focus.
 func (s *Session) Press(x, y int) tea.Cmd {
+	if top, found := s.topAt(x, y); found && top.IsContainer() {
+		// A press on a tab or a header shows that page.
+		if page, hit := container.HeaderAt(top, x, y); hit {
+			s.ed.PressContainerHeader(top.ID, page)
+			s.doc = s.ed.Document()
+			return s.focusOn("")
+		}
+	}
 	n, ok := s.at(x, y)
 	if !ok {
 		return s.focusOn("")
@@ -168,11 +181,24 @@ func (s *Session) Wheel(x, y, dy int) tea.Cmd {
 	return tag(n.ID, s.live[n.ID].update(tea.KeyPressMsg{Code: code}))
 }
 
+// topAt is the top-most visible node under the cell, running or not.
+func (s *Session) topAt(x, y int) (design.Node, bool) {
+	order := container.Order(s.doc)
+	for k := len(order) - 1; k >= 0; k-- {
+		n := s.doc.Nodes[order[k]]
+		if !n.Hidden && container.Visible(s.doc, n) && n.Rect.Contains(x, y) {
+			return n, true
+		}
+	}
+	return design.Node{}, false
+}
+
 // at is the top-most visible running component under the cell.
 func (s *Session) at(x, y int) (design.Node, bool) {
-	for i := len(s.doc.Nodes) - 1; i >= 0; i-- {
-		n := s.doc.Nodes[i]
-		if !n.Hidden && n.Rect.Contains(x, y) {
+	order := container.Order(s.doc)
+	for k := len(order) - 1; k >= 0; k-- {
+		n := s.doc.Nodes[order[k]]
+		if !n.Hidden && container.Visible(s.doc, n) && n.Rect.Contains(x, y) {
 			return n, s.live[n.ID] != nil
 		}
 	}

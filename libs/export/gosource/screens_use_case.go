@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-tui/cuppa/libs/document/container"
 	"github.com/meta-tui/cuppa/libs/document/design"
 	"github.com/meta-tui/cuppa/libs/layout/expr"
 )
@@ -26,6 +27,10 @@ var listKeys = map[string]bool{
 	"items": true, "options": true, "entries": true, "tabs": true, "buttons": true,
 	"columns": true, "labels": true, "headers": true, "bindings": true, "checked": true, "values": true,
 }
+
+// dyKey is the property under which a screen hands a member the rows its place
+// moved by when its section moved.
+const dyKey = "cuppa.dy"
 
 // rowsKey is the text property that holds the rows of a table, separated by
 // semicolons, with commas between cells; a bound one is a [][]string.
@@ -214,11 +219,35 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 
 	var parts []partSource
 	usesStrconv := false
+	// containers are the container leaves of the screen, by their index in the
+	// list: the input that holds their state and what shows them.
+	type containerState struct {
+		kind, name, field string
+		leaf              leaf
+	}
+	containers := map[int]containerState{}
 	// readRefs are the inputs that conditions and layout expressions read.
 	var readRefs []string
-	for _, l := range placed {
+	for li, l := range placed {
 		ps := partSource{l: l}
 		def, _ := cat.Get(l.Kind)
+		if l.Kind == design.TabsComponent || l.Kind == design.PanelsComponent {
+			// A container keeps its state in an input the program can read
+			// and set; unbound, it is called after the container.
+			key := "active"
+			if l.Kind == design.PanelsComponent {
+				key = "open"
+			}
+			if l.Bind[key] == "" {
+				bound := map[string]string{}
+				for k, v := range l.Bind {
+					bound[k] = v
+				}
+				bound[key] = l.Name + " " + key
+				l.Bind = bound
+				ps.l = l
+			}
+		}
 		if l.Kind == rowsKind && len(palette) > 0 {
 			// Columns and cells name colours (@Name); they are read through
 			// the palette the program hands in.
@@ -344,10 +373,29 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 				ps.assign = append(ps.assign, fmt.Sprintf("{\n\t\t\t\trows := make([][]string, len(p.%[1]s))\n\t\t\t\tcellStyles := make([][]string, len(p.%[1]s))\n\t\t\t\tstyles := make([]string, len(p.%[1]s))\n\t\t\t\tfor i, r := range p.%[1]s {\n\t\t\t\t\trows[i] = []string{%[2]s}\n\t\t\t\t\tcellStyles[i] = []string{%[4]s}\n\t\t\t\t\tstyles[i] = rowStyleName(r.Style)\n\t\t\t\t}\n\t\t\t\tv[%[3]q] = joinRows(rows)\n\t\t\t\tv[\"cellstyles\"] = joinRows(cellStyles)\n\t\t\t\tv[\"styles\"] = joinList(styles)\n\t\t\t}", field, strings.Join(cells, ", "), key, strings.Join(cellStyleCells, ", ")))
 				continue
 			}
+			if l.Kind == design.PanelsComponent && key == "open" {
+				// The open sections are a list of page numbers.
+				var nums []string
+				for _, f := range splitList(l.Props[key], ",") {
+					if n, err := strconv.Atoi(strings.TrimSpace(f)); err == nil {
+						nums = append(nums, strconv.Itoa(n))
+					}
+				}
+				field, ok := register(l.Bind[key], "[]int", "[]int{"+strings.Join(nums, ", ")+"}", fmt.Sprintf("open sections of %q", l.Name))
+				if !ok {
+					continue
+				}
+				ps.assign = append(ps.assign, fmt.Sprintf("v[%q] = joinInts(p.%s)", key, field))
+				containers[li] = containerState{kind: l.Kind, name: l.Name, field: field, leaf: l}
+				continue
+			}
 			typ, lit := inputType(spec, key, l.Props[key])
 			field, ok := register(l.Bind[key], typ, lit, fmt.Sprintf("%s of %q", spec.Label, l.Name))
 			if !ok {
 				continue
+			}
+			if l.Kind == design.TabsComponent && key == "active" {
+				containers[li] = containerState{kind: l.Kind, name: l.Name, field: field, leaf: l}
 			}
 			switch typ {
 			case "int":
@@ -367,6 +415,29 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 				ps.assign = append(ps.assign, fmt.Sprintf("v[%q] = p.%s", key, field))
 			}
 		}
+		if st, ok := containers[l.Of]; ok && l.In != "" {
+			// A member shows while its page does (and its container does).
+			var page string
+			if st.kind == design.TabsComponent {
+				page = fmt.Sprintf("p.%s == %d", st.field, l.Page)
+			} else {
+				page = fmt.Sprintf("containsInt(p.%s, %d)", st.field, l.Page)
+			}
+			if above := parts[l.Of]; above.cond != "" {
+				page = "(" + above.cond + ") && " + page
+			} else if above.show != "" {
+				page = above.show + " && " + page
+			}
+			ps.show = page
+			if st.kind == design.PanelsComponent {
+				// Its place moves with its section.
+				node := design.Node{Component: st.kind, Rect: st.leaf.Rect, Props: st.leaf.Props}
+				top := container.Layout(node).Bodies[l.Page].Y - st.leaf.Rect.Y
+				usesStrconv = true
+				ps.assign = append(ps.assign, fmt.Sprintf("v[%q] = strconv.Itoa(containerBodyY(%q, props{%s, \"open\": joinInts(p.%s)}, %d, %d, %d) - %d)",
+					dyKey, st.kind, "\"pages\": "+strconv.Quote(st.leaf.Props["pages"]), st.field, st.leaf.Rect.W, st.leaf.Rect.H, l.Page, top))
+			}
+		}
 		if l.ShowIf != "" {
 			if expr.IsCondition(l.ShowIf) {
 				cond, err := expr.ParseCond(l.ShowIf)
@@ -377,7 +448,11 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 					readRefs = append(readRefs, cond.Refs()...)
 				}
 			} else if field, ok := register(l.ShowIf, "bool", "true", fmt.Sprintf("whether %q is shown", l.Name)); ok {
-				ps.show = "p." + field
+				if ps.show != "" {
+					ps.show += " && p." + field
+				} else {
+					ps.show = "p." + field
+				}
 			}
 		}
 		for _, src := range []string{l.Layout.X, l.Layout.Y, l.Layout.W, l.Layout.H} {
@@ -562,6 +637,26 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 			v.WriteString("\t\t}\n")
 		}
 		v.WriteString("\t}\n\t_ = f\n\treturn nil, false\n}\n")
+	}
+	if len(containers) > 0 {
+		var idx []int
+		for i := range containers {
+			idx = append(idx, i)
+		}
+		sort.Sort(sort.Reverse(sort.IntSlice(idx)))
+		fmt.Fprintf(&v, "\n// %sPress handles a click on a tab or on the header of a section: it changes the\n// page the screen shows by changing the container's input in p, and reports\n// whether it did. f is the frame the screen last returned.\nfunc %sPress(p *%sProps, f Frame, msg tea.Msg) bool {\n\tm, ok := msg.(tea.MouseClickMsg)\n\tif !ok {\n\t\treturn false\n\t}\n", ident, ident, ident)
+		for _, i := range idx {
+			st := containers[i]
+			pages := strconv.Quote(st.leaf.Props["pages"])
+			if st.kind == design.TabsComponent {
+				fmt.Fprintf(&v, "\tif r, ok := f.RegionNamed(%q); ok && m.X >= r.X && m.X < r.X+r.W && m.Y >= r.Y && m.Y < r.Y+r.H {\n\t\tif page, hit := containerHeaderAt(%q, props{\"pages\": %s}, r.W, r.H, m.X-r.X, m.Y-r.Y); hit {\n\t\t\tp.%s = page\n\t\t\treturn true\n\t\t}\n\t}\n",
+					st.name, st.kind, pages, st.field)
+			} else {
+				fmt.Fprintf(&v, "\tif r, ok := f.RegionNamed(%q); ok && m.X >= r.X && m.X < r.X+r.W && m.Y >= r.Y && m.Y < r.Y+r.H {\n\t\tcur := props{\"pages\": %s, \"open\": joinInts(p.%s), \"exclusive\": %q}\n\t\tif page, hit := containerHeaderAt(%q, cur, r.W, r.H, m.X-r.X, m.Y-r.Y); hit {\n\t\t\tp.%s = parseInts(containerPressed(%q, cur, page)[\"open\"])\n\t\t\treturn true\n\t\t}\n\t}\n",
+					st.name, pages, st.field, st.leaf.Props["exclusive"], st.kind, st.field, st.kind)
+			}
+		}
+		v.WriteString("\treturn false\n}\n")
 	}
 	sc.view = v.String()
 	return sc

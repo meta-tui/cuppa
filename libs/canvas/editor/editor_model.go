@@ -82,12 +82,14 @@ func (e *Editor) Select(ids ...design.NodeID) {
 	for _, id := range ids {
 		e.addToSelection(id)
 	}
+	e.revealMembers()
 }
 
 // Toggle adds the node to the selection, or removes it if already selected.
 func (e *Editor) Toggle(id design.NodeID) {
 	if !e.IsSelected(id) {
 		e.addToSelection(id)
+		e.revealMembers()
 		return
 	}
 	kept := e.sel[:0]

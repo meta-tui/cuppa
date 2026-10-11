@@ -2,6 +2,7 @@ package shell
 
 import (
 	"fmt"
+	"github.com/meta-tui/cuppa/libs/document/container"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/meta-tui/cuppa/libs/document/design"
@@ -61,8 +62,9 @@ func (m *Model) canvasKey(k tea.Key, text string) bool {
 		m.saySelection()
 	case text == "ctrl+a":
 		var ids []design.NodeID
-		for _, n := range m.ed.Document().Nodes {
-			if !n.Hidden {
+		doc := m.ed.Document()
+		for _, n := range doc.Nodes {
+			if !n.Hidden && container.Visible(doc, n) {
 				ids = append(ids, n.ID)
 			}
 		}
@@ -90,8 +92,9 @@ func (m *Model) canvasKey(k tea.Key, text string) bool {
 // ones left out.
 func (m *Model) layers() []design.NodeID {
 	var ids []design.NodeID
-	for _, n := range m.ed.Document().Nodes {
-		if !n.Hidden {
+	doc := m.ed.Document()
+	for _, n := range doc.Nodes {
+		if !n.Hidden && container.Visible(doc, n) {
 			ids = append(ids, n.ID)
 		}
 	}

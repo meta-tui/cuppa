@@ -22,11 +22,14 @@ func (e *Editor) Add(componentID string, x, y int) (design.NodeID, error) {
 	var added design.Node
 	e.apply(func() bool {
 		r := design.Rect{X: x, Y: y, W: min(def.DefaultSize.W, e.doc.Width), H: min(def.DefaultSize.H, e.doc.Height)}
-		added = e.doc.Add(design.Node{
+		n := design.Node{
 			Component: componentID,
 			Name:      e.uniqueName(def.Name),
 			Rect:      r.MoveInto(e.doc.Bounds()),
-		})
+		}
+		// A component dropped on the shown page of a container belongs to it.
+		e.joinContainer(&n)
+		added = e.doc.Add(n)
 		return true
 	})
 	e.Select(added.ID)
@@ -37,9 +40,14 @@ func (e *Editor) Add(componentID string, x, y int) (design.NodeID, error) {
 func (e *Editor) Delete() bool {
 	ids := e.unlockedSelection()
 	changed := e.apply(func() bool {
+		removed := map[design.NodeID]bool{}
 		for _, id := range ids {
+			if n, ok := e.doc.Get(id); ok && n.IsContainer() {
+				removed[id] = true
+			}
 			e.doc.Remove(id)
 		}
+		e.removeMembersOf(removed)
 		return len(ids) > 0
 	})
 	e.sel = e.keepSelected(func(id design.NodeID) bool { return e.doc.Index(id) >= 0 })
@@ -58,7 +66,11 @@ func (e *Editor) Duplicate() bool {
 			c.Locked, c.Hidden = false, false
 			c.Rect = n.Rect.Translate(duplicateDX, duplicateDY).MoveInto(e.doc.Bounds())
 			c.Name = e.uniqueName(baseName(n.Name))
-			copies = append(copies, e.doc.Add(c).ID)
+			added := e.doc.Add(c)
+			copies = append(copies, added.ID)
+			if n.IsContainer() {
+				e.duplicateMembers(n.ID, added.ID, duplicateDX, duplicateDY)
+			}
 		}
 		return len(ids) > 0
 	})

@@ -109,6 +109,7 @@ func (e *Editor) resolveNode(id design.NodeID) {
 	if !ok || n.Layout.IsZero() {
 		return
 	}
+	before := n
 	r := n.Rect
 	w, h := e.doc.Width, e.doc.Height
 	env := e.layoutEnv()
@@ -131,6 +132,8 @@ func (e *Editor) resolveNode(id design.NodeID) {
 	r.Y = pick(n.Layout.Y, h, r.Y)
 	r = r.MoveInto(e.doc.Bounds())
 	e.doc.Update(id, func(n *design.Node) { n.Rect = r })
+	// The members of a container follow it when the canvas size moved it.
+	e.shiftMembers(before, nil)
 }
 
 // layoutEnv is what an expression can read: the inputs of the screen with the

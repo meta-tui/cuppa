@@ -131,6 +131,11 @@ func New(cat *registry.Registry) *Model {
 	}
 	m.flow.SetOnLoad(m.adoptEmbedded)
 	m.ins.BindSnap(m.stg.Snap, m.stg.SetSnap)
+	m.ins.BindPreview(m.Previewing, func(on bool) {
+		if on != m.Previewing() {
+			m.togglePreview()
+		}
+	})
 	m.ins.BindColorPicker(m.pickColor)
 	m.ins.BindAsker(m.askQuestion)
 	m.ins.BindThemePicker(m.pickTheme)

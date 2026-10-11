@@ -164,3 +164,23 @@ func TestAClickOutsideTheDropdownClosesItWithoutChoosing(t *testing.T) {
 		t.Fatal("nothing is chosen")
 	}
 }
+
+func TestEditorAndPreviewButtonsSwitchTheMode(t *testing.T) {
+	m, _, _ := setup(t, "lipgloss.box")
+	on := false
+	m.BindPreview(func() bool { return on }, func(v bool) { on = v })
+	line := stripANSI(m.Lines()[0])
+	x := strings.Index(line, "Preview")
+	if x < 0 || !strings.Contains(line, "Editor") {
+		t.Fatalf("no buttons on the title row: %q", line)
+	}
+	m.Handle(pointer.Event{X: len([]rune(line[:x])), Y: 0, Phase: pointer.Down, Left: true})
+	if !on {
+		t.Fatal("Preview should start the preview")
+	}
+	// While it runs the bar is idle but for the way back.
+	m.Lines()
+	if !m.HandleMode(pointer.Event{X: len([]rune(line[:strings.Index(line, "Editor")])) + 1, Y: 0, Phase: pointer.Down, Left: true}) || on {
+		t.Fatal("Editor should go back to editing")
+	}
+}

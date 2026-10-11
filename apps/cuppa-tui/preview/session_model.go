@@ -149,17 +149,17 @@ func (s *Session) cycle(back bool) tea.Cmd {
 // Press is a click at canvas cell (x, y): the top-most running component there
 // takes the keyboard and gets the click. Clicking anything else clears focus.
 func (s *Session) Press(x, y int) tea.Cmd {
-	n, ok := s.at(x, y)
-	if !ok {
-		return s.focusOn("")
-	}
-	if n.IsContainer() {
+	if top, found := s.topAt(x, y); found && top.IsContainer() {
 		// A press on a tab or a header shows that page.
-		if page, hit := container.HeaderAt(n, x, y); hit {
-			s.ed.PressContainerHeader(n.ID, page)
+		if page, hit := container.HeaderAt(top, x, y); hit {
+			s.ed.PressContainerHeader(top.ID, page)
 			s.doc = s.ed.Document()
 			return s.focusOn("")
 		}
+	}
+	n, ok := s.at(x, y)
+	if !ok {
+		return s.focusOn("")
 	}
 	cmds := []tea.Cmd{s.focusOn(n.ID)}
 	if l := s.live[n.ID]; l != nil {
@@ -179,6 +179,18 @@ func (s *Session) Wheel(x, y, dy int) tea.Cmd {
 		code = tea.KeyUp
 	}
 	return tag(n.ID, s.live[n.ID].update(tea.KeyPressMsg{Code: code}))
+}
+
+// topAt is the top-most visible node under the cell, running or not.
+func (s *Session) topAt(x, y int) (design.Node, bool) {
+	order := container.Order(s.doc)
+	for k := len(order) - 1; k >= 0; k-- {
+		n := s.doc.Nodes[order[k]]
+		if !n.Hidden && container.Visible(s.doc, n) && n.Rect.Contains(x, y) {
+			return n, true
+		}
+	}
+	return design.Node{}, false
 }
 
 // at is the top-most visible running component under the cell.

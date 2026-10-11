@@ -237,8 +237,10 @@ func TestALightTerminalPreviewPaintsPaleCanvasAndDarkDefaultText(t *testing.T) {
 	}
 }
 
-// Pressing a tab on the canvas shows that page, like it will in the program.
-func TestPressingATabOnTheCanvasShowsItsPage(t *testing.T) {
+// While editing, a press on a tab selects the container and leaves the page
+// alone: the person is editing a component, not using it. Pages change in the
+// preview (or from the Properties list).
+func TestPressingATabWhileEditingDoesNotChangeThePage(t *testing.T) {
 	cat := standard.Default()
 	ed := editor.New(cat, design.NewDocument("t", 80, 24))
 	id, err := ed.Add("cuppa.tabs", 5, 3)
@@ -253,7 +255,11 @@ func TestPressingATabOnTheCanvasShowsItsPage(t *testing.T) {
 	x, y := tab.X0+1-m.offX, n.Rect.Y-m.offY
 	down(m, x, y)
 	m.Handle(pointer.Event{X: x, Y: y, Phase: pointer.Up, Left: true})
-	if got, _ := ed.Document().Get(id); container.Active(got) != 1 {
-		t.Fatalf("active = %d", container.Active(got))
+	got, _ := ed.Document().Get(id)
+	if container.Active(got) != 0 {
+		t.Fatalf("active = %d: editing must not change the page", container.Active(got))
+	}
+	if !ed.IsSelected(id) {
+		t.Error("the press should select the container")
 	}
 }

@@ -116,7 +116,9 @@ func (m *Model) Lines() []string {
 	if m.focused {
 		title = theme.Selected(" DETAILS ")
 	}
-	b.text(title).end()
+	b.text(title)
+	m.modeButtons(b)
+	b.end()
 	m.history(b)
 
 	specs := m.panelSpecs()
@@ -558,4 +560,28 @@ func (m *Model) pageRows(b *builder, n design.Node) {
 	if !n.Locked {
 		b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddPage(n.ID, "")) }).end()
 	}
+}
+
+// modeButtons are the Editor and Preview buttons at the right of the title
+// row, a pair of which one is lit: while editing, a press on a tab or a header
+// of the design only selects it; Preview makes the design respond.
+func (m *Model) modeButtons(b *builder) {
+	if m.setPreview == nil {
+		return
+	}
+	on := m.previewing != nil && m.previewing()
+	editor, preview := " Editor ", " Preview "
+	pad := max(m.w-b.x-lipgloss.Width(editor)-lipgloss.Width(preview), 1)
+	b.text(strings.Repeat(" ", pad))
+	style := func(label string, active bool) string {
+		if active {
+			return theme.Selected(label)
+		}
+		return theme.Button(label, true)
+	}
+	m.modeX[0][0] = b.x
+	b.add(style(editor, !on), func() { m.setPreview(false) })
+	m.modeX[0][1], m.modeX[1][0] = b.x, b.x
+	b.add(style(preview, on), func() { m.setPreview(true) })
+	m.modeX[1][1] = b.x
 }

@@ -56,6 +56,12 @@ func keepsPreview(a menubar.Action) bool {
 // previewMouse hands pointer events over the canvas to the running design.
 func (m *Model) previewMouse(e pointer.Event) {
 	m.mouseX, m.mouseY = e.X, e.Y
+	if m.layout.paneAt(e.X, e.Y) == inInspector {
+		// The right bar is idle while the design runs, except for the button
+		// that goes back to editing.
+		m.ins.HandleMode(e.Translate(m.layout.inspector.X, m.layout.inspector.Y))
+		return
+	}
 	if m.layout.paneAt(e.X, e.Y) != inStage {
 		return
 	}

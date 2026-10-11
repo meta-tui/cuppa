@@ -58,6 +58,13 @@ type Model struct {
 	buf     string
 	message string
 
+	// previewing reads whether the design is being run, and setPreview starts
+	// or stops it: the Editor and Preview buttons of the title row.
+	previewing func() bool
+	setPreview func(on bool)
+	// modeX is where each button is on the title row: Editor then Preview.
+	modeX [2][2]int
+
 	// snap reads and changes the stage setting this pane exposes as a checkbox.
 	snapGet func() bool
 	snapSet func(bool)
@@ -90,6 +97,28 @@ type Model struct {
 
 // New returns an inspector editing through ed.
 func New(ed *editor.Editor, cat Catalog) *Model { return &Model{ed: ed, cat: cat} }
+
+// BindPreview connects the Editor and Preview buttons: get says whether the
+// design is being run, set starts or stops it.
+func (m *Model) BindPreview(get func() bool, set func(on bool)) {
+	m.previewing, m.setPreview = get, set
+}
+
+// HandleMode takes a pointer event in pane coordinates while the design is
+// being run, when the bar is otherwise idle: only the Editor button works. It
+// reports whether it was pressed.
+func (m *Model) HandleMode(e pointer.Event) bool {
+	if e.Phase != pointer.Down || !e.Left || e.Y != 0 || m.setPreview == nil {
+		return false
+	}
+	for i, x := range m.modeX {
+		if e.X >= x[0] && e.X < x[1] {
+			m.setPreview(i == 1)
+			return true
+		}
+	}
+	return false
+}
 
 // BindSnap connects the "snap to guides" checkbox to the stage setting.
 func (m *Model) BindSnap(get func() bool, set func(bool)) { m.snapGet, m.snapSet = get, set }

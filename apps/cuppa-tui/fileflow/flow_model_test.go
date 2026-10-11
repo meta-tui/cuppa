@@ -381,8 +381,8 @@ func TestExportGoSourceWritesAProjectAndSaysWhatIsMissing(t *testing.T) {
 		t.Fatalf("the export folder is not in the design: %+v", got)
 	}
 	f.ExportGoSource()
-	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "untitled-app") {
-		t.Fatal("exporting again names the folder")
+	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "Change…") {
+		t.Fatal("exporting again offers to export or to change the folder")
 	}
 	press(f, true, false) // Export
 	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "Written to") {

@@ -39,3 +39,27 @@ func TestAPaneWithoutFocusShowsAccentTextAndTheBlurredBorder(t *testing.T) {
 		t.Errorf("focused border %q, want 212", c.Fg)
 	}
 }
+
+// Rows without focus can draw the selected row's text in a colour of their
+// own, apart from the one the focused row is filled with.
+func TestRowsWithoutFocusUseTheirBlurColour(t *testing.T) {
+	props := map[string]string{
+		"columns": "Name:8,Value",
+		"rows":    "Accent,#ff007f;Focus,#00f0ff",
+		"styles":  "selected,normal",
+		"color":   "212",
+		"focused": "false",
+	}
+	if c := rowsGrid(30, 2, props).At(0, 0); c.Fg != "212" {
+		t.Errorf("no blur colour: fg %q, want the colour", c.Fg)
+	}
+	props["blurColor"] = "51"
+	g := rowsGrid(30, 2, props)
+	if c := g.At(0, 0); c.Fg != "51" || c.Bg != "" {
+		t.Errorf("blur colour: fg %q bg %q", c.Fg, c.Bg)
+	}
+	props["focused"] = "true"
+	if c := rowsGrid(30, 2, props).At(0, 0); c.Bg != "212" {
+		t.Errorf("focused: bg %q, want the colour", c.Bg)
+	}
+}

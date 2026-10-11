@@ -74,6 +74,7 @@ func lipglossEntries() []definition.Definition {
 				intProp("gap", "Spaces between columns", 0, 0, 8),
 				colorProp("color", "Colour", "212"),
 				boolProp("focused", "Has focus (false: a selected row is accent text, not inverted)", true),
+				colorProp("blurColor", "Selected row text colour without focus (empty: Colour)", ""),
 			},
 		},
 		{

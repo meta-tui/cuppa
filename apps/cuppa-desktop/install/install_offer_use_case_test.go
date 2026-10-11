@@ -11,6 +11,7 @@ import (
 // fake is a machine for the offer: it records what was asked, installed and
 // started, and answers the questions from a script.
 type fake struct {
+	base      string
 	env       environment
 	asked     []string
 	told      []string
@@ -22,14 +23,13 @@ type fake struct {
 
 func newFake(t *testing.T) *fake {
 	t.Helper()
-	f := &fake{}
-	appDir := filepath.Join(t.TempDir(), "Cuppa")
+	f := &fake{base: t.TempDir()}
 	f.env = environment{
 		GOOS: "windows", Version: "1.2.0",
-		Places: places{LocalAppData: `C:\Users\me\AppData\Local`},
-		AppDir: appDir,
-		Exe:    `C:\Users\me\Downloads\cuppa-desktop.exe`,
-		Args:   []string{`C:\designs\a.cuppa`},
+		Places: places{LocalAppData: filepath.Join(f.base, "Local")},
+		AppDir: filepath.Join(f.base, "Config", "Cuppa"),
+		Exe:    filepath.Join(f.base, "Downloads", "cuppa-desktop.exe"),
+		Args:   []string{"a.cuppa"},
 		Ask: func(title, text string, choices []string) answer {
 			f.asked = append(f.asked, text)
 			if len(f.answers) == 0 {
@@ -71,16 +71,16 @@ func TestTheFirstStartFromElsewhereOffersToMoveAndRemembersTheVersion(t *testing
 	if got := offer(f.env); got != outcomeMoved {
 		t.Fatalf("outcome %v", got)
 	}
-	if len(f.installed) != 1 || f.installed[0].Program != `C:\Users\me\AppData\Local\Programs\Cuppa\Cuppa.exe` {
+	if len(f.installed) != 1 || f.installed[0].Program != filepath.Join(f.base, "Local", "Programs", "Cuppa", "Cuppa.exe") {
 		t.Fatalf("installed %+v", f.installed)
 	}
-	if len(f.started) != 1 || strings.Join(f.started[0], "|") != `C:\designs\a.cuppa|--moved-from=C:\Users\me\Downloads\cuppa-desktop.exe` {
+	if len(f.started) != 1 || strings.Join(f.started[0], "|") != "a.cuppa|--moved-from="+f.env.Exe {
 		t.Fatalf("started %v", f.started)
 	}
 	if !strings.Contains(f.marker(), "installed 1.2.0") {
 		t.Fatalf("marker %q", f.marker())
 	}
-	if !strings.Contains(f.asked[0], `C:\Users\me\Downloads`) {
+	if !strings.Contains(f.asked[0], filepath.Dir(f.env.Exe)) {
 		t.Errorf("the question does not say where it runs from: %q", f.asked[0])
 	}
 }
@@ -92,7 +92,7 @@ func TestADevelopersBuildAndTheCopyAMoveStartedAreNeverAsked(t *testing.T) {
 		t.Fatalf("dev: %v, asked %d", got, len(f.asked))
 	}
 	f = newFake(t)
-	f.env.MovedFrom = `C:\Users\me\Downloads\cuppa-desktop.exe`
+	f.env.MovedFrom = f.env.Exe
 	if got := offer(f.env); got != outcomeSkipped || len(f.asked) != 0 {
 		t.Fatalf("moved: %v", got)
 	}
@@ -188,7 +188,7 @@ func TestAnOlderVersionDoesNotReplaceANewerInstalledOne(t *testing.T) {
 
 func TestWhenInstallingForEveryoneFailsTheOwnFolderIsOffered(t *testing.T) {
 	f := newFake(t)
-	f.env.Places.ProgramFiles = `C:\Program Files`
+	f.env.Places.ProgramFiles = filepath.Join(f.base, "ProgramFiles")
 	f.installOK = func(tg target) error {
 		if tg.Everyone {
 			return errors.New("access denied")
@@ -206,7 +206,7 @@ func TestWhenInstallingForEveryoneFailsTheOwnFolderIsOffered(t *testing.T) {
 
 func TestAProgramAlreadyInItsFolderIsNotAskedToMove(t *testing.T) {
 	f := newFake(t)
-	f.env.Exe = `C:\Users\me\AppData\Local\Programs\Cuppa\Cuppa.exe`
+	f.env.Exe = filepath.Join(f.base, "Local", "Programs", "Cuppa", "Cuppa.exe")
 	if got := offer(f.env); got != outcomeSkipped || len(f.asked) != 0 {
 		t.Fatalf("outcome %v", got)
 	}

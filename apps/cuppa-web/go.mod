@@ -6,7 +6,7 @@ require (
 	charm.land/bubbletea/v2 v2.1.0
 	github.com/meta-ui-labs/cuppa/apps/cuppa-tui v0.0.0-00010101000000-000000000000
 	github.com/meta-ui-labs/cuppa/libs/catalog v0.0.0-00010101000000-000000000000
-	github.com/meta-tui/treactui/packages/tty-go v0.1.4
+	github.com/meta-ui-labs/treactui/packages/tty-go v0.1.5
 )
 
 require (

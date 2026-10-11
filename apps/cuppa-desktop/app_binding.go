@@ -9,7 +9,7 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-desktop/terminal"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
-	ttygo "github.com/meta-tui/treactui/packages/tty-go"
+	ttygo "github.com/meta-ui-labs/treactui/packages/tty-go"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 

@@ -23,6 +23,7 @@ const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
   cuppa screens <design.cuppa> -o <folder> --app
   cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
+  cuppa screens <design.cuppa> -o <folder> --layout slices --library -m <import path of the folder> [--router]
 
 Writes one contract and one view file per design, and the shared runtime, into
 <folder> (a package of its own). Files it wrote earlier are replaced and the
@@ -37,6 +38,13 @@ With --layout slices the application is written as a folder and a package per
 page (pages/<page>/), the router in app/, the runtime in internal/cuppa/ and
 main.go at the root of the module -m names (the design's name by default).
 
+With --library the slices are written into a folder of a module that exists:
+no go.mod, main.go or README.md; each page in the folder its page names (or
+pages/<page>), the runtime in internal/cuppa and the components in
+internal/components. Everything under the folder's parent of internal/ can
+import them, and every page declares aliases of the runtime types it uses. The
+router (app/) is written only with --router. -m is the import path of <folder>.
+
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
 can tell that the generated package is out of date.
@@ -47,13 +55,17 @@ can tell that the generated package is out of date.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
 	out, pkg, layout, module := "", "", gosource.LayoutFlat, ""
-	check, app := false, false
+	check, app, library, router := false, false, false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
 		case "--app":
 			app = true
 		case "--check":
 			check = true
+		case "--library":
+			library = true
+		case "--router":
+			router = true
 		case "--layout":
 			i++
 			if i < len(args) {
@@ -86,11 +98,19 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		_, _ = fmt.Fprintf(stderr, "cuppa screens: --layout is %s or %s\n", gosource.LayoutFlat, gosource.LayoutSlices)
 		return 2
 	}
+	if library && layout != gosource.LayoutSlices {
+		_, _ = fmt.Fprintln(stderr, "cuppa screens: --library needs --layout slices")
+		return 2
+	}
+	if library && module == "" {
+		_, _ = fmt.Fprintln(stderr, "cuppa screens: --library needs -m, the import path of the output folder")
+		return 2
+	}
 	if layout == gosource.LayoutSlices {
 		app = true
 	}
 	if app {
-		if err := runApp(inputs, out, layout, module, check, stdout); err != nil {
+		if err := runApp(inputs, out, layout, module, library, router, check, stdout); err != nil {
 			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 			return 1
 		}
@@ -190,7 +210,7 @@ func designFiles(inputs []string) ([]string, error) {
 
 // runApp writes one design as a whole application: the screens of its pages,
 // the router, main.go and go.mod.
-func runApp(inputs []string, out, layout, module string, check bool, stdout io.Writer) error {
+func runApp(inputs []string, out, layout, module string, library, router, check bool, stdout io.Writer) error {
 	paths, err := designFiles(inputs)
 	if err != nil {
 		return err
@@ -202,7 +222,7 @@ func runApp(inputs []string, out, layout, module string, check bool, stdout io.W
 	if err != nil {
 		return fmt.Errorf("%s: %w", paths[0], err)
 	}
-	opts := gosource.Options{Module: module}
+	opts := gosource.Options{Module: module, Library: library, Router: router}
 	if data, err := format.Encode(doc); err == nil {
 		opts.Source = data
 	}

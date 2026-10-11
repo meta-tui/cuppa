@@ -3,6 +3,9 @@ package gosource
 import (
 	"encoding/base64"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"sort"
 	"strconv"
 	"strings"
@@ -118,6 +121,20 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 	}
 
 	pkgs := pagePackages(screens)
+	// A page with a folder of its own keeps its package name from the folder.
+	dirs := make([]string, len(screens))
+	pkgNames := make([]string, len(screens))
+	for i, s := range screens {
+		dirs[i], pkgNames[i] = "pages/"+pkgs[i], pkgs[i]
+		if s.Folder != "" {
+			dirs[i] = s.Folder
+			pkgNames[i] = packageOfFolder(s.Folder)
+		}
+	}
+	componentsDir, runtimeDir := "components", "internal/cuppa"
+	if opts.Library {
+		componentsDir = "internal/components"
+	}
 	use := &pageUse{tops: map[string]bool{}, members: map[string]bool{}, pkgs: map[string]bool{}, qualify: map[string]string{}}
 	// The exported names a component package declares are used by pages as
 	// pkg.Name (the colour picker's type, for one).
@@ -155,12 +172,13 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			events[pascal(k.Event)] = true
 		}
 		use.pkgs = map[string]bool{}
-		out, err := rewritePage(combined, pkgs[i], "cuppa", sf, pageNamer{ident: pascal(s.Name), lower: camel(s.Name), events: events}, use)
+		out, err := rewritePage(combined, pkgNames[i], "cuppa", sf, pageNamer{ident: pascal(s.Name), lower: camel(s.Name), events: events}, use)
 		pageUses := use.pkgs
 		if err != nil {
 			return p, fmt.Errorf("slices: page %q: %w", s.Name, err)
 		}
-		out = addImport(out, "cuppa", module+"/internal/cuppa")
+		out = addImport(out, "cuppa", module+"/"+runtimeDir)
+		out = addRuntimeAliases(out, sf)
 		// The page imports the packages of the components it uses, so only
 		// those are in the application and their kinds are registered.
 		needed := map[string]bool{}
@@ -180,9 +198,9 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			if pageUses[pkg] {
 				alias = pkg
 			}
-			out = addImport(out, alias, module+"/components/"+pkg)
+			out = addImport(out, alias, module+"/"+componentsDir+"/"+pkg)
 		}
-		p.Files["pages/"+pkgs[i]+"/"+pkgs[i]+".go"] = tidy(out, &p)
+		p.Files[dirs[i]+"/"+pkgNames[i]+".go"] = tidy(out, &p)
 		hasContainers[i] = hasContainer(s)
 	}
 
@@ -197,8 +215,8 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		if err != nil {
 			return p, fmt.Errorf("slices: component %s: %w", pkg, err)
 		}
-		out = addImport(out, "cuppa", module+"/internal/cuppa")
-		p.Files["components/"+pkg+"/"+pkg+".go"] = tidy(out, &p)
+		out = addImport(out, "cuppa", module+"/"+runtimeDir)
+		p.Files[componentsDir+"/"+pkg+"/"+pkg+".go"] = tidy(out, &p)
 	}
 
 	names := map[string]bool{}
@@ -209,13 +227,17 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		names[n] = true
 	}
 	for name, src := range exportRuntime(runtime, names) {
-		p.Files["internal/cuppa/"+strings.TrimPrefix(name, "cuppa_")] = tidy(src, &p)
+		p.Files[runtimeDir+"/"+strings.TrimPrefix(name, "cuppa_")] = tidy(src, &p)
 	}
 
-	p.Files["app/app.go"] = tidy(sliceRouter(doc, screens, pkgs, hasContainers, module, opts.Source), &p)
-	p.Files["main.go"] = tidy(sliceMain(doc, module, hasContainers), &p)
-	p.Files["go.mod"] = goMod(module, p.Requires)
-	p.Files["README.md"] = sliceReadme(doc, screens, pkgs, p.Notes)
+	if !opts.Library || opts.Router {
+		p.Files["app/app.go"] = tidy(sliceRouter(doc, screens, pkgs, dirs, hasContainers, module, opts.Source), &p)
+	}
+	if !opts.Library {
+		p.Files["main.go"] = tidy(sliceMain(doc, module, hasContainers), &p)
+		p.Files["go.mod"] = goMod(module, p.Requires)
+		p.Files["README.md"] = sliceReadme(doc, screens, pkgs, dirs, p.Notes)
+	}
 	return p, nil
 }
 
@@ -233,7 +255,7 @@ func addImport(src, name, path string) string {
 }
 
 // sliceRouter is app/app.go: the props of the pages and the page shown.
-func sliceRouter(doc design.Document, screens []design.Document, pkgs []string, containers []bool, module string, source []byte) string {
+func sliceRouter(doc design.Document, screens []design.Document, pkgs, dirs []string, containers []bool, module string, source []byte) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "%s\n\n", GeneratedHeader)
 	if len(source) > 0 {
@@ -241,8 +263,8 @@ func sliceRouter(doc design.Document, screens []design.Document, pkgs []string, 
 	}
 	fmt.Fprintf(&b, "// Package app is the router of %s: the props of every page and which one is\n// shown. Pages go to each other by a click that names a page; the router\n// changes the page, so no page imports another.\npackage app\n\n", strconv.Quote(doc.Name))
 	b.WriteString("import (\n\ttea \"charm.land/bubbletea/v2\"\n\n\t\"" + module + "/internal/cuppa\"\n")
-	for _, pkg := range pkgs {
-		fmt.Fprintf(&b, "\t\"%s/pages/%s\"\n", module, pkg)
+	for i, pkg := range pkgs {
+		fmt.Fprintf(&b, "\t%s \"%s/%s\"\n", pkg, module, dirs[i])
 	}
 	b.WriteString(")\n\n")
 
@@ -386,7 +408,7 @@ func main() {
 `, GeneratedHeader, strconv.Quote(doc.Name), module, press)
 }
 
-func sliceReadme(doc design.Document, screens []design.Document, pkgs []string, notes []string) string {
+func sliceReadme(doc design.Document, screens []design.Document, pkgs, dirs []string, notes []string) string {
 	var b strings.Builder
 	fmt.Fprintf(&b, "# %s\n\nA Bubble Tea v2 application generated by Cuppa, one package per page.\n\n", doc.Name)
 	b.WriteString("```sh\ngo mod tidy\ngo run .\n```\n\n")
@@ -394,7 +416,7 @@ func sliceReadme(doc design.Document, screens []design.Document, pkgs []string, 
 	b.WriteString("| `main.go` | the program that runs the application |\n")
 	b.WriteString("| `app/` | the router: `Props`, `Page`, `View`, `Handle` |\n")
 	for i, s := range screens {
-		fmt.Fprintf(&b, "| `pages/%s/` | the page %q: `Props`, `Default`, `View`, `Handle` |\n", pkgs[i], s.Name)
+		fmt.Fprintf(&b, "| `%s/` | the page %q: `Props`, `Default`, `View`, `Handle` |\n", dirs[i], s.Name)
 	}
 	b.WriteString("| `internal/cuppa/` | the runtime the pages share |\n\n")
 	b.WriteString("Files Cuppa wrote start with `// Code generated by Cuppa`; add your own files beside them (a page's\nupdate logic, tests) and they are left alone when the application is exported again.\nOpen the design again with `cuppa main.go`.\n")
@@ -421,4 +443,83 @@ func componentsUsed(ls []leaf, kindPkg map[string]string) []string {
 	}
 	sort.Strings(out)
 	return out
+}
+
+// packageOfFolder is the package name of a page kept in folder: its last
+// element in lower case, with "page" added when that is a keyword.
+func packageOfFolder(folder string) string {
+	name := folder[strings.LastIndex(folder, "/")+1:]
+	var b strings.Builder
+	for _, r := range strings.ToLower(name) {
+		if r >= 'a' && r <= 'z' || r >= '0' && r <= '9' {
+			b.WriteRune(r)
+		}
+	}
+	name = b.String()
+	if name == "" || name[0] >= '0' && name[0] <= '9' {
+		name = "page" + name
+	}
+	if goKeywords[name] {
+		name += "page"
+	}
+	return name
+}
+
+// aliasedTypes and aliasedRowStyles are the names of the runtime a page's
+// Props and Frame use. Each page declares them as aliases, so the program that
+// holds the page names pages/<page>.CellStyle and never imports the runtime.
+var (
+	aliasedTypes     = []string{"CellStyle", "RowStyle", "Frame", "Region", "Theme"}
+	aliasedRowStyles = []string{"RowNormal", "RowSelected", "RowDim", "RowAccent"}
+)
+
+// addRuntimeAliases appends the aliases of the runtime names the page does
+// not declare itself.
+func addRuntimeAliases(src string, sf surface) string {
+	fset := token.NewFileSet()
+	f, err := parser.ParseFile(fset, "page.go", src, parser.SkipObjectResolution)
+	if err != nil {
+		return src
+	}
+	declared := map[string]bool{}
+	for _, d := range f.Decls {
+		switch d := d.(type) {
+		case *ast.FuncDecl:
+			if d.Recv == nil {
+				declared[d.Name.Name] = true
+			}
+		case *ast.GenDecl:
+			for _, spec := range d.Specs {
+				switch spec := spec.(type) {
+				case *ast.TypeSpec:
+					declared[spec.Name.Name] = true
+				case *ast.ValueSpec:
+					for _, n := range spec.Names {
+						declared[n.Name] = true
+					}
+				}
+			}
+		}
+	}
+	var types, rows []string
+	for _, n := range aliasedTypes {
+		if sf.tops[n] && !declared[n] {
+			types = append(types, "\t"+n+" = cuppa."+n)
+		}
+	}
+	for _, n := range aliasedRowStyles {
+		if sf.tops[n] && !declared[n] {
+			rows = append(rows, "\t"+n+" = cuppa."+n)
+		}
+	}
+	var b strings.Builder
+	b.WriteString(strings.TrimRight(src, "\n") + "\n")
+	if len(types) > 0 {
+		b.WriteString("\n// The runtime's types a page's Props and Frame are made of, so the program that\n")
+		b.WriteString("// holds the page does not import the runtime.\ntype (\n" + strings.Join(types, "\n") + "\n)\n")
+	}
+	if len(rows) > 0 {
+		b.WriteString("\n// The styles of a row.\nconst (\n" + strings.Join(rows, "\n") + "\n)\n")
+	}
+	return b.String()
 }

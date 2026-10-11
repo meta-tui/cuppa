@@ -222,6 +222,19 @@ func rewritePage(src, pkg, runtime string, sf surface, namer pageNamer, use *pag
 	}
 	// roles records, for identifiers that are not plain uses, what they are.
 	roles := map[*ast.Ident]string{}
+	// fields are the names of the struct fields the page declares: a key of
+	// that name in a literal is the field, which keeps its name.
+	fields := map[string]bool{}
+	ast.Inspect(f, func(n ast.Node) bool {
+		if st, ok := n.(*ast.StructType); ok {
+			for _, field := range st.Fields.List {
+				for _, id := range field.Names {
+					fields[id.Name] = true
+				}
+			}
+		}
+		return true
+	})
 	ast.Inspect(f, func(n ast.Node) bool {
 		switch n := n.(type) {
 		case *ast.SelectorExpr:
@@ -273,6 +286,9 @@ func rewritePage(src, pkg, runtime string, sf surface, namer pageNamer, use *pag
 			if sf.members[name] && isUnexported(name) && !namer.own[name] {
 				use.members[name] = true
 				replace(id, exportedName(name))
+				return true
+			}
+			if fields[name] {
 				return true
 			}
 			if local, ok := namer.local(name); ok {

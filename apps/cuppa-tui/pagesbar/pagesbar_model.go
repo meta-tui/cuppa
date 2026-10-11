@@ -141,6 +141,7 @@ func (m *Model) build() {
 				m.report("Cannot delete page", err.Error())
 			}
 		}},
+		item{label: "Folder…", act: func() { m.folder(cur) }},
 	)
 }
 
@@ -155,6 +156,18 @@ func (m *Model) rename(i int) {
 	m.ask("Rename page", names[i], func(value string) {
 		if err := m.ed.RenamePage(i, value); err != nil && m.report != nil {
 			m.report("Cannot rename page", strings.TrimPrefix(err.Error(), "editor: "))
+		}
+	})
+}
+
+// folder asks for the folder an export keeps the page in.
+func (m *Model) folder(i int) {
+	if m.ask == nil {
+		return
+	}
+	m.ask("Folder of the page (empty: pages/<page>)", m.ed.PageFolder(i), func(value string) {
+		if err := m.ed.SetPageFolder(i, value); err != nil && m.report != nil {
+			m.report("Cannot set the folder", strings.TrimPrefix(err.Error(), "editor: "))
 		}
 	})
 }

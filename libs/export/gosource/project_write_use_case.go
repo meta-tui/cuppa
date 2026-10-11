@@ -47,6 +47,12 @@ func ReplaceProject(dir string, p Project) error {
 		if err := os.Remove(filepath.Join(dir, filepath.FromSlash(stale))); err != nil {
 			return err
 		}
+		// A folder the page left is removed when nothing else is in it.
+		for d := filepath.Dir(filepath.Join(dir, filepath.FromSlash(stale))); d != filepath.Clean(dir); d = filepath.Dir(d) {
+			if os.Remove(d) != nil {
+				break
+			}
+		}
 	}
 	return nil
 }

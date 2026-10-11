@@ -20,6 +20,7 @@ const usage = `usage:
   cuppa design json  <file.cuppa>             print a design as editable JSON
   cuppa design build <file.json> [out.cuppa]  check the JSON and write the design
   cuppa design check <file.cuppa|file.json>   list what is wrong with a design and what it exports
+  cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa>   one design with a page per design
 
 A design is {"document": {"name", "width", "height", "background", "theme",
 "keys", "nodes": [...]}}. A node has "id", "component" (see "cuppa pack
@@ -48,6 +49,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		err = build(args[1], out, stdout)
 	case "check":
 		err = check(args[1], stdout)
+	case "merge":
+		err = merge(args[1:], stdout)
 	default:
 		_, _ = fmt.Fprint(stderr, usage)
 		return 2

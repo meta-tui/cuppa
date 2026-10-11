@@ -36,11 +36,22 @@ func main() {
 	app := shell.New(standard.Default())
 	app.RestoreLayout()
 	app.LoadUserPacks()
-	if len(os.Args) > 1 {
-		if err := app.OpenFile(os.Args[1]); err != nil {
+	args, connect := os.Args[1:], ""
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--connect" && i+1 < len(args) {
+			connect = args[i+1]
+			args = append(args[:i], args[i+2:]...)
+			break
+		}
+	}
+	if len(args) > 0 {
+		if err := app.OpenFile(args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, "cuppa:", err)
 			os.Exit(1)
 		}
+	}
+	if connect != "" {
+		app.Connect(connect)
 	}
 	app.Welcome()
 	app.ReportPackProblems()

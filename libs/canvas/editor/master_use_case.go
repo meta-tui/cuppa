@@ -135,14 +135,28 @@ func (e *Editor) MoveToMaster() (int, error) {
 // not part of Document, so they cannot be selected or changed from the page.
 func (e *Editor) RenderDocument() design.Document {
 	doc := e.doc.Clone()
-	if e.doc.MasterIndex() < 0 || e.OnMaster() {
+	live := e.applyLive(&doc)
+	if e.doc.MasterIndex() >= 0 && !e.OnMaster() {
+		if shown := e.doc.ShownMaster(e.doc.ActivePage()); len(shown) > 0 {
+			if live {
+				// The master's components read the same live values.
+				masterDoc := design.Document{Nodes: shown}.Clone()
+				e.applyLive(&masterDoc)
+				for name, v := range masterDoc.Samples {
+					if doc.Samples == nil {
+						doc.Samples = map[string]string{}
+					}
+					doc.Samples[name] = v
+				}
+				shown = masterDoc.Nodes
+			}
+			doc.Nodes = append(shown, doc.Nodes...)
+			live = true
+		}
+	}
+	if !live {
 		return doc
 	}
-	shown := e.doc.ShownMaster(e.doc.ActivePage())
-	if len(shown) == 0 {
-		return doc
-	}
-	doc.Nodes = append(shown, doc.Nodes...)
 	laid := &Editor{cat: e.cat, doc: doc}
 	laid.Resolve()
 	return laid.doc

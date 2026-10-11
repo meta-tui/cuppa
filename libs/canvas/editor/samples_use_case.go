@@ -42,10 +42,8 @@ func (e *Editor) ReadInputs() []string {
 			scan(n.Children)
 		}
 	}
+	// The samples are the shown page's, so are the inputs it reads.
 	scan(e.doc.Nodes)
-	for _, p := range e.doc.Pages {
-		scan(p.Nodes)
-	}
 	var out []string
 	for name := range read {
 		if !bound[name] {

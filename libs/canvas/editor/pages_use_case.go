@@ -19,6 +19,7 @@ func (e *Editor) pages() {
 	if e.doc.IsPaged() {
 		return
 	}
+	e.doc.PerPage = true
 	e.doc.Pages = []design.Page{{Name: "Page 1"}}
 	e.doc.Page = 0
 }
@@ -62,6 +63,8 @@ func (e *Editor) AddPage(name string) error {
 func (e *Editor) stashPage() {
 	if e.doc.IsPaged() {
 		e.doc.Pages[e.doc.ActivePage()].Nodes = e.doc.Nodes
+		e.doc.Pages[e.doc.ActivePage()].Samples = e.doc.Samples
+		e.doc.Pages[e.doc.ActivePage()].Keys = e.doc.Keys
 	}
 }
 
@@ -72,6 +75,10 @@ func (e *Editor) showPage(i int) {
 		e.doc.Nodes = []design.Node{}
 	}
 	e.doc.Pages[i].Nodes = nil
+	e.doc.Samples = e.doc.Pages[i].Samples
+	e.doc.Pages[i].Samples = nil
+	e.doc.Keys = e.doc.Pages[i].Keys
+	e.doc.Pages[i].Keys = nil
 	e.doc.Page = i
 	e.sel = nil
 	// The canvas may have been resized while the page was away.
@@ -111,6 +118,36 @@ func (e *Editor) RenamePage(i int, name string) error {
 	e.apply(func() bool {
 		e.doc.Pages[i].Name = name
 		e.retarget(old, name)
+		return true
+	})
+	return nil
+}
+
+// PageFolder is the folder an export keeps page i in ("" for the default).
+func (e *Editor) PageFolder(i int) string {
+	if !e.doc.IsPaged() || i < 0 || i >= len(e.doc.Pages) {
+		return ""
+	}
+	return e.doc.Pages[i].Folder
+}
+
+// SetPageFolder sets the folder an export keeps page i in, as one undo step.
+// An empty folder is pages/<page>. The design is made paged when it had one
+// page only.
+func (e *Editor) SetPageFolder(i int, folder string) error {
+	folder = strings.Trim(strings.TrimSpace(folder), "/")
+	if err := design.ValidFolder(folder); err != nil {
+		return fmt.Errorf("editor: %w", err)
+	}
+	if i != 0 && (!e.doc.IsPaged() || i < 0 || i >= len(e.doc.Pages)) {
+		return fmt.Errorf("editor: no such page")
+	}
+	if e.doc.IsPaged() && e.doc.Pages[i].Folder == folder {
+		return nil
+	}
+	e.apply(func() bool {
+		e.pages()
+		e.doc.Pages[i].Folder = folder
 		return true
 	})
 	return nil

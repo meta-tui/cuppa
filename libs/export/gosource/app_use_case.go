@@ -24,6 +24,14 @@ type Options struct {
 	// needs it for the imports between its packages. Empty means the name of
 	// the design.
 	Module string
+	// Library writes the slice layout as packages of a module that exists:
+	// no go.mod, main.go or README.md, the runtime in internal/cuppa and the
+	// components in internal/components under the folder, and the router only
+	// when Router asks for it.
+	Library bool
+	// Router writes app/app.go in a library export; an application always has
+	// it.
+	Router bool
 }
 
 // gotoEvent is the name of the event a component raises when a click on it

@@ -74,6 +74,21 @@ func normalise(doc design.Document) design.Document {
 	doc.Embedded = cleanEmbedded(doc.Embedded)
 	doc.Nodes = nodes
 	doc = cleanPages(doc)
+	if doc.IsPaged() {
+		for i := range doc.Pages {
+			if i == doc.Page {
+				continue
+			}
+			if !doc.PerPage {
+				// Samples used to be one set for every page.
+				doc.Pages[i].Samples = doc.Samples
+				doc.Pages[i].Keys = doc.Keys
+			}
+			doc.Pages[i].Samples = cleanSamples(doc.Pages[i].Samples)
+			doc.Pages[i].Keys = cleanKeys(doc.Pages[i].Keys)
+		}
+		doc.PerPage = true
+	}
 	doc.Samples = cleanSamples(doc.Samples)
 	return doc
 }
@@ -126,6 +141,9 @@ func cleanPages(doc design.Document) design.Document {
 			active = len(pages)
 		}
 		p.Nodes = cleanNodes(p.Nodes, 0)
+		if design.ValidFolder(p.Folder) != nil {
+			p.Folder = ""
+		}
 		pages = append(pages, p)
 	}
 	if len(pages) == 0 {

@@ -139,3 +139,25 @@ exports every example both ways and compares the drawings.
   the differences without writing.
 - **Opening again.** The design is embedded in `app/app.go`; `cuppa main.go`
   finds it there.
+
+## Addendum: library mode, folders per page, samples per page (#222)
+
+A real application (MVD) keeps its screens inside a module that exists and
+organises it by feature, so the slice layout grew three options:
+
+- `--library -m <import path of the folder>` writes only packages: no go.mod,
+  main.go or README.md, the runtime in `internal/cuppa`, the components in
+  `internal/components/<family>`, and `app/` only with `--router`. Everything
+  under the folder's parent of `internal/` imports them, so pages in several
+  feature folders share one runtime.
+- A page has a **Folder** (`setup/preferences`; "Folder…" in the pages list) that
+  replaces `pages/<page>`. The package takes the folder's last element.
+- Every page declares aliases of the runtime types its Props and Frame use
+  (`CellStyle`, `RowStyle`, `Frame`, `Region`, `Theme`, `RowNormal`…), so the
+  program holding a page never imports the runtime. A page imports only the
+  runtime and the components, never another page.
+- A page keeps its own **samples and keys** (`perPage` in the file): two pages
+  may read the same input with different values. Designs saved before it share
+  one set, which is copied to each page on load.
+- `cuppa design merge a.cuppa b.cuppa -o all.cuppa [--folder page=folder]` builds
+  one multi-page design from several.

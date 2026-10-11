@@ -48,6 +48,12 @@ type Document struct {
 	// value.
 	Samples map[string]string `json:"samples,omitempty"`
 	Pages   []Page            `json:"pages,omitempty"`
+	// PerPage says each page keeps its own samples and keys. A design saved
+	// without it had one set of each for every page.
+	PerPage bool `json:"perPage,omitempty"`
+	// Folder is the folder of the page this screen is, set by Screens; it is
+	// not part of a design's file.
+	Folder string `json:"-"`
 	Page  int    `json:"page,omitempty"`
 	// Seq is the counter behind generated node ids; it only ever grows.
 	Seq int `json:"seq"`
@@ -168,7 +174,7 @@ func (d Document) Clone() Document {
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
-			pages[i] = Page{Name: p.Name}
+			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Keys: append([]KeyBinding(nil), p.Keys...)}
 			for _, n := range p.Nodes {
 				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
 			}
@@ -280,4 +286,15 @@ func SampleNumber(value string) (float64, bool) {
 	}
 	f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
 	return f, err == nil
+}
+
+func cloneSamples(m map[string]string) map[string]string {
+	if m == nil {
+		return nil
+	}
+	out := make(map[string]string, len(m))
+	for k, v := range m {
+		out[k] = v
+	}
+	return out
 }

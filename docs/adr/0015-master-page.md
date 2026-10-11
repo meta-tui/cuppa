@@ -1,0 +1,63 @@
+# ADR 0015: A master page for what every page shows
+
+Status: proposed (from MVD#180; nothing built yet)
+
+## Context
+
+A real application repeats its chrome on every page: MVD has the same Title
+label on 8 pages, the same key bar on 9 and a bottom line on 4, and two pages
+share a whole frame. Each copy is a node in the design and a block of generated
+code, so a change to the key bar is made 9 times. Embedded user components
+(ADR 0012) are packs of Go, not compositions, so they do not help.
+
+## Proposal
+
+A design has one **master**: a set of nodes, drawn on every page below the
+page's own components.
+
+- **Model.** `Document.Master []Node` (the nodes are ordinary nodes, with the
+  same layout expressions, bindings and conditions) and `Page.Hide []NodeID`,
+  the master nodes a page does not show (MVD's Download has no Title). A master
+  node cannot be moved or changed from a page; it is edited on the master.
+- **Inputs stay flat.** A master node binds inputs by name like any node, and
+  the inputs of the master nodes a page shows are inputs of that page, under the
+  same names. A page's `Props` therefore does not change (`Title`, `Hints`,
+  `Status`), and two pages can still give an input different values.
+- **Designer.** The pages bar's list starts with **Master**. Selecting it edits
+  the master's nodes alone on the canvas. On a page, the master's nodes are
+  drawn but cannot be selected; the Layers panel has a Master section with an
+  eye per node, which is the page's opt-out. Preview and export show them as
+  they are.
+- **Export, first step.** `Document.Screens()` puts the shown master nodes,
+  minus the hidden, under each page's nodes. The flat and the slice layouts
+  need no change, and every layout draws exactly what the designer shows. The
+  design has each piece once, which is what the people editing it need; the
+  generated code still repeats it.
+- **Export, second step.** The slice layout writes the master once, as a
+  package under `internal/components/master`, with its parts typed on a small
+  `master.Props` of the inputs it reads; each page calls it through a generated
+  adapter from its own Props. A change to the key bar is then one file in the
+  generated code too.
+- **Events.** The events of master nodes (a click on a key bar hint) are
+  raised by each page under the same names, so the page's `Handle` and its
+  `Event` types do not change.
+
+## Not in this ADR
+
+- Different text per page on a master node: the page has an input for it
+  (`Title`), which is what a bound property is for.
+- A master node that a page moves or resizes: a page that needs it hides the
+  node and draws its own.
+- More than one master (a "setup" chrome and a "run" chrome): one design, one
+  master; a second chrome is a second design until it is needed.
+
+## Steps
+
+1. Model, file format, `Screens()`, editor operations (add to the master, hide
+   on a page), the designer's Master entry and the Layers section. Tests: the
+   export of a page equals the export of the same page with copies of the
+   master's nodes.
+2. Slice layout: one master package and the adapters, with the same parity
+   test.
+3. `cuppa design merge --master <page>` to lift the nodes MVD repeats into the
+   master.

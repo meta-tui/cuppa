@@ -361,6 +361,10 @@ func TestExportGoSourceWritesAProjectAndSaysWhatIsMissing(t *testing.T) {
 		t.Fatal("the folder is suggested next to the design")
 	}
 	press(f, true, false) // accept the suggestion
+	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "Slices") {
+		t.Fatal("the layout of the project is asked")
+	}
+	press(f, true, false) // One folder, the first button
 	for _, name := range []string{"go.mod", "main.go", "layout.go", "runtime.go"} {
 		if _, err := os.Stat(filepath.Join(want, name)); err != nil {
 			t.Fatalf("%s not written: %v", name, err)
@@ -374,6 +378,7 @@ func TestExportGoSourceWritesAProjectAndSaysWhatIsMissing(t *testing.T) {
 	// A second export into the same folder is refused and nothing is overwritten.
 	f.ExportGoSource()
 	press(f, true, false)
+	press(f, true, false) // One folder
 	if f.Modal() == nil || !strings.Contains(stripped(strings.Join(f.Modal().Lines(), "\n")), "empty folder") {
 		t.Fatal("exporting over an existing project is refused")
 	}

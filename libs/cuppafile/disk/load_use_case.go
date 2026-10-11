@@ -43,24 +43,27 @@ func loadFromGo(path string) (design.Document, error) {
 	if !errors.Is(err, format.ErrNoDesign) {
 		return doc, err
 	}
-	entries, err := os.ReadDir(filepath.Dir(path))
-	if err != nil {
-		return design.Document{}, err
-	}
-	for _, e := range entries {
-		if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".go") || e.Name() == filepath.Base(path) {
-			continue
-		}
-		info, err := e.Info()
-		if err != nil || info.Size() > maxGoSource {
-			continue
-		}
-		sibling, err := os.ReadFile(filepath.Join(filepath.Dir(path), e.Name()))
+	// The files beside it, then the router's folder of a slice layout.
+	for _, dir := range []string{filepath.Dir(path), filepath.Join(filepath.Dir(path), "app")} {
+		entries, err := os.ReadDir(dir)
 		if err != nil {
 			continue
 		}
-		if doc, err := format.FromGo(sibling); err == nil {
-			return doc, nil
+		for _, e := range entries {
+			if e.IsDir() || !strings.EqualFold(filepath.Ext(e.Name()), ".go") || filepath.Join(dir, e.Name()) == path {
+				continue
+			}
+			info, err := e.Info()
+			if err != nil || info.Size() > maxGoSource {
+				continue
+			}
+			sibling, err := os.ReadFile(filepath.Join(dir, e.Name()))
+			if err != nil {
+				continue
+			}
+			if doc, err := format.FromGo(sibling); err == nil {
+				return doc, nil
+			}
 		}
 	}
 	return design.Document{}, format.ErrNoDesign

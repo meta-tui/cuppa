@@ -159,3 +159,66 @@ func TestCheckingReportsANameThePageAndTheMasterShare(t *testing.T) {
 		t.Fatalf("check: %d\n%s", code, o)
 	}
 }
+
+// A lifted component keeps what each page had for its bound text, as the
+// page's own value, and a variant that is left says what differs.
+func TestLiftingKeepsEachPagesBoundTextAndSaysWhatDiffers(t *testing.T) {
+	dir := t.TempDir()
+	var files []string
+	for _, name := range []string{"One", "Two", "Three", "Four"} {
+		show := ""
+		if name == "Four" {
+			show = `, "showIf": "Show keys"`
+		}
+		json := `{"document": {"name": "` + name + `", "width": 100, "height": 30,
+		  "nodes": [
+		   {"id": "n1", "component": "lipgloss.label", "name": "Title", "rect": {"X": 0, "Y": 0, "W": 100, "H": 1},
+		    "props": {"text": "App · ` + name + `"}, "bind": {"text": "Title"}},
+		   {"id": "n2", "component": "lipgloss.label", "name": "Footer", "rect": {"X": 0, "Y": 29, "W": 100, "H": 1},
+		    "props": {"text": "keys"}` + show + `}]}}`
+		src := filepath.Join(dir, name+".json")
+		if err := os.WriteFile(src, []byte(json), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		out := filepath.Join(dir, name+".cuppa")
+		if code, o, e := run(t, "build", src, out); code != 0 {
+			t.Fatalf("build: %d %s%s", code, o, e)
+		}
+		files = append(files, out)
+	}
+	out := filepath.Join(dir, "all.cuppa")
+	code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", out, "--master")...)
+	if code != 0 {
+		t.Fatalf("merge: %d\n%s%s", code, o, e)
+	}
+	if !strings.Contains(o, `lifted "Footer"`) || !strings.Contains(o, `lifted "Title"`) {
+		t.Fatalf("report:\n%s", o)
+	}
+	doc, err := disk.Load(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	screens := doc.Screens()
+	for i, name := range []string{"One", "Two", "Three"} {
+		var title string
+		for _, n := range screens[i].Nodes {
+			if n.Name == "Title" {
+				title = n.Props["text"]
+			}
+		}
+		if title != "App · "+name {
+			t.Errorf("page %s draws the title %q", name, title)
+		}
+	}
+	// Four has a different Footer (it has a condition): it keeps its own and
+	// hides the lifted one.
+	var footers int
+	for _, n := range screens[3].Nodes {
+		if n.Name == "Footer" {
+			footers++
+		}
+	}
+	if footers != 1 {
+		t.Errorf("page Four has %d footers", footers)
+	}
+}

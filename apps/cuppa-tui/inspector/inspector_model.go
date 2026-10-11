@@ -292,6 +292,9 @@ func (m *Model) apply(field, value string) {
 	case strings.HasPrefix(field, "theme-"):
 		m.report(m.ed.SetThemeColor(strings.TrimPrefix(field, "theme-"), value))
 		return
+	case strings.HasPrefix(field, "mvalue:"):
+		m.report(m.ed.SetPageValue(strings.TrimPrefix(field, "mvalue:"), value))
+		return
 	case strings.HasPrefix(field, "sample:"):
 		m.report(m.ed.SetSample(strings.TrimPrefix(field, "sample:"), value))
 		return

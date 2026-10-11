@@ -88,6 +88,9 @@ func normalise(doc design.Document) design.Document {
 			doc.Pages[i].Samples = cleanSamples(doc.Pages[i].Samples)
 			doc.Pages[i].Keys = cleanKeys(doc.Pages[i].Keys)
 		}
+		for i := range doc.Pages {
+			doc.Pages[i].Values = cleanValues(doc.Pages[i].Values)
+		}
 		doc.PerPage = true
 	}
 	doc.Samples = cleanSamples(doc.Samples)
@@ -277,3 +280,19 @@ func cleanPalette(in []design.Swatch) []design.Swatch {
 
 // maxNodesPerPage bounds the list of master components a page hides.
 const maxNodesPerPage = 2048
+
+// cleanValues keeps the values of a page for master inputs that have a usable
+// name and a text of sensible length.
+func cleanValues(in map[string]string) map[string]string {
+	var out map[string]string
+	for k, v := range in {
+		if !design.ValidInputName(k) || len(v) > 500 || len(out) >= 64 {
+			continue
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[k] = v
+	}
+	return out
+}

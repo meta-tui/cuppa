@@ -5,7 +5,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
-	ttygo "github.com/meta-tui/treactui/packages/tty-go"
+	ttygo "github.com/meta-ui-labs/treactui/packages/tty-go"
 )
 
 // fake is a model whose status changes when it gets a string message.

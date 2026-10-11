@@ -13,7 +13,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
-	ttygo "github.com/meta-tui/treactui/packages/tty-go"
+	ttygo "github.com/meta-ui-labs/treactui/packages/tty-go"
 )
 
 // onAMac reports whether the browser says it runs on a Mac, from the User

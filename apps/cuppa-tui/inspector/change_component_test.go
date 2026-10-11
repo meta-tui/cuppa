@@ -18,22 +18,12 @@ func TestChangeRowChangesTheComponentAndKeepsTheVariables(t *testing.T) {
 		t.Fatalf("no Change row:\n%s", plain)
 	}
 
-	// Step through the candidates until the colour picker is the one shown.
-	shown := func() string {
-		for _, l := range m.Lines() {
-			if p := stripANSI(l); strings.Contains(p, "Change ") && strings.Contains(p, "◂") {
-				return p
-			}
-		}
-		return ""
+	// The list opens under the button and a name in it changes the component.
+	clickText(t, m, "Change ", "Replace with")
+	if !strings.Contains(stripANSI(strings.Join(m.Lines(), "\n")), "Colour picker") {
+		t.Fatalf("the colour picker is not offered for a text input:\n%s", strings.Join(m.Lines(), "\n"))
 	}
-	for i := 0; i < 30 && !strings.Contains(shown(), "Colour picker"); i++ {
-		clickText(t, m, "Change ", "▸")
-	}
-	if !strings.Contains(shown(), "Colour picker") {
-		t.Fatalf("the colour picker is not offered for a text input:\n%s", shown())
-	}
-	clickText(t, m, "Change ", "Colour picker")
+	clickText(t, m, "Colour picker", "Colour picker")
 
 	n, _ := ed.Document().Get(id)
 	if n.Component != "lipgloss.colourpicker" || n.Bind["value"] != "Colour" {

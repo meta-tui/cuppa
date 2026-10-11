@@ -20,7 +20,7 @@ func typeValue(m *Model, s string) {
 
 func TestTypingAnExpressionMakesTheAxisFollowTheCanvas(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " W ", "24")
+	barClick(t, m, "W", "value")
 	typeValue(m, "100% - 20")
 	if got := ed.Layout(id).W; got != "100% - 20" {
 		t.Fatalf("layout = %q (message %q)", got, m.message)
@@ -28,8 +28,8 @@ func TestTypingAnExpressionMakesTheAxisFollowTheCanvas(t *testing.T) {
 	if got := rect(ed, id).W; got != 80 {
 		t.Fatalf("w = %d", got)
 	}
-	if !strings.Contains(strings.Join(m.Lines(), "\n"), "100% - 20") {
-		t.Fatal("the expression is not shown")
+	if !strings.Contains(stripANSI(strings.Join(m.Context(120), "\n")), "100% - 20") {
+		t.Fatalf("the expression is not shown: %q", stripANSI(strings.Join(m.Context(120), "|")))
 	}
 	if err := ed.SetCanvasSize(120, 40); err != nil {
 		t.Fatal(err)
@@ -45,7 +45,7 @@ func TestTypingANumberOverAnExpressionFixesTheAxis(t *testing.T) {
 		t.Fatal(err)
 	}
 	m.Lines()
-	clickText(t, m, " W ", "50%")
+	barClick(t, m, "W", "value")
 	typeValue(m, "30")
 	if got := ed.Layout(id).W; got != "" {
 		t.Fatalf("layout = %q", got)
@@ -57,7 +57,7 @@ func TestTypingANumberOverAnExpressionFixesTheAxis(t *testing.T) {
 
 func TestBadExpressionIsReportedAndNothingChanges(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " W ", "24")
+	barClick(t, m, "W", "value")
 	typeValue(m, "50% +")
 	if m.message == "" {
 		t.Fatal("no message")
@@ -69,11 +69,11 @@ func TestBadExpressionIsReportedAndNothingChanges(t *testing.T) {
 
 func TestUnitButtonSwitchesBetweenCellsAndPercent(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " W ", "[%]")
+	barClick(t, m, "W", "unit")
 	if got := ed.Layout(id).W; got != "24%" {
 		t.Fatalf("layout = %q", got)
 	}
-	clickText(t, m, " W ", "[#]")
+	barClick(t, m, "W", "unit")
 	if ed.Layout(id).W != "" {
 		t.Fatal("not fixed again")
 	}

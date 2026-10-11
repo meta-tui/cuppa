@@ -223,8 +223,7 @@ func TestALockedSelectionSaysSoAndRefusesEdits(t *testing.T) {
 	if !strings.Contains(screen, "Locked: unlock it in Layers") {
 		t.Fatalf("the details bar should say why edits do nothing:\n%s", screen)
 	}
-	x, y := find(t, m, "[+]") // nudge X
-	press(m, x, y)
+	barClick(t, m, "X", "plus")
 	if n, _ := ed.Document().Get(ids[2]); n.Rect.X != 45 {
 		t.Fatalf("a locked layer must not move, X = %d", n.Rect.X)
 	}

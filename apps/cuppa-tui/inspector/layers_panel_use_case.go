@@ -28,23 +28,17 @@ func (m *Model) CancelDrag() { m.drag = nil }
 
 // layers lists the layers front to back. Each row has an eye (show or hide) and
 // a padlock (lock or unlock); the name selects it and can be dragged to a new
-// place in the list, or onto the trash button.
+// place in the list, or onto the trash button in the panel header.
 func (m *Model) layers(b *builder) {
 	doc := m.ed.Document()
-	b.blank()
-	b.text(theme.Bold(" Layers")).text("  ")
-	m.trashButton(b)
-	b.end()
 	n := len(doc.Nodes)
+	m.layerCount = n
 	if n == 0 {
 		b.text(theme.Faded(" (none)")).end()
-		m.layerCount = 0
 		return
 	}
-	m.layerTop, m.layerCount = len(b.lines), n
 	for row := 0; row < n; row++ {
-		node := doc.Nodes[n-1-row]
-		m.layerRow(b, node, row)
+		m.layerRow(b, doc.Nodes[n-1-row], row)
 		b.end()
 	}
 }
@@ -62,7 +56,7 @@ func (m *Model) trashButton(b *builder) {
 	default:
 		styled = theme.Button(label, len(m.ed.Selected()) > 0)
 	}
-	m.trashY, m.trashX0 = len(b.lines), b.x
+	m.trashX0 = b.x
 	b.add(styled, func() { m.ed.Delete() })
 	m.trashX1 = b.x
 }
@@ -86,7 +80,7 @@ func (m *Model) layerRow(b *builder, node design.Node, row int) {
 	b.addMouse(lock, func() { m.ed.SetLocked(id, !node.Locked) }).text(" ")
 
 	name := node.Name
-	rest := max(m.w-b.x, 1)
+	rest := max(m.content()-b.x, 1)
 	var styled string
 	switch {
 	case m.drag != nil && m.drag.moved && m.drag.id == id:
@@ -107,16 +101,32 @@ func (m *Model) pressLayer(id design.NodeID, y int, selectIt func()) {
 	m.drag = &layerDrag{id: id, startY: y, selectIt: selectIt}
 }
 
-// dragTo follows the pointer while a layer is held.
+// layersView is the Layers panel as it was last drawn.
+func (m *Model) layersView() (panelView, bool) {
+	for _, v := range m.views {
+		if v.id == panelLayers && v.open {
+			return v, true
+		}
+	}
+	return panelView{}, false
+}
+
+// dragTo follows the pointer while a layer is held. The row it is over is
+// counted in the panel's own scrolled list, and a pointer above or below the
+// panel stays on the first or last row.
 func (m *Model) dragTo(e pointer.Event) {
 	d := m.drag
-	y := e.Y + m.scroll
-	if y != d.startY {
+	if e.Y != d.startY {
 		d.moved = true
 	}
-	d.overTrash = y == m.trashY && e.X >= m.trashX0 && e.X < m.trashX1
+	v, ok := m.layersView()
+	if !ok {
+		return
+	}
+	d.overTrash = e.Y == v.top && e.X >= m.trashX0 && e.X < m.trashX1
 	if m.layerCount > 0 {
-		d.row = min(max(y-m.layerTop, 0), m.layerCount-1)
+		row := e.Y - v.top - 1 + m.state(v.id).scroll
+		d.row = min(max(row, 0), m.layerCount-1)
 	}
 }
 

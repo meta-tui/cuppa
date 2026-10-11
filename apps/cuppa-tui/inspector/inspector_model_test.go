@@ -20,14 +20,33 @@ func setup(t *testing.T, comp string) (*Model, *editor.Editor, design.NodeID) {
 		t.Fatal(err)
 	}
 	m := New(ed, cat)
-	m.SetSize(32, 40)
+	m.SetSize(32, 200)
+	expandAll(m)
 	m.Lines() // renders once so clickable regions exist
 	return m, ed, id
+}
+
+// expandAll opens every panel and gives it room, so a test can look at the
+// whole bar in one list of lines.
+func expandAll(m *Model) {
+	for id := range panelDefaults {
+		st := m.state(id)
+		st.closed, st.want = false, 30
+	}
 }
 
 // clickText clicks the first clickable span whose rendered line contains text.
 func clickText(t *testing.T, m *Model, line, text string) {
 	t.Helper()
+	// The contextual bar above the canvas is part of the bar's controls.
+	for y, l := range m.Context(120) {
+		plain := stripANSI(l)
+		if x := strings.Index(plain, text); strings.Contains(plain, line) && x >= 0 {
+			m.HandleContext(pointer.Event{X: len([]rune(plain[:x])), Y: y, Phase: pointer.Down, Left: true})
+			m.Lines()
+			return
+		}
+	}
 	lines := m.Lines()
 	for y, l := range lines {
 		plain := stripANSI(l)
@@ -44,6 +63,26 @@ func clickText(t *testing.T, m *Model, line, text string) {
 		return
 	}
 	t.Fatalf("no line %q containing %q in:\n%s", line, text, strings.Join(lines, "\n"))
+}
+
+// barClick presses one part of a geometry field of the contextual bar: the
+// "value" (to type it), "minus", "plus" or the "unit" button.
+func barClick(t *testing.T, m *Model, label, part string) {
+	t.Helper()
+	plain := stripANSI(m.Context(120)[0])
+	at := strings.Index(plain, " "+label+" ")
+	if at < 0 {
+		t.Fatalf("no %s field in the bar: %q", label, plain)
+	}
+	start := len([]rune(plain[:at])) + 1 + len(label) + 1
+	end := start
+	runes := []rune(plain)
+	for end < len(runes) && runes[end] != ' ' {
+		end++
+	}
+	x := map[string]int{"value": start, "minus": end + 1, "plus": end + 2, "unit": end + 4}[part]
+	m.HandleContext(pointer.Event{X: x, Y: 0, Phase: pointer.Down, Left: true})
+	m.Lines()
 }
 
 func stripANSI(s string) string {
@@ -69,8 +108,8 @@ func rect(ed *editor.Editor, id design.NodeID) design.Rect {
 
 func TestPlusMinusNudgeGeometry(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " X ", "[+]")
-	clickText(t, m, " Y ", "[-]")
+	barClick(t, m, "X", "plus")
+	barClick(t, m, "Y", "minus")
 	if got := rect(ed, id); got.X != 11 || got.Y != 4 {
 		t.Fatalf("rect = %+v", got)
 	}
@@ -78,7 +117,7 @@ func TestPlusMinusNudgeGeometry(t *testing.T) {
 
 func TestTypedValueCommitsOnEnter(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " W ", "  24") // the value
+	barClick(t, m, "W", "value")
 	if !m.Editing() {
 		t.Fatal("clicking the value should start editing")
 	}
@@ -98,13 +137,13 @@ func TestTypedValueCommitsOnEnter(t *testing.T) {
 
 func TestEscapeCancelsAndBadInputReports(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, " H ", "   6")
+	barClick(t, m, "H", "value")
 	m.Key("9", false, false, false)
 	m.Key("", false, false, true)
 	if rect(ed, id).H != 6 || m.Editing() {
 		t.Fatal("escape should discard the edit")
 	}
-	clickText(t, m, " H ", "   6")
+	barClick(t, m, "H", "value")
 	m.Key("", true, false, false)
 	m.Key("x", false, false, false)
 	m.Key("", false, true, false)
@@ -133,7 +172,8 @@ func TestLayerButtonsAndList(t *testing.T) {
 
 func TestPropertiesEditThroughTheSchema(t *testing.T) {
 	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, "rounded", "▸") // choice: next border
+	clickText(t, m, "rounded", "rounded") // choice: opens the list of borders
+	clickText(t, m, "  normal", "normal")
 	n, _ := ed.Document().Get(id)
 	if n.Props["border"] != "normal" {
 		t.Fatalf("border = %q", n.Props["border"])
@@ -166,7 +206,7 @@ func TestEmptyStateAndSizing(t *testing.T) {
 	m := New(ed, cat)
 	m.SetSize(30, 12)
 	lines := m.Lines()
-	if len(lines) != 12 || !strings.Contains(stripANSI(strings.Join(lines, "\n")), "Nothing selected") {
+	if len(lines) != 12 || !strings.Contains(stripANSI(strings.Join(lines, "\n")), "Canvas") {
 		t.Fatalf("empty state wrong:\n%s", strings.Join(lines, "\n"))
 	}
 }
@@ -175,7 +215,8 @@ func TestSnapCheckboxTogglesTheBoundSetting(t *testing.T) {
 	cat := standard.Default()
 	ed := editor.New(cat, design.NewDocument("t", 100, 40))
 	m := New(ed, cat)
-	m.SetSize(32, 60) // the theme section made the pane longer
+	m.SetSize(32, 200)
+	expandAll(m)
 	on := true
 	m.BindSnap(func() bool { return on }, func(v bool) { on = v })
 	m.Lines()
@@ -204,7 +245,7 @@ func TestLongTextPropertyWrapsInsidePaneAndStaysClickable(t *testing.T) {
 		if first < 0 && strings.HasPrefix(plain, "docs/,") {
 			first = y
 		}
-		if strings.Contains(plain, "commitlint.config.mjs") {
+		if strings.HasSuffix(plain, "mjs") {
 			last = y
 		}
 	}

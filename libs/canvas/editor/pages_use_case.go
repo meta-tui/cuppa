@@ -106,6 +106,9 @@ func (e *Editor) RenamePage(i int, name string) error {
 	if err := design.ValidPageName(name); err != nil {
 		return fmt.Errorf("editor: %w", err)
 	}
+	if e.doc.Pages[i].Master {
+		return fmt.Errorf("editor: the master page keeps its name")
+	}
 	old := e.doc.Pages[i].Name
 	if name == old {
 		return nil
@@ -142,6 +145,9 @@ func (e *Editor) SetPageFolder(i int, folder string) error {
 	if i != 0 && (!e.doc.IsPaged() || i < 0 || i >= len(e.doc.Pages)) {
 		return fmt.Errorf("editor: no such page")
 	}
+	if e.doc.IsPaged() && e.doc.Pages[i].Master {
+		return fmt.Errorf("editor: the master page has no folder; it is drawn on every page")
+	}
 	if e.doc.IsPaged() && e.doc.Pages[i].Folder == folder {
 		return nil
 	}
@@ -177,7 +183,7 @@ func (e *Editor) DeletePage(i int) error {
 		e.doc.Pages = pages
 		e.retarget(gone, "")
 		e.showPage(active)
-		if len(e.doc.Pages) == 1 {
+		if len(e.doc.Pages) == 1 && !e.doc.Pages[0].Master {
 			// One page left is no split: it is the design again.
 			e.doc.Pages, e.doc.Page = nil, 0
 		}
@@ -220,6 +226,9 @@ func (e *Editor) SetGoto(id design.NodeID, page string) error {
 	}
 	if page != "" && e.doc.PageIndex(page) < 0 {
 		return fmt.Errorf("editor: there is no page called %q", page)
+	}
+	if i := e.doc.PageIndex(page); page != "" && e.doc.Pages[i].Master {
+		return fmt.Errorf("editor: the master is not a page a click can go to")
 	}
 	if n.Goto == page {
 		return nil

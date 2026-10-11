@@ -36,6 +36,7 @@ func (m *Model) layers(b *builder) {
 	m.layerCount = n
 	if n == 0 {
 		b.text(theme.Faded(" (none)")).end()
+		m.masterRows(b)
 		return
 	}
 	// A container is followed by its members, indented, as a tree; with no
@@ -60,6 +61,35 @@ func (m *Model) layers(b *builder) {
 	for row, node := range tree {
 		m.layerIDs = append(m.layerIDs, node.ID)
 		m.layerRow(b, node, row)
+		b.end()
+	}
+	m.masterRows(b)
+}
+
+// masterRows lists the master's components under the page's own, each with an
+// eye: the page shows the component, or hides it (ADR 0015). The rows are not
+// layers of the page, so they cannot be selected or dragged.
+func (m *Model) masterRows(b *builder) {
+	if m.ed.MasterPage() < 0 || m.ed.OnMaster() {
+		return
+	}
+	nodes := m.ed.MasterComponents()
+	if len(nodes) == 0 {
+		return
+	}
+	page := m.ed.ActivePage()
+	b.text(theme.Faded(" Master (shown on every page)")).end()
+	for k := len(nodes) - 1; k >= 0; k-- {
+		node := nodes[k]
+		id := node.ID
+		hidden := m.ed.MasterHidden(page, id)
+		eye := "◉"
+		name := node.Name
+		if hidden {
+			eye = theme.Faded("○")
+			name = theme.Faded(name)
+		}
+		b.text(" ").addMouse(eye, func() { _ = m.ed.SetMasterHidden(page, id, !hidden) }).text(" " + name)
 		b.end()
 	}
 }

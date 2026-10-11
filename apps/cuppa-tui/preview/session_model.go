@@ -38,7 +38,9 @@ type Session struct {
 // Start runs doc. The returned command starts whatever needs time (spinners,
 // timers, blinking cursors); the caller runs it.
 func Start(doc design.Document, cat scene.Catalog) (*Session, tea.Cmd) {
-	s := &Session{doc: doc.Clone(), cat: cat, live: map[design.NodeID]*live{}, ed: editor.New(cat, doc)}
+	ed := editor.New(cat, doc)
+	// The master's components run with the page's own.
+	s := &Session{doc: ed.RenderDocument(), cat: cat, live: map[design.NodeID]*live{}, ed: ed}
 	return s, tea.Batch(s.startAll()...)
 }
 
@@ -160,14 +162,14 @@ func (s *Session) Press(x, y int) tea.Cmd {
 		// A press on a tab or a header shows that page.
 		if page, hit := container.HeaderAt(top, x, y); hit {
 			s.ed.PressContainerHeader(top.ID, page)
-			s.doc = s.ed.Document()
+			s.doc = s.ed.RenderDocument()
 			return s.focusOn("")
 		}
 	}
 	if top, found := s.topAt(x, y); found && top.Goto != "" {
 		// A component that goes to a page takes the person there.
 		if i := s.doc.PageIndex(top.Goto); i >= 0 && s.ed.SwitchPage(i) {
-			s.doc = s.ed.Document()
+			s.doc = s.ed.RenderDocument()
 			s.focus = ""
 			return tea.Batch(s.startAll()...)
 		}

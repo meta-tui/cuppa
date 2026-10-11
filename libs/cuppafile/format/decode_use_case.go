@@ -128,6 +128,7 @@ func cleanPages(doc design.Document) design.Document {
 	}
 	seen := map[string]bool{}
 	var pages []design.Page
+	hasMaster := false
 	active := -1
 	for i, p := range doc.Pages {
 		p.Name = strings.TrimSpace(p.Name)
@@ -142,8 +143,17 @@ func cleanPages(doc design.Document) design.Document {
 			active = len(pages)
 		}
 		p.Nodes = cleanNodes(p.Nodes, 0)
-		if design.ValidFolder(p.Folder) != nil {
+		if design.ValidFolder(p.Folder) != nil || p.Master {
 			p.Folder = ""
+		}
+		if p.Master {
+			if hasMaster {
+				p.Master = false
+			}
+			hasMaster = true
+			p.Hide = nil
+		} else if len(p.Hide) > maxNodesPerPage {
+			p.Hide = p.Hide[:maxNodesPerPage]
 		}
 		pages = append(pages, p)
 	}
@@ -264,3 +274,6 @@ func cleanPalette(in []design.Swatch) []design.Swatch {
 	}
 	return out
 }
+
+// maxNodesPerPage bounds the list of master components a page hides.
+const maxNodesPerPage = 2048

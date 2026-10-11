@@ -1,6 +1,7 @@
 # ADR 0015: A master page for what every page shows
 
-Status: proposed (from MVD#180; nothing built yet)
+Status: accepted; steps 1 and 3 built, step 2 (one master package in the slice
+layout) not yet (#225)
 
 ## Context
 
@@ -82,3 +83,20 @@ page's own components.
    test.
 3. `cuppa design merge --master <page>` to lift the nodes MVD repeats into the
    master.
+
+## What was built
+
+- The master is a page of the design flagged `master`; it is not a screen.
+  `Page.Hide` holds the master components a page does not show; `Screens()`
+  puts the shown ones, with ids prefixed `m_`, below each page's own.
+- Designer: the pages list has *Add master page* and, on a page, *Move
+  selection to master*; the master is marked ◆. The canvas draws the master
+  under the page, not selectable; the Layers panel has a Master section with an
+  eye per component (hide on this page). The preview runs the master too.
+- `cuppa design merge ... --master [--master-min N]` lifts what is the same on N
+  pages or more, prints what it lifted and left, and has the other pages hide it.
+  `cuppa design check` checks every page and reports a name clash between a
+  page and the master.
+- Exports are unchanged in shape: each page's code still draws the master's
+  components itself (step 2 would write them once). Older files open as before;
+  a design with no master has no `master` or `hide` fields.

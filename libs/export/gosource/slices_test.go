@@ -322,3 +322,31 @@ func TestCheckingALibraryExportFindsEditsAndMovedPages(t *testing.T) {
 		t.Error("the person's own file was removed")
 	}
 }
+
+// The master is not a page of its own: each page's package draws it, and its
+// inputs are the page's inputs under the same names.
+func TestTheMasterIsOnEveryPageAndIsNotAPage(t *testing.T) {
+	doc := design.NewDocument("Shop", 80, 20)
+	doc.Add(design.Node{Component: "lipgloss.box", Name: "Home box", Rect: design.Rect{X: 2, Y: 3, W: 10, H: 4}})
+	title := design.Node{ID: "n9", Component: "lipgloss.label", Name: "Title", Rect: design.Rect{W: 80, H: 1},
+		Props: map[string]string{"text": "Shop"}, Bind: map[string]string{"text": "Title"}}
+	doc.Pages = []design.Page{
+		{Name: "Home"},
+		{Name: "Cart", Nodes: []design.Node{{ID: "n2", Component: "lipgloss.box", Name: "Cart box", Rect: design.Rect{X: 2, Y: 3, W: 10, H: 4}}}},
+		{Name: "Master", Master: true, Nodes: []design.Node{title}},
+	}
+	doc.PerPage = true
+	p, err := GenerateSlices(doc, standard.Default(), Options{Module: "shop", Library: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, ok := p.Files["pages/master/master.go"]; ok {
+		t.Error("the master was exported as a page")
+	}
+	for _, page := range []string{"pages/home/home.go", "pages/cart/cart.go"} {
+		src := p.Files[page]
+		if !strings.Contains(src, "Title string") || !strings.Contains(src, `"Title"`) {
+			t.Errorf("%s does not have the master's Title input", page)
+		}
+	}
+}

@@ -75,7 +75,7 @@ not offered.
 
 **What stays hand-written.** The export replaces only files that start with
 the generated header, as `cuppa screens` does today, and removes the generated
-files of pages that are gone. A page folder may hold the program's own files
+files of pages that are gone, after listing them: the designer asks to delete or keep them, and `cuppa screens` lists what it removes (`--keep-stale` keeps them). A page folder may hold the program's own files
 (`home/update.go`, tests); they are never read or deleted.
 
 **Opening it again.** `main.go` is the entry: it imports `app`, `app` imports

@@ -42,6 +42,27 @@ page's own components.
   raised by each page under the same names, so the page's `Handle` and its
   `Event` types do not change.
 
+## Rules a real application needs (MVD's review)
+
+- **Names.** Master and page nodes share one namespace per page: a layout
+  expression on a page node may name a master node (`below("Title")`) and the
+  other way round. A page node with the name of a master node shown on that
+  page is an error in `cuppa design check`, and nothing renames it silently;
+  the page hides the master node or renames its own.
+- **Conditions.** A master node's condition reads inputs by name, and those
+  inputs are inputs of every page that shows the node (the same rule as a bound
+  property), with the sample or default value, 0 or false. A page that does not
+  want the input hides the node (MVD's Download hides the key bar and keeps its
+  own bottom group). `check` lists the inputs a page gains from the master.
+- **Events.** A master node raises the page's own event under its own name
+  (`HintEvent`, unprefixed), part of the page's `Event` interface; `Handle`
+  returns it like any other.
+- **Regions.** Master nodes are in the page's `Frame` and its `Layout` with
+  their names, so `RegionNamed("Key bar")` works on every page that shows it.
+- **Lifting.** `design merge --master <page>` matches nodes by component,
+  layout and properties except bound text, prints what it lifted and what it
+  left, and renames nothing.
+
 ## Not in this ADR
 
 - Different text per page on a master node: the page has an input for it

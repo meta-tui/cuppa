@@ -1,7 +1,6 @@
 # ADR 0015: A master page for what every page shows
 
-Status: accepted; steps 1 and 3 built, step 2 (one master package in the slice
-layout) not yet (#225)
+Status: accepted; all three steps built (#225, #241)
 
 ## Context
 
@@ -105,3 +104,15 @@ page's own components.
   "Master text" in the designer's canvas panels), which the page's drawing, its
   screen and its `Default()` start from. `design merge --master` records the
   text each page had.
+- Slice layout (step 2, #241): the master's parts are written once, as the
+  package `internal/components/master` (`components/master` outside library
+  mode), typed on `master.Props`: the inputs its parts read and the palette.
+  A page keeps its `Props`, `Default`, `View`, `Layout`, `Handle`, events,
+  `HintsHint` and `HintsHintAt` and takes the parts through
+  `master.PartsFor(masterProps, <hidden parts>...)`, where `masterProps` turns
+  its props into the master's. The page's hint and row types of master inputs
+  are aliases of the package's, so no conversion copies a list. The parts are
+  the text the page would have held, in the same order, so the drawing is the
+  same; a page whose parts are not the master's (a container or a colour
+  picker on the master, an input of another kind) keeps its own copy and a
+  note says why. The flat layout is unchanged.

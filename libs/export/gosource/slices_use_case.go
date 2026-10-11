@@ -77,7 +77,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 	shared, masterNotes := masterScreen(doc, cat)
 	var whyNot []string
 	flat := GenerateScreensWith(screens, cat, "cuppa", Options{master: shared, masterNotes: &whyNot})
-	p := Project{Module: module, Files: map[string]string{}, Requires: flat.Requires, Notes: append(append(flat.Notes, masterNotes...), whyNot...)}
+	p := Project{Module: module, Files: map[string]string{}, Requires: flat.Requires, Notes: append(append(flat.Notes, masterNotes...), whyNot...), PageFiles: map[string][]string{}}
 
 	// What each component file (a library of kinds) becomes: a package under
 	// components/. The rest of the cuppa_ files is the runtime they share.
@@ -214,6 +214,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 			out = addImport(out, alias, module+"/"+componentsDir+"/"+pkg)
 		}
 		p.Files[dirs[i]+"/"+pkgNames[i]+generatedSuffix] = tidy(out, &p)
+		p.PageFiles[s.Name] = []string{dirs[i] + "/" + pkgNames[i] + generatedSuffix}
 		hasContainers[i] = hasContainer(s)
 	}
 
@@ -224,6 +225,9 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		}
 		out = addImport(out, "cuppa", module+"/"+runtimeDir)
 		p.Files[componentsDir+"/"+masterPackage+"/"+masterPackage+generatedSuffix] = tidy(out, &p)
+		if m := doc.MasterIndex(); m >= 0 {
+			p.PageFiles[doc.Pages[m].Name] = []string{componentsDir + "/" + masterPackage + "/" + masterPackage + generatedSuffix}
+		}
 	}
 
 	componentFiles := make([]string, 0, len(components))

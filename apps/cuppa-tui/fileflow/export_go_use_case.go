@@ -221,6 +221,22 @@ func (f *Flow) exported(dir string, s design.ExportSettings, project gosource.Pr
 	f.Notice("Go source exported", body)
 }
 
+// PageStates says, by page name, whether the page's exported files are what the
+// design exports now ("current"), differ ("changed") or are not there ("new").
+// It is nil when the design has no export folder yet.
+func (f *Flow) PageStates() map[string]string {
+	s := f.ed.ExportSettings()
+	if !s.IsSet() {
+		return nil
+	}
+	doc := f.ed.Document()
+	project, err := gosource.GenerateExport(doc, f.cat, s, f.source(doc))
+	if err != nil {
+		return nil
+	}
+	return gosource.PageStates(gosource.ExportDir(s, f.path), project)
+}
+
 // CheckGoExport tells whether the Go files in the folder the design names are
 // what the design exports: nothing is written.
 func (f *Flow) CheckGoExport() {

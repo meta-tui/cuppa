@@ -43,6 +43,7 @@ type Model struct {
 	ed     *editor.Editor
 	ask    Asker
 	report Reporter
+	states States
 
 	// open says the list is shown; at is the row the keyboard is on.
 	open  bool
@@ -53,6 +54,13 @@ type Model struct {
 	// box is where the list was drawn, in screen cells.
 	boxX, boxY, boxW, boxH int
 }
+
+// States says, for each page name, how its exported Go files compare with the
+// design ("current", "changed", "new"); nil when the design has no export.
+type States func() map[string]string
+
+// SetStates sets where the list gets the export state of the pages.
+func (m *Model) SetStates(s States) { m.states = s }
 
 // New returns the bar for an editor.
 func New(ed *editor.Editor) *Model { return &Model{ed: ed} }
@@ -132,6 +140,21 @@ func (m *Model) build() {
 	m.items = m.items[:0]
 	m.at = 0
 	onMaster := m.ed.OnMaster()
+	// What the last export did to each page: ✓ current, ● changed since, + not
+	// exported. Worked out when the list opens, not on every redraw.
+	marks := map[string]string{}
+	if m.states != nil {
+		for page, st := range m.states() {
+			switch st {
+			case "current":
+				marks[page] = "  ✓"
+			case "changed":
+				marks[page] = "  ●"
+			case "new":
+				marks[page] = "  +"
+			}
+		}
+	}
 	add := func(i int) {
 		page := i
 		if i == cur {
@@ -141,7 +164,7 @@ func (m *Model) build() {
 		if i == m.ed.MasterPage() {
 			label = "◆ " + label
 		}
-		m.items = append(m.items, item{label: label, current: i == cur, act: func() { m.ed.SwitchPage(page) }})
+		m.items = append(m.items, item{label: label + marks[names[i]], current: i == cur, act: func() { m.ed.SwitchPage(page) }})
 	}
 	// Pages that have a folder are listed under it, so a design of many pages
 	// is as easy to read as the folders its export makes.

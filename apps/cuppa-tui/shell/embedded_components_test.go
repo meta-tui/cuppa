@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
 	"github.com/meta-ui-labs/cuppa/libs/render/scene"
 )
 

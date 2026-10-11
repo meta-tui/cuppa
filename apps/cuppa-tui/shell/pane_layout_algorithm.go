@@ -12,7 +12,7 @@ type layout struct {
 	// tools is the tool list at the top of the left bar, palette the component
 	// list under it, options the contextual bar above the canvas, and stage
 	// the canvas below that.
-	tools, palette, options, stage, inspector design.Rect
+	tools, palette, options, stage, pages, inspector design.Rect
 }
 
 const (
@@ -47,11 +47,19 @@ func computeLayout(w, h, palW, insW int) layout {
 	stageW := max(w-pal-ins-2, 1)
 	body := max(h-chromeRows, 1)
 	toolRows := min(tools.Rows, max(body-1, 0))
+	// The pages bar is the row under the canvas; with no room for it the
+	// canvas keeps the row.
+	pagesRows := 0
+	if body-inspector.ContextRows >= 3 {
+		pagesRows = 1
+	}
+	stageH := max(body-inspector.ContextRows-pagesRows, 1)
 	return layout{
 		tools:     design.Rect{X: 0, Y: 1, W: pal, H: toolRows},
 		palette:   design.Rect{X: 0, Y: 1 + toolRows, W: pal, H: max(body-toolRows, 0)},
 		options:   design.Rect{X: pal + 1, Y: 1, W: stageW, H: inspector.ContextRows},
-		stage:     design.Rect{X: pal + 1, Y: 1 + inspector.ContextRows, W: stageW, H: max(body-inspector.ContextRows, 1)},
+		stage:     design.Rect{X: pal + 1, Y: 1 + inspector.ContextRows, W: stageW, H: stageH},
+		pages:     design.Rect{X: pal + 1, Y: 1 + inspector.ContextRows + stageH, W: stageW, H: pagesRows},
 		inspector: design.Rect{X: pal + 1 + stageW + 1, Y: 1, W: ins, H: body},
 	}
 }
@@ -98,6 +106,8 @@ func (l layout) paneAt(x, y int) pane {
 		return inTools
 	case l.options.Contains(x, y):
 		return inOptions
+	case l.pages.Contains(x, y):
+		return inPages
 	case l.palette.Contains(x, y):
 		return inPalette
 	case l.stage.Contains(x, y):

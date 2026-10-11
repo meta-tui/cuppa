@@ -246,3 +246,25 @@ func TestOpenFileOrNotifyShowsADialogWhenTheFileIsBad(t *testing.T) {
 		t.Fatal("dialog not drawn")
 	}
 }
+
+// The pages bar sits under the canvas; Alt+PageUp and Alt+PageDown walk pages.
+func TestThePagesBarIsUnderTheCanvasAndAltPageKeysWalkPages(t *testing.T) {
+	m := newShell(t)
+	if m.layout.pages.H != 1 || m.layout.pages.Y != m.layout.stage.Y+m.layout.stage.H {
+		t.Fatalf("layout = %+v", m.layout)
+	}
+	if err := m.Editor().AddPage("Second"); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(m.render(), "Second  2/2") {
+		t.Fatal("the bar names the page being edited")
+	}
+	send(m, key(tea.KeyPgUp, tea.ModAlt))
+	if m.Editor().ActivePage() != 0 {
+		t.Fatalf("active = %d", m.Editor().ActivePage())
+	}
+	send(m, key(tea.KeyPgDown, tea.ModAlt))
+	if m.Editor().ActivePage() != 1 {
+		t.Fatalf("active = %d", m.Editor().ActivePage())
+	}
+}

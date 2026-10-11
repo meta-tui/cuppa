@@ -17,7 +17,6 @@ const (
 	panelKeys       panelID = "keys"
 	panelDisplay    panelID = "display"
 	panelInputs     panelID = "inputs"
-	panelPages      panelID = "pages"
 	panelLayers     panelID = "layers"
 )
 
@@ -45,7 +44,6 @@ var panelDefaults = map[panelID]panelDefault{
 	panelKeys:       {want: 3, min: 2, closed: true},
 	panelDisplay:    {want: 8, min: 3},
 	panelInputs:     {want: 4, min: 2},
-	panelPages:      {want: 4, min: 2},
 	panelLayers:     {want: 8, min: 3},
 }
 
@@ -70,8 +68,8 @@ type panelView struct {
 	open bool
 }
 
-// fixedRows are the rows above the panels: the title and the history buttons.
-const fixedRows = 2
+// fixedRows are the rows above the panels: the title and the mode buttons.
+const fixedRows = 1
 
 func (m *Model) state(id panelID) *panelState {
 	if m.panels == nil {

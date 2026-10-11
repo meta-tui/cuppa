@@ -5,6 +5,8 @@ package shell
 
 import (
 	"fmt"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pagesbar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,8 +23,8 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/preview"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/stage"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/tools"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/themepicker"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/tools"
 	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/packstate"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/registry"
@@ -43,6 +45,8 @@ const (
 	// there choose and set, the keyboard focus stays where it was.
 	inTools
 	inOptions
+	// inPages is the bar of pages under the canvas.
+	inPages
 )
 
 // Default canvas size of a new design, in cells.
@@ -61,22 +65,24 @@ type Model struct {
 	packs *packstate.State
 	// userPacks is the folder of installed packs ("" until LoadUserPacks) and
 	// packProblems what could not be loaded from it.
-	userPacks    string
-	embedded     []design.Embedded
+	userPacks string
+	embedded  []design.Embedded
 	// run is the design being previewed, or nil while editing; pending holds
 	// commands it asked for until Update returns them.
-	run     *preview.Session
-	pending []tea.Cmd
+	run          *preview.Session
+	pending      []tea.Cmd
 	packProblems []error
-	ed    *editor.Editor
-	bar   *menubar.Model
-	flow  *fileflow.Flow
+	ed           *editor.Editor
+	bar          *menubar.Model
+	flow         *fileflow.Flow
 
 	tb   *tools.Model
 	gest gesture
 	pal  *palette.Model
 	stg  *stage.Model
-	ins *inspector.Model
+	ins  *inspector.Model
+	// pg is the bar of pages under the canvas.
+	pg *pagesbar.Model
 
 	w, h   int
 	layout layout
@@ -125,6 +131,7 @@ func New(cat *registry.Registry) *Model {
 		packs: packstate.Open(""),
 		stg:   stage.New(ed, live),
 		ins:   inspector.New(ed, live),
+		pg:    pagesbar.New(ed),
 		focus: inStage,
 		curX:  4,
 		curY:  2,
@@ -140,6 +147,13 @@ func New(cat *registry.Registry) *Model {
 	m.ins.BindAsker(m.askQuestion)
 	m.ins.BindThemePicker(m.pickTheme)
 	m.tb.BindColorPicker(m.pickColor)
+	m.pg.Bind(func(title, initial string, then func(string)) {
+		m.flow.Show(prompt.New(title, "Name of the page", initial), func(o modal.Outcome) {
+			if !o.Canceled {
+				then(o.Value)
+			}
+		})
+	}, m.flow.Notice)
 	return m
 }
 
@@ -406,6 +420,11 @@ func (m *Model) mouse(e pointer.Event) {
 		return
 	}
 	m.mouseX, m.mouseY = e.X, e.Y
+	if m.pg.Open() {
+		// The list of pages takes every press until it closes.
+		m.pg.HandleMenu(e)
+		return
+	}
 	target := m.layout.paneAt(e.X, e.Y)
 	if m.owner != nowhere && (e.Phase == pointer.Move && e.Held || e.Phase == pointer.Up) {
 		target = m.owner
@@ -425,6 +444,8 @@ func (m *Model) mouse(e pointer.Event) {
 			m.cancelGesture()
 			m.say(m.tb.Tool().Name() + " tool")
 		}
+	case inPages:
+		m.pg.HandleBar(e.Translate(m.layout.pages.X, m.layout.pages.Y))
 	case inOptions:
 		local := e.Translate(m.layout.options.X, m.layout.options.Y)
 		if m.tb.Tool() == tools.Select {
@@ -446,7 +467,7 @@ func (m *Model) mouse(e pointer.Event) {
 	if m.dragging != "" {
 		m.dragFromPalette(e)
 	}
-	if e.Phase == pointer.Down && target != nowhere && target != inTools && target != inOptions {
+	if e.Phase == pointer.Down && target != nowhere && target != inTools && target != inOptions && target != inPages {
 		m.setFocus(target)
 	}
 	if e.Phase == pointer.Down && m.dragging == "" {
@@ -532,6 +553,24 @@ func (m *Model) key(msg tea.KeyPressMsg) {
 		return
 	case "ctrl+shift+s":
 		m.flow.SaveAs()
+		return
+	}
+	if m.pg.Open() {
+		m.pg.Key(text)
+		return
+	}
+	switch text {
+	case "alt+pgup", "alt+pgdown":
+		if m.run == nil {
+			at := m.ed.ActivePage()
+			if text == "alt+pgup" {
+				at--
+			} else {
+				at++
+			}
+			m.ed.SwitchPage(at)
+			m.say("Page " + m.ed.PageNames()[m.ed.ActivePage()])
+		}
 		return
 	}
 	if m.run == nil && !m.ins.Dragging() && !m.ins.Editing() && !m.pal.Searching() && m.focusKey(text) {
@@ -678,6 +717,9 @@ func (m *Model) render() string {
 	m.stg.SetCursor(m.curX, m.curY, len(m.ed.Selected()) == 0 && (m.focus == inStage || m.focus == inPalette))
 	pal := append(m.tb.Lines(l.tools.W, false)[:l.tools.H], m.pal.Lines()...)
 	stg := append(m.contextLines(l.options.W), m.stg.Lines()...)
+	if l.pages.H > 0 {
+		stg = append(stg, m.pg.Line(l.pages.W, m.run != nil))
+	}
 	ins := m.ins.Lines()
 	left, right := m.separator(leftDivider), m.separator(rightDivider)
 	out := make([]string, 0, m.h)
@@ -688,6 +730,9 @@ func (m *Model) render() string {
 	out = append(out, m.statusBar())
 	if x, drop := m.bar.Dropdown(); drop != nil {
 		m.overlay(out, drop, x, 1)
+	}
+	if x, y, list := m.pg.Overlay(l.pages.X, l.pages.Y); list != nil {
+		m.overlay(out, list, x, y)
 	}
 	if dlg := m.flow.Modal(); dlg != nil {
 		r := dlg.Rect()

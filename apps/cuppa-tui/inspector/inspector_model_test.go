@@ -188,18 +188,6 @@ func TestPropertiesEditThroughTheSchema(t *testing.T) {
 	}
 }
 
-func TestUndoRedoButtons(t *testing.T) {
-	m, ed, _ := setup(t, "lipgloss.box")
-	clickText(t, m, "[Undo]", "[Undo]")
-	if len(ed.Document().Nodes) != 0 {
-		t.Fatal("undo button did not undo the add")
-	}
-	clickText(t, m, "[Redo]", "[Redo]")
-	if len(ed.Document().Nodes) != 1 {
-		t.Fatal("redo button did not redo")
-	}
-}
-
 func TestEmptyStateAndSizing(t *testing.T) {
 	cat := standard.Default()
 	ed := editor.New(cat, design.NewDocument("t", 100, 40))

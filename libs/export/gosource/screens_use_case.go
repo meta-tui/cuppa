@@ -184,6 +184,9 @@ type partSource struct {
 	show   string
 	// cond is the Go condition of a show-if that is an expression ("w >= 100").
 	cond string
+	// late is what is assigned once the layout has given the component its
+	// size: w and h are the component's own.
+	late []string
 }
 
 func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) screen {
@@ -259,6 +262,10 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		name, input, signature string
 		fields                 []string
 		colour                 []bool
+		// component is the Rows component that shows the list, source the input
+		// that holds the function giving its rows for its size ("" when the
+		// name was taken).
+		component, source string
 	}
 	var rowTypes []rowType
 	rowTypeIndex := map[string]int{}
@@ -424,7 +431,29 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 				for _, f := range fields {
 					cellStyleCells = append(cellStyleCells, "cellStyleCode(r."+f+"Style)")
 				}
-				ps.assign = append(ps.assign, fmt.Sprintf("{\n\t\t\t\trows := make([][]string, len(p.%[1]s))\n\t\t\t\tcellStyles := make([][]string, len(p.%[1]s))\n\t\t\t\tstyles := make([]string, len(p.%[1]s))\n\t\t\t\tfor i, r := range p.%[1]s {\n\t\t\t\t\trows[i] = []string{%[2]s}\n\t\t\t\t\tcellStyles[i] = []string{%[4]s}\n\t\t\t\t\tstyles[i] = rowStyleName(r.Style)\n\t\t\t\t}\n\t\t\t\tv[%[3]q] = joinRows(rows)\n\t\t\t\tv[\"cellstyles\"] = joinRows(cellStyles)\n\t\t\t\tv[\"styles\"] = joinList(styles)\n\t\t\t}", field, strings.Join(cells, ", "), key, strings.Join(cellStyleCells, ", ")))
+				// The rows of the list, as the component reads them. A program may
+				// instead give a function that makes the rows for the size the
+				// layout gives the component (Late), so it needs no first pass.
+				block := func(list string) string {
+					return fmt.Sprintf("{\n\t\t\t\trows := make([][]string, len(%[1]s))\n\t\t\t\tcellStyles := make([][]string, len(%[1]s))\n\t\t\t\tstyles := make([]string, len(%[1]s))\n\t\t\t\tfor i, r := range %[1]s {\n\t\t\t\t\trows[i] = []string{%[2]s}\n\t\t\t\t\tcellStyles[i] = []string{%[4]s}\n\t\t\t\t\tstyles[i] = rowStyleName(r.Style)\n\t\t\t\t}\n\t\t\t\tv[%[3]q] = joinRows(rows)\n\t\t\t\tv[\"cellstyles\"] = joinRows(cellStyles)\n\t\t\t\tv[\"styles\"] = joinList(styles)\n\t\t\t}", list, strings.Join(cells, ", "), key, strings.Join(cellStyleCells, ", "))
+				}
+				source := ""
+				if i, ok := rowTypeIndex[typeName]; ok {
+					source = rowTypes[i].source
+				}
+				if source == "" {
+					if f, ok := register(l.Bind[key]+"Rows", "func(w, h int) ([]"+typeName+", int)", "nil", fmt.Sprintf("function that gives the rows of %q for the size its place has (w, h cells) and the index of the first one; use Window to keep the selected row in view. It is used when it is not nil", l.Name)); ok {
+						source = f
+						rowTypes[rowTypeIndex[typeName]].source = f
+						rowTypes[rowTypeIndex[typeName]].component = l.Name
+					}
+				}
+				if source == "" {
+					ps.assign = append(ps.assign, block("p."+field))
+				} else {
+					ps.assign = append(ps.assign, "if p."+source+" == nil "+block("p."+field))
+					ps.late = append(ps.late, "if p."+source+" != nil {\n\t\t\t\trs, _ := p."+source+"(w, h)\n\t\t\t\t"+block("rs")+"\n\t\t\t}")
+				}
 				continue
 			}
 			if l.Kind == design.PanelsComponent && key == "open" {
@@ -611,6 +640,12 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		}
 		inputs[i].def = lit
 	}
+	for _, rt := range rowTypes {
+		if rt.source == "" {
+			continue
+		}
+		fmt.Fprintf(&c, "// %[1]s%[2]sAt is the index in %[2]s of the row under screen row y, for a\n// screen of w by h cells, and false where there is none. It reads the rows\n// the way the drawing does, so a click is mapped with no arithmetic of the\n// program's own.\nfunc %[1]s%[2]sAt(p %[1]sProps, w, h, y int) (int, bool) {\n\tr, ok := %[1]sLayout(p, w, h).RegionNamed(%[3]q)\n\tif !ok || y < r.Y || y >= r.Y+r.H {\n\t\treturn 0, false\n\t}\n\trows, first := p.%[2]s, 0\n\tif p.%[4]s != nil {\n\t\trows, first = p.%[4]s(r.W, r.H)\n\t}\n\tk := y - r.Y\n\tif k >= len(rows) {\n\t\treturn 0, false\n\t}\n\treturn first + k, true\n}\n\n", ident, rt.input, rt.component, rt.source)
+	}
 	fmt.Fprintf(&c, "// Default%sProps is the screen as it was designed: each input holds the value\n// it had in the design, unless the design gives the input an app default.\nfunc Default%sProps() %sProps {\n\treturn %sProps{\n", ident, ident, ident, ident)
 	for _, in := range inputs {
 		fmt.Fprintf(&c, "\t\t%s: %s,\n", in.field, in.def)
@@ -673,6 +708,13 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		}
 		if l.Event != "" && eventOf[l.Event] != "" {
 			fmt.Fprintf(&v, "\t\tEvent: %s,\n", strconv.Quote(l.Event))
+		}
+		if len(ps.late) > 0 {
+			v.WriteString("\t\tLate: func(p " + ident + "Props, v map[string]string, w, h int) {\n")
+			for _, a := range ps.late {
+				v.WriteString("\t\t\t" + a + "\n")
+			}
+			v.WriteString("\t\t},\n")
 		}
 		if len(ps.assign) > 0 || ps.show != "" || ps.cond != "" {
 			v.WriteString("\t\tApply: func(p " + ident + "Props, v map[string]string, w, h int) bool {\n")

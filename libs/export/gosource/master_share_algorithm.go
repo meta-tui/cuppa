@@ -85,6 +85,9 @@ func MasterPartsFor[P any](conv func(P) MasterProps, hide ...string) []screenPar
 			continue
 		}
 		shared := screenPart[P]{placed: part.placed, Roles: part.Roles, Event: part.Event}
+		if late := part.Late; late != nil {
+			shared.Late = func(p P, v map[string]string, w, h int) { late(conv(p), v, w, h) }
+		}
 		if apply := part.Apply; apply != nil {
 			shared.Apply = func(p P, v map[string]string, w, h int) bool { return apply(conv(p), v, w, h) }
 		}

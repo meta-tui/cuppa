@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
@@ -12,12 +13,17 @@ import (
 
 const mergeUsage = `usage:
   cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa> [--name <design name>] [--folder <page>=<folder>]...
+                     [--master [--master-min <pages>]]
 
-Builds one design with a page per input design, in the order given. A page is
+Builds one design with a page per input design, in the order given. With
+--master a single design that has pages is enough: its pages are lifted. A page is
 named after its design, and keeps its components, its samples and its keys; a
 design that has pages gives one page each. The canvas size is the largest of
 the designs, and the theme, palette and background are the first design's.
 --folder says where an export keeps a page (setup/preferences).
+--master lifts the components that are the same on at least --master-min pages
+(3 by default) to a master page the pages share (ADR 0015); a page that did not
+have one hides it. It prints what it lifted and what it left.
 `
 
 // merge builds a multi-page design from several, so an application made of
@@ -25,6 +31,7 @@ the designs, and the theme, palette and background are the first design's.
 func merge(args []string, stdout io.Writer) error {
 	var inputs []string
 	out, name := "", ""
+	lift, liftMin := false, 3
 	folders := map[string]string{}
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
@@ -33,6 +40,18 @@ func merge(args []string, stdout io.Writer) error {
 			if i < len(args) {
 				out = args[i]
 			}
+		case "--master":
+			lift = true
+		case "--master-min":
+			i++
+			if i >= len(args) {
+				return fmt.Errorf("--master-min takes a number")
+			}
+			n, err := strconv.Atoi(args[i])
+			if err != nil || n < 2 {
+				return fmt.Errorf("--master-min takes a number of at least 2, got %q", args[i])
+			}
+			liftMin = n
 		case "--name":
 			i++
 			if i < len(args) {
@@ -55,7 +74,7 @@ func merge(args []string, stdout io.Writer) error {
 			inputs = append(inputs, args[i])
 		}
 	}
-	if out == "" || len(inputs) < 2 {
+	if out == "" || len(inputs) == 0 || len(inputs) < 2 && !lift {
 		return fmt.Errorf("%s", mergeUsage)
 	}
 	var base design.Document
@@ -96,7 +115,11 @@ func merge(args []string, stdout io.Writer) error {
 			return fmt.Errorf("two designs are called %q; a page needs a name of its own", s.Name)
 		}
 		seen[s.Name] = true
-		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Keys: s.Keys, Folder: folders[s.Name]}
+		folder := s.Folder
+		if f, ok := folders[s.Name]; ok {
+			folder = f
+		}
+		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Keys: s.Keys, Folder: folder}
 		if s.Seq > base.Seq {
 			base.Seq = s.Seq
 		}
@@ -104,6 +127,15 @@ func merge(args []string, stdout io.Writer) error {
 	for page := range folders {
 		if !seen[page] {
 			return fmt.Errorf("--folder: there is no page called %q", page)
+		}
+	}
+	if lift {
+		master, report := liftMaster(pages, liftMin, &base)
+		for _, l := range report {
+			_, _ = fmt.Fprintln(stdout, l)
+		}
+		if len(master) > 0 {
+			pages = append(pages, design.Page{Name: "Master", Master: true, Nodes: master})
 		}
 	}
 	first := pages[0]

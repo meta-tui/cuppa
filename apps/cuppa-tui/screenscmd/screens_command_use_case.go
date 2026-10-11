@@ -252,7 +252,7 @@ func runApp(inputs []string, out, layout, module string, library, router, check 
 		if check {
 			diffs := gosource.CheckProject(out, project)
 			if len(diffs) == 0 {
-				_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", out, doc.PageCount(), len(project.Files))
+				_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", out, doc.ScreenCount(), len(project.Files))
 				return nil
 			}
 			for _, d := range diffs {
@@ -266,7 +266,7 @@ func runApp(inputs []string, out, layout, module string, library, router, check 
 	} else if err := gosource.Write(out, project); err != nil {
 		return err
 	}
-	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\nNext: cd %s && go mod tidy && go run .\n", doc.PageCount(), len(project.Files), out, out)
+	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\nNext: cd %s && go mod tidy && go run .\n", doc.ScreenCount(), len(project.Files), out, out)
 	for _, n := range project.Notes {
 		_, _ = fmt.Fprintln(stdout, "note:", n)
 	}
@@ -297,7 +297,7 @@ func runSaved(path string, check bool, stdout io.Writer) (bool, error) {
 	if check {
 		diffs := gosource.CheckProject(dir, project)
 		if len(diffs) == 0 {
-			_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", dir, doc.PageCount(), len(project.Files))
+			_, _ = fmt.Fprintf(stdout, "%s is current: %d pages, %d files\n", dir, doc.ScreenCount(), len(project.Files))
 			return true, nil
 		}
 		for _, d := range diffs {
@@ -308,7 +308,7 @@ func runSaved(path string, check bool, stdout io.Writer) (bool, error) {
 	if err := gosource.WriteExport(dir, s, project); err != nil {
 		return true, err
 	}
-	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\n", doc.PageCount(), len(project.Files), dir)
+	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\n", doc.ScreenCount(), len(project.Files), dir)
 	for _, n := range project.Notes {
 		_, _ = fmt.Fprintln(stdout, "note:", n)
 	}

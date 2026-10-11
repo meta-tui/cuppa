@@ -112,10 +112,25 @@ func check(path string, stdout io.Writer) error {
 	if err != nil {
 		return err
 	}
-	problems := problemsOf(doc)
+	// Every page is checked, with the master's components it shows.
+	screens := doc.Screens()
+	var problems []string
+	for _, s := range screens {
+		for _, p := range problemsOf(s) {
+			if len(screens) > 1 {
+				p = s.Name + ": " + p
+			}
+			problems = append(problems, p)
+		}
+		problems = append(problems, masterClashes(s)...)
+	}
 	cat := standard.Default()
-	export := gosource.GenerateScreens([]design.Document{doc}, cat, "screens")
-	_, _ = fmt.Fprintf(stdout, "%q, %dx%d, %d components\n", doc.Name, doc.Width, doc.Height, count(doc.Nodes))
+	export := gosource.GenerateScreens(screens, cat, "screens")
+	total := 0
+	for _, s := range screens {
+		total += count(s.Nodes)
+	}
+	_, _ = fmt.Fprintf(stdout, "%q, %dx%d, %d pages, %d components\n", doc.Name, doc.Width, doc.Height, len(screens), total)
 	if len(problems) == 0 && len(export.Notes) == 0 {
 		_, _ = fmt.Fprintln(stdout, "in order; exports as a screen without notes")
 		return nil
@@ -176,4 +191,23 @@ func count(nodes []design.Node) int {
 		n += count(node.Children)
 	}
 	return n
+}
+
+// masterClashes lists the pages' components that have the name of a master
+// component the page shows: the two would be one name in a layout expression
+// (ADR 0015).
+func masterClashes(s design.Document) []string {
+	own := map[string]bool{}
+	for _, n := range s.Nodes {
+		if !strings.HasPrefix(string(n.ID), design.MasterPrefix) {
+			own[n.Name] = true
+		}
+	}
+	var out []string
+	for _, n := range s.Nodes {
+		if strings.HasPrefix(string(n.ID), design.MasterPrefix) && own[n.Name] {
+			out = append(out, fmt.Sprintf("%s: a component is called %q on the page and on the master; hide the master's or rename one", s.Name, n.Name))
+		}
+	}
+	return out
 }

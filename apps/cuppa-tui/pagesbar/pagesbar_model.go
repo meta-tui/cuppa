@@ -90,6 +90,9 @@ func (m *Model) Line(w int, idle bool) string {
 	button("◂", at > 0, func() { m.ed.SwitchPage(at - 1) })
 	text(" ")
 	name := names[at]
+	if at == m.ed.MasterPage() {
+		name = "◆ " + name
+	}
 	label := fmt.Sprintf("%s  %d/%d ▾", ansi.Truncate(name, 24, "…"), at+1, len(names))
 	if idle {
 		text(theme.Dim(label))
@@ -128,12 +131,17 @@ func (m *Model) build() {
 	cur := m.ed.ActivePage()
 	m.items = m.items[:0]
 	m.at = 0
+	onMaster := m.ed.OnMaster()
 	add := func(i int) {
 		page := i
 		if i == cur {
 			m.at = len(m.items)
 		}
-		m.items = append(m.items, item{label: names[i], current: i == cur, act: func() { m.ed.SwitchPage(page) }})
+		label := names[i]
+		if i == m.ed.MasterPage() {
+			label = "◆ " + label
+		}
+		m.items = append(m.items, item{label: label, current: i == cur, act: func() { m.ed.SwitchPage(page) }})
 	}
 	// Pages that have a folder are listed under it, so a design of many pages
 	// is as easy to read as the folders its export makes.
@@ -155,6 +163,9 @@ func (m *Model) build() {
 			if f := m.ed.PageFolder(i); f != "" {
 				g, _, _ = strings.Cut(f, "/")
 			}
+			if i == m.ed.MasterPage() {
+				g = "master"
+			}
 			if _, ok := members[g]; !ok {
 				order = append(order, g)
 			}
@@ -170,7 +181,7 @@ func (m *Model) build() {
 	m.items = append(m.items,
 		item{separator: true},
 		item{label: "Add page", act: m.add},
-		item{label: "Rename…", act: func() { m.rename(cur) }},
+		item{label: "Rename…", disabled: onMaster, act: func() { m.rename(cur) }},
 		item{label: "Move left", disabled: cur == 0, act: func() { m.ed.MovePage(cur, cur-1) }},
 		item{label: "Move right", disabled: cur >= len(names)-1, act: func() { m.ed.MovePage(cur, cur+1) }},
 		item{label: "Delete page", disabled: len(names) < 2, act: func() {
@@ -178,8 +189,24 @@ func (m *Model) build() {
 				m.report("Cannot delete page", err.Error())
 			}
 		}},
-		item{label: "Folder…", act: func() { m.folder(cur) }},
+		item{label: "Folder…", disabled: onMaster, act: func() { m.folder(cur) }},
 	)
+	// The master page (ADR 0015): the components every page shows.
+	switch {
+	case m.ed.MasterPage() < 0:
+		m.items = append(m.items, item{label: "Add master page", act: func() {
+			m.open = false
+			if err := m.ed.AddMasterPage(); err != nil && m.report != nil {
+				m.report("Cannot add the master page", strings.TrimPrefix(err.Error(), "editor: "))
+			}
+		}})
+	case !onMaster:
+		m.items = append(m.items, item{label: "Move selection to master", disabled: len(m.ed.Selected()) == 0, act: func() {
+			if _, err := m.ed.MoveToMaster(); err != nil && m.report != nil {
+				m.report("Cannot move to the master", strings.TrimPrefix(err.Error(), "editor: "))
+			}
+		}})
+	}
 }
 
 func (m *Model) rename(i int) {

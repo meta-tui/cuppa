@@ -10,7 +10,9 @@ import (
 // render draws the visible part of the canvas, the selection and the drag
 // feedback onto a grid the size of the pane.
 func (m *Model) render() *grid.Grid {
-	doc := m.ed.Document()
+	// The master's components are drawn below the page's own; they are not in
+	// the document the person selects from.
+	doc := m.ed.RenderDocument()
 	rendered := scene.Render(doc, m.cat)
 	if m.renderer != nil {
 		rendered = m.renderer()

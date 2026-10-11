@@ -25,6 +25,11 @@ type Page struct {
 	// Keys are the keys of the page when it is not the one being edited; the
 	// shown page's are Document.Keys.
 	Keys []KeyBinding `json:"keys,omitempty"`
+	// Master marks the page whose components every other page shows below its
+	// own (ADR 0015). There is at most one, and it is not a screen.
+	Master bool `json:"master,omitempty"`
+	// Hide are the master components this page does not show.
+	Hide []NodeID `json:"hide,omitempty"`
 }
 
 // PageCount is how many pages the design has: at least one.
@@ -70,8 +75,11 @@ func (d Document) Screens() []Document {
 		return []Document{d}
 	}
 	active := d.ActivePage()
-	out := make([]Document, len(d.Pages))
+	var out []Document
 	for i, p := range d.Pages {
+		if p.Master {
+			continue
+		}
 		s := d
 		s.Pages, s.Page = nil, 0
 		s.Name = p.Name
@@ -83,10 +91,80 @@ func (d Document) Screens() []Document {
 			s.Samples = p.Samples
 			s.Keys = p.Keys
 		}
-		out[i] = s.Clone()
+		s.Nodes = append(d.ShownMaster(i), s.Nodes...)
+		out = append(out, s.Clone())
+	}
+	if len(out) == 0 {
+		// A design of nothing but its master is that master.
+		s := d
+		s.Pages, s.Page = nil, 0
+		out = append(out, s.Clone())
 	}
 	return out
 }
+
+// MasterIndex is the index of the master page, or -1 when the design has none.
+func (d Document) MasterIndex() int {
+	for i, p := range d.Pages {
+		if p.Master {
+			return i
+		}
+	}
+	return -1
+}
+
+// MasterNodes are the components of the master page, as they were designed.
+func (d Document) MasterNodes() []Node {
+	m := d.MasterIndex()
+	switch {
+	case m < 0:
+		return nil
+	case m == d.ActivePage():
+		return d.Nodes
+	}
+	return d.Pages[m].Nodes
+}
+
+// MasterPrefix starts the id of a master component as a page shows it, so it
+// never takes the id of one of the page's own.
+const MasterPrefix = "m_"
+
+// ShownMaster are the master's components page i shows: the ones it does not
+// hide, with ids that carry MasterPrefix. The page that is the master shows
+// none of them, as it is where they are made.
+func (d Document) ShownMaster(i int) []Node {
+	m := d.MasterIndex()
+	if m < 0 || i == m || i < 0 || i >= len(d.Pages) {
+		return nil
+	}
+	hidden := map[NodeID]bool{}
+	for _, id := range d.Pages[i].Hide {
+		hidden[id] = true
+	}
+	var out []Node
+	for _, n := range d.MasterNodes() {
+		if !hidden[n.ID] {
+			out = append(out, prefixed(n))
+		}
+	}
+	return out
+}
+
+func prefixed(n Node) Node {
+	n = n.Clone()
+	n.ID = MasterPrefix + n.ID
+	if n.In != "" {
+		n.In = MasterPrefix + n.In
+	}
+	for i := range n.Children {
+		n.Children[i] = prefixed(n.Children[i])
+	}
+	return n
+}
+
+// ScreenCount is how many screens the design exports: its pages, without the
+// master.
+func (d Document) ScreenCount() int { return len(d.Screens()) }
 
 // ValidPageName reports whether a page name can be used: it becomes the name
 // of a Go screen, so it is letters, digits and spaces, and starts with a

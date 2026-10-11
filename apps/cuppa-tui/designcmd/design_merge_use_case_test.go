@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func buildDesign(t *testing.T, dir, name, w, h, text, sampleValue string) string {
@@ -68,5 +69,93 @@ func TestMergingRefusesTwoDesignsWithOneName(t *testing.T) {
 	code, _, e := run(t, "merge", a, b, "-o", filepath.Join(dir, "x.cuppa"))
 	if code == 0 || !strings.Contains(e, "Same") {
 		t.Fatalf("merge: %d %s", code, e)
+	}
+}
+
+// --master lifts what is the same on enough pages; a page without it hides it,
+// and every screen still has the components it had.
+func TestMergingWithAMasterLiftsWhatPagesShare(t *testing.T) {
+	dir := t.TempDir()
+	var files []string
+	for _, name := range []string{"One", "Two", "Three", "Four"} {
+		files = append(files, buildDesign(t, dir, name, "100", "30", name+" text", "1"))
+	}
+	plain := filepath.Join(dir, "plain.cuppa")
+	if code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", plain)...); code != 0 {
+		t.Fatalf("merge: %d\n%s%s", code, o, e)
+	}
+	// "Title" has a different text on every design, so it is not the same.
+	out := filepath.Join(dir, "master.cuppa")
+	code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", out, "--master")...)
+	if code != 0 {
+		t.Fatalf("merge: %d\n%s%s", code, o, e)
+	}
+	if !strings.Contains(o, "nothing is on 3 pages") {
+		t.Fatalf("different texts were lifted:\n%s", o)
+	}
+}
+
+func TestTheMasterKeepsEveryScreenWhole(t *testing.T) {
+	dir := t.TempDir()
+	// Four designs whose Title is the same (a property bound to an input).
+	var files []string
+	for _, name := range []string{"One", "Two", "Three", "Four"} {
+		json := `{"document": {"name": "` + name + `", "width": 100, "height": 30,
+		  "nodes": [
+		   {"id": "n1", "component": "lipgloss.label", "name": "Title", "rect": {"X": 0, "Y": 0, "W": 100, "H": 1},
+		    "props": {"text": "` + name + `"}, "bind": {"text": "Title"}},
+		   {"id": "n2", "component": "lipgloss.box", "name": "` + name + ` box", "rect": {"X": 2, "Y": 3, "W": 20, "H": 5}}]}}`
+		src := filepath.Join(dir, name+".json")
+		if err := os.WriteFile(src, []byte(json), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		out := filepath.Join(dir, name+".cuppa")
+		if code, o, e := run(t, "build", src, out); code != 0 {
+			t.Fatalf("build: %d %s%s", code, o, e)
+		}
+		files = append(files, out)
+	}
+	out := filepath.Join(dir, "all.cuppa")
+	code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", out, "--master")...)
+	if code != 0 || !strings.Contains(o, `lifted "Title"`) {
+		t.Fatalf("merge: %d\n%s%s", code, o, e)
+	}
+	doc, err := disk.Load(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if doc.MasterIndex() < 0 || len(doc.MasterNodes()) != 1 {
+		t.Fatalf("master: index %d nodes %d", doc.MasterIndex(), len(doc.MasterNodes()))
+	}
+	screens := doc.Screens()
+	if len(screens) != 4 {
+		t.Fatalf("screens = %d", len(screens))
+	}
+	for _, s := range screens {
+		if len(s.Nodes) != 2 {
+			t.Fatalf("screen %s has %d nodes", s.Name, len(s.Nodes))
+		}
+		got := []string{s.Nodes[0].Name, s.Nodes[1].Name}
+		if got[0] != "Title" || got[1] != s.Name+" box" {
+			t.Errorf("screen %s: %v", s.Name, got)
+		}
+	}
+}
+
+func TestCheckingReportsANameThePageAndTheMasterShare(t *testing.T) {
+	dir := t.TempDir()
+	doc := design.NewDocument("App", 60, 10)
+	doc.Add(design.Node{Component: "lipgloss.label", Name: "Title", Rect: design.Rect{W: 10, H: 1}})
+	doc.Pages = []design.Page{
+		{Name: "Home"},
+		{Name: "Master", Master: true, Nodes: []design.Node{{ID: "n8", Component: "lipgloss.label", Name: "Title", Rect: design.Rect{W: 10, H: 1}}}},
+	}
+	file, err := disk.Save(filepath.Join(dir, "app"), doc)
+	if err != nil {
+		t.Fatal(err)
+	}
+	code, o, _ := run(t, "check", file)
+	if code != 1 || !strings.Contains(o, `"Title" on the page and on the master`) {
+		t.Fatalf("check: %d\n%s", code, o)
 	}
 }

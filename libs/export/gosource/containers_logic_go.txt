@@ -140,3 +140,51 @@ func containerPressed(kind string, p props, page int) map[string]string {
 	return map[string]string{"open": strings.Join(parts, ",")}
 }
 
+
+// dyKey is the property under which a screen hands a member the rows its place
+// moved by, because its section did.
+const dyKey = "cuppa.dy"
+
+// containerDY is how many rows a screen moved a component down (or up).
+func containerDY(v map[string]string) int {
+	n, _ := strconv.Atoi(v[dyKey])
+	return n
+}
+
+// containerBodyY is the top of a page's body, relative to its container.
+func containerBodyY(kind string, p props, w, h, page int) int {
+	g := containerGeometry(kind, p, w, h)
+	if page < 0 || page >= len(g.bodies) {
+		return 0
+	}
+	return g.bodies[page][1]
+}
+
+// joinInts writes page numbers as a comma separated list.
+func joinInts(v []int) string {
+	parts := make([]string, len(v))
+	for i, n := range v {
+		parts[i] = strconv.Itoa(n)
+	}
+	return strings.Join(parts, ",")
+}
+
+// parseInts reads a comma separated list of page numbers.
+func parseInts(s string) []int {
+	var out []int
+	for _, f := range strings.Split(s, ",") {
+		if n, err := strconv.Atoi(strings.TrimSpace(f)); err == nil {
+			out = append(out, n)
+		}
+	}
+	return out
+}
+
+func containsInt(v []int, n int) bool {
+	for _, x := range v {
+		if x == n {
+			return true
+		}
+	}
+	return false
+}

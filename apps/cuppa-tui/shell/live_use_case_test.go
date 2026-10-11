@@ -3,6 +3,7 @@ package shell
 import (
 	"strings"
 	"testing"
+	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/meta-ui-labs/cuppa/libs/connector/serve"
@@ -100,3 +101,39 @@ func TestAnAddressThatIsNotThisComputerIsRefused(t *testing.T) {
 	}
 }
 
+// While connected, a click on a component with an event, in the preview, is
+// sent to the application, and the values it publishes next are what runs.
+func TestAClickInThePreviewReachesTheApplication(t *testing.T) {
+	app, err := serve.Listen("127.0.0.1:0", serve.Options{App: "demo", Pages: []string{"Untitled"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = app.Close() }()
+	_ = app.Publish("Untitled", map[string]any{"Title": "one"}, true)
+
+	m := newShell(t)
+	doc := m.ed.Document()
+	doc.Add(design.Node{Component: "lipgloss.box", Name: "Go", Rect: design.Rect{X: 2, Y: 2, W: 20, H: 3},
+		Props: map[string]string{"title": "design"}, Bind: map[string]string{"title": "Title"}, Event: "Start"})
+	m.ed.Load(doc)
+	m.Connect(app.Addr())
+	_, cmd := m.Update(struct{}{})
+	_, cmd = m.Update(messages(cmd)[0])
+	m.Update(messages(cmd)[0])
+
+	m.togglePreview()
+	m.sendLiveEvent("Start", 3, 1)
+	for _, c := range m.pending {
+		if c != nil {
+			c()
+		}
+	}
+	select {
+	case e := <-app.Events():
+		if e.Page != "Untitled" || e.Name != "Start" || e.X != 3 || e.Y != 1 {
+			t.Fatalf("event %+v", e)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("the event did not arrive")
+	}
+}

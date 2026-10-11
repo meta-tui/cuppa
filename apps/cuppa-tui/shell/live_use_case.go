@@ -1,7 +1,10 @@
 package shell
 
 import (
+	"encoding/json"
 	"strings"
+
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/liveconn"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
@@ -39,6 +42,10 @@ func (m *Model) disconnect(why string) {
 		m.live = nil
 	}
 	m.ed.ClearLive()
+	m.liveStates = nil
+	if m.run != nil {
+		m.pending = append(m.pending, m.run.ClearLive())
+	}
 	if why != "" {
 		m.flow.Notice("Disconnected", why)
 	}
@@ -71,6 +78,13 @@ func (m *Model) liveMessage(msg any) {
 		}
 		if known {
 			m.ed.SetLive(page, msg.Inputs)
+			if m.liveStates == nil {
+				m.liveStates = map[string]map[string]json.RawMessage{}
+			}
+			m.liveStates[page] = msg.Inputs
+			if m.run != nil {
+				m.pending = append(m.pending, m.run.SetLive(page, msg.Inputs))
+			}
 			if msg.Current {
 				for i, n := range names {
 					if n == page && i != m.ed.ActivePage() {
@@ -85,4 +99,18 @@ func (m *Model) liveMessage(msg any) {
 			m.disconnect("The application closed the connection; the designer shows the values of the design again.")
 		}
 	}
+}
+
+// sendLiveEvent tells the connected application that a click or a key raised
+// an event on the page being run. It is sent from a command so a slow
+// application cannot hold the designer.
+func (m *Model) sendLiveEvent(name string, x, y int) {
+	if m.live == nil || m.run == nil {
+		return
+	}
+	conn, page := m.live, m.run.PageName()
+	m.pending = append(m.pending, func() tea.Msg {
+		_ = conn.Send(page, name, x, y)
+		return nil
+	})
 }

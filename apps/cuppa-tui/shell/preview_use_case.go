@@ -21,6 +21,9 @@ func (m *Model) togglePreview() {
 	m.run = run
 	m.stg.SetRenderer(run.Render)
 	m.pending = append(m.pending, start)
+	for page, inputs := range m.liveStates {
+		m.pending = append(m.pending, run.SetLive(page, inputs))
+	}
 	m.flow.SetStatus(previewStatus(run))
 }
 
@@ -71,6 +74,9 @@ func (m *Model) previewMouse(e pointer.Event) {
 	}
 	switch {
 	case e.Phase == pointer.Down && e.Left:
+		if name, lx, ly, ok := m.run.EventAt(cx, cy); ok {
+			m.sendLiveEvent(name, lx, ly)
+		}
 		m.pending = append(m.pending, m.run.Press(cx, cy))
 	case e.Phase == pointer.Wheel && e.WheelY != 0:
 		m.pending = append(m.pending, m.run.Wheel(cx, cy, e.WheelY))
@@ -82,6 +88,9 @@ func (m *Model) previewKey(msg tea.KeyPressMsg) {
 	if msg.Key().Code == tea.KeyEscape {
 		m.stopPreview()
 		return
+	}
+	if name, ok := m.run.KeyEvent(msg.String()); ok {
+		m.sendLiveEvent(name, 0, 0)
 	}
 	_, cmd := m.run.Key(msg)
 	m.pending = append(m.pending, cmd)

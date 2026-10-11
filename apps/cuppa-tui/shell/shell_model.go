@@ -4,6 +4,7 @@
 package shell
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pagesbar"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/liveconn"
@@ -74,6 +75,9 @@ type Model struct {
 	pending      []tea.Cmd
 	// live is the running application the designer shows the values of.
 	live *liveconn.Conn
+	// liveStates are the latest values of each page, so a preview that starts
+	// while connected runs with them.
+	liveStates map[string]map[string]json.RawMessage
 	packProblems []error
 	ed           *editor.Editor
 	bar          *menubar.Model

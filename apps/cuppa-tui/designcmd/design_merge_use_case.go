@@ -119,7 +119,7 @@ func merge(args []string, stdout io.Writer) error {
 		if f, ok := folders[s.Name]; ok {
 			folder = f
 		}
-		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Keys: s.Keys, Folder: folder}
+		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Defaults: s.Defaults, Keys: s.Keys, Folder: folder}
 		if s.Seq > base.Seq {
 			base.Seq = s.Seq
 		}
@@ -143,8 +143,8 @@ func merge(args []string, stdout io.Writer) error {
 		base.Name = name
 	}
 	// The first page is the one shown, as in every saved design.
-	base.Nodes, base.Samples, base.Keys = first.Nodes, first.Samples, first.Keys
-	pages[0].Nodes, pages[0].Samples, pages[0].Keys = nil, nil, nil
+	base.Nodes, base.Samples, base.Defaults, base.Keys = first.Nodes, first.Samples, first.Defaults, first.Keys
+	pages[0].Nodes, pages[0].Samples, pages[0].Defaults, pages[0].Keys = nil, nil, nil, nil
 	base.Pages, base.Page, base.PerPage = pages, 0, true
 	base.Effects = screens[0].Effects
 	path, err := disk.Save(out, base)

@@ -86,6 +86,7 @@ func normalise(doc design.Document) design.Document {
 				doc.Pages[i].Keys = doc.Keys
 			}
 			doc.Pages[i].Samples = cleanSamples(doc.Pages[i].Samples)
+			doc.Pages[i].Defaults = cleanDefaults(doc.Pages[i].Defaults)
 			doc.Pages[i].Keys = cleanKeys(doc.Pages[i].Keys)
 		}
 		for i := range doc.Pages {
@@ -94,6 +95,7 @@ func normalise(doc design.Document) design.Document {
 		doc.PerPage = true
 	}
 	doc.Samples = cleanSamples(doc.Samples)
+	doc.Defaults = cleanDefaults(doc.Defaults)
 	return doc
 }
 
@@ -114,6 +116,22 @@ func cleanSamples(in map[string]string) map[string]string {
 			out = map[string]string{}
 		}
 		out[name] = strings.TrimSpace(v)
+	}
+	return out
+}
+
+// cleanDefaults keeps the app defaults that name a valid input and hold a
+// short single-line value.
+func cleanDefaults(in map[string]string) map[string]string {
+	var out map[string]string
+	for name, v := range in {
+		if !design.ValidInputName(name) || len(out) >= maxSamples || v == "" || len(v) > 200 || strings.ContainsAny(v, "\r\n") {
+			continue
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[name] = v
 	}
 	return out
 }

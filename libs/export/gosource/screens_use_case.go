@@ -595,7 +595,19 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		c.WriteString(decl + at)
 		sc.shared = append(sc.shared, sharedType{name: ht.name, field: ht.field, hint: true, decl: decl, at: at})
 	}
-	fmt.Fprintf(&c, "// Default%sProps is the screen as it was designed: each input holds the value\n// it had in the design.\nfunc Default%sProps() %sProps {\n\treturn %sProps{\n", ident, ident, ident, ident)
+	for i := range inputs {
+		want, set := doc.Defaults[inputs[i].name]
+		if !set {
+			continue
+		}
+		lit, ok := defaultLiteral(inputs[i].typ, want)
+		if !ok {
+			note("the default %q of input %q is not a %s: it starts from the design's value", want, inputs[i].name, inputs[i].typ)
+			continue
+		}
+		inputs[i].def = lit
+	}
+	fmt.Fprintf(&c, "// Default%sProps is the screen as it was designed: each input holds the value\n// it had in the design, unless the design gives the input an app default.\nfunc Default%sProps() %sProps {\n\treturn %sProps{\n", ident, ident, ident, ident)
 	for _, in := range inputs {
 		fmt.Fprintf(&c, "\t\t%s: %s,\n", in.field, in.def)
 	}

@@ -295,6 +295,9 @@ func (m *Model) apply(field, value string) {
 	case strings.HasPrefix(field, "mvalue:"):
 		m.report(m.ed.SetPageValue(strings.TrimPrefix(field, "mvalue:"), value))
 		return
+	case strings.HasPrefix(field, "default:"):
+		m.report(m.ed.SetDefault(strings.TrimPrefix(field, "default:"), value))
+		return
 	case strings.HasPrefix(field, "sample:"):
 		m.report(m.ed.SetSample(strings.TrimPrefix(field, "sample:"), value))
 		return

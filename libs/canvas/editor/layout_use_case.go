@@ -141,10 +141,12 @@ func (e *Editor) resolveNode(id design.NodeID) {
 // show-if), and the places the components before it have now.
 func (e *Editor) layoutEnv() *expr.Env {
 	inputs := map[string]float64{}
+	bound := map[string]bool{}
 	var scan func(nodes []design.Node)
 	scan = func(nodes []design.Node) {
 		for _, n := range nodes {
 			for key, name := range n.Bind {
+				bound[name] = true
 				value, set := n.Props[key]
 				if def, ok := e.cat.Get(n.Component); ok && !set {
 					if spec, ok := def.Prop(key); ok {
@@ -171,6 +173,13 @@ func (e *Editor) layoutEnv() *expr.Env {
 		}
 	}
 	scan(e.doc.Nodes)
+	// An input only an expression reads has the value the design gave it to
+	// preview with; one a property is bound to keeps that property's value.
+	for name, v := range e.doc.Samples {
+		if f, ok := design.SampleNumber(v); ok && !bound[name] {
+			inputs[name] = f
+		}
+	}
 	return &expr.Env{
 		W: e.doc.Width, H: e.doc.Height,
 		Input: func(name string) (float64, bool) { v, ok := inputs[name]; return v, ok },

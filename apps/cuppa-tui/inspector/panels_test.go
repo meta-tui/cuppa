@@ -239,3 +239,23 @@ func TestAComponentCanGoToAnotherPageFromTheBehaviourPanel(t *testing.T) {
 		t.Fatalf("goto = %q (message %q)", n.Goto, m.message)
 	}
 }
+
+func TestLayoutInputsReadByExpressionsGetSampleValues(t *testing.T) {
+	m, ed, id := setup(t, "lipgloss.box")
+	if err := ed.SetLayout(id, "w", "$LeftWidth"); err != nil {
+		t.Fatal(err)
+	}
+	ed.Clear()
+	m.Lines()
+	clickText(t, m, "LeftWidth", "0 (set)")
+	for _, r := range "38" {
+		m.Key(string(r), false, false, false)
+	}
+	m.Key("", false, true, false)
+	if got := ed.Samples()["LeftWidth"]; got != "38" {
+		t.Fatalf("samples = %v (message %q)", ed.Samples(), m.message)
+	}
+	if n, _ := ed.Document().Get(id); n.Rect.W != 38 {
+		t.Errorf("the box follows the sample: width %d", n.Rect.W)
+	}
+}

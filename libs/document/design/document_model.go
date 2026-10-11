@@ -2,6 +2,7 @@ package design
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
@@ -40,7 +41,13 @@ type Document struct {
 	// Pages split the design into the screens of an application; Page is the
 	// one being edited, whose components are Nodes. Empty for a design with
 	// one page. See ADR 0012.
-	Pages []Page `json:"pages,omitempty"`
+	// Samples give the inputs that only a layout expression or a condition
+	// reads a value to preview with, so the designer and the exported
+	// DefaultProps show the screen as it is meant to look: input name to a
+	// number ("38"). An input a property is bound to keeps that property's
+	// value.
+	Samples map[string]string `json:"samples,omitempty"`
+	Pages   []Page            `json:"pages,omitempty"`
 	Page  int    `json:"page,omitempty"`
 	// Seq is the counter behind generated node ids; it only ever grows.
 	Seq int `json:"seq"`
@@ -151,6 +158,13 @@ func (d Document) Clone() Document {
 		nodes[i] = n.Clone()
 	}
 	d.Nodes = nodes
+	if d.Samples != nil {
+		samples := make(map[string]string, len(d.Samples))
+		for k, v := range d.Samples {
+			samples[k] = v
+		}
+		d.Samples = samples
+	}
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
@@ -254,4 +268,16 @@ func (d *Document) moveTo(id NodeID, to int) bool {
 	d.Nodes = append(d.Nodes[:from], d.Nodes[from+1:]...)
 	d.Nodes = append(d.Nodes[:to], append([]Node{n}, d.Nodes[to:]...)...)
 	return true
+}
+
+// SampleNumber reads a sample value: a number, or true and false as 1 and 0.
+func SampleNumber(value string) (float64, bool) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "true":
+		return 1, true
+	case "false":
+		return 0, true
+	}
+	f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
+	return f, err == nil
 }

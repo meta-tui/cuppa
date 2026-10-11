@@ -33,8 +33,11 @@ var goKeywords = map[string]bool{
 // pagePackages gives each screen the name of its package and folder: its
 // words joined in lower case, with "page" added when that is a keyword or a
 // name the application already has, or is taken by another page.
-func pagePackages(screens []design.Document) []string {
+func pagePackages(screens []design.Document, hasMaster bool) []string {
 	taken := map[string]bool{"app": true, "cuppa": true, "main": true, "tea": true, "internal": true, "components": true}
+	if hasMaster {
+		taken[masterPackage] = true
+	}
 	out := make([]string, len(screens))
 	for i, s := range screens {
 		name := strings.ToLower(strings.Join(words(s.Name), ""))
@@ -69,8 +72,12 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		module = Slug(doc.Name)
 	}
 	screens := doc.Screens()
-	flat := GenerateScreensWith(screens, cat, "cuppa", Options{})
-	p := Project{Module: module, Files: map[string]string{}, Requires: flat.Requires, Notes: flat.Notes}
+	// The master's parts are written once, as a package the pages take them
+	// from (ADR 0015).
+	shared, masterNotes := masterScreen(doc, cat)
+	var whyNot []string
+	flat := GenerateScreensWith(screens, cat, "cuppa", Options{master: shared, masterNotes: &whyNot})
+	p := Project{Module: module, Files: map[string]string{}, Requires: flat.Requires, Notes: append(append(flat.Notes, masterNotes...), whyNot...)}
 
 	// What each component file (a library of kinds) becomes: a package under
 	// components/. The rest of the cuppa_ files is the runtime they share.
@@ -120,7 +127,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		return p, fmt.Errorf("slices: reading the runtime: %w", err)
 	}
 
-	pkgs := pagePackages(screens)
+	pkgs := pagePackages(screens, shared != nil)
 	// A page with a folder of its own keeps its package name from the folder.
 	dirs := make([]string, len(screens))
 	pkgNames := make([]string, len(screens))
@@ -150,6 +157,7 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		}
 	}
 	hasContainers := make([]bool, len(screens))
+	usesMaster := false
 	for i, s := range screens {
 		stem := snake(s.Name)
 		view, contract := flat.Files[stem+"_screen_view.go"], flat.Files[stem+"_screen_contract.go"]
@@ -174,6 +182,11 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		use.pkgs = map[string]bool{}
 		out, err := rewritePage(combined, pkgNames[i], "cuppa", sf, pageNamer{ident: pascal(s.Name), lower: camel(s.Name), events: events}, use)
 		pageUses := use.pkgs
+		takesMaster := strings.Contains(combined, masterPackage+".PartsFor(")
+		if takesMaster {
+			pageUses[masterPackage] = true
+			usesMaster = true
+		}
 		if err != nil {
 			return p, fmt.Errorf("slices: page %q: %w", s.Name, err)
 		}
@@ -202,6 +215,15 @@ func GenerateSlices(doc design.Document, cat Catalog, opts Options) (Project, er
 		}
 		p.Files[dirs[i]+"/"+pkgNames[i]+".go"] = tidy(out, &p)
 		hasContainers[i] = hasContainer(s)
+	}
+
+	if shared != nil && usesMaster {
+		out, err := rewritePage(shared.source(), masterPackage, "cuppa", sf, pageNamer{ident: masterIdent, lower: masterLower, events: shared.events}, use)
+		if err != nil {
+			return p, fmt.Errorf("slices: the master: %w", err)
+		}
+		out = addImport(out, "cuppa", module+"/"+runtimeDir)
+		p.Files[componentsDir+"/"+masterPackage+"/"+masterPackage+".go"] = tidy(out, &p)
 	}
 
 	componentFiles := make([]string, 0, len(components))

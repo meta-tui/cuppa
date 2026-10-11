@@ -32,6 +32,11 @@ type Options struct {
 	// Router writes app/app.go in a library export; an application always has
 	// it.
 	Router bool
+	// master is the master of the design generated as a screen of its own,
+	// when the pages take its parts from a package (the slice layout).
+	master *masterShare
+	// masterNotes collects why a page keeps its own copy of the master's parts.
+	masterNotes *[]string
 }
 
 // gotoEvent is the name of the event a component raises when a click on it

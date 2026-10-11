@@ -80,7 +80,14 @@ func GenerateScreensWith(docs []design.Document, cat Catalog, pkg string, opts O
 		}
 		used[ident] = true
 		placed := leaves(doc, cat)
-		sc := buildScreen(doc, ident, placed, cat).with(pkg)
+		sc := buildScreen(doc, ident, placed, cat)
+		if opts.master != nil {
+			var why string
+			if sc, why = opts.master.share(sc, doc, ident, cat); why != "" && opts.masterNotes != nil {
+				*opts.masterNotes = append(*opts.masterNotes, why)
+			}
+		}
+		sc = sc.with(pkg)
 		p.Notes = append(p.Notes, sc.notes...)
 		if len(routers) == 0 && len(opts.Source) > 0 && len(used) == 1 {
 			// A single screen carries the design in its contract.
@@ -140,6 +147,23 @@ func tidy(src string, p *Project) string {
 type screen struct {
 	contract, view string
 	notes          []string
+	// What a design with a master needs from a page to write the master's
+	// parts once (ADR 0015): the page's inputs, the name and generated text of
+	// each part, the hint and row types, and whether the page can share at all.
+	inputs    []input
+	partNames []string
+	partTexts []string
+	shared    []sharedType
+	palette   bool
+	sharable  bool
+}
+
+// sharedType is a hint or row type of a screen, with the text it was written
+// as, so that a page can say it is the master's type instead.
+type sharedType struct {
+	name, field, signature string
+	hint                   bool
+	decl, at               string
 }
 
 // with sets the package name in the generated source.
@@ -243,7 +267,7 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 	hintTypeIndex := map[string]bool{}
 
 	var parts []partSource
-	usesStrconv := false
+	usesStrconv, usesColourPicker := false, false
 	// containers are the container leaves of the screen, by their index in the
 	// list: the input that holds their state and what shows them.
 	type containerState struct {
@@ -307,6 +331,7 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 					continue
 				}
 				usesStrconv = true
+				usesColourPicker = true
 				ps.assign = append(ps.assign,
 					fmt.Sprintf("v[\"value\"] = p.%s.Value()", field),
 					fmt.Sprintf("v[\"tab\"] = p.%s.Tab()", field),
@@ -547,23 +572,28 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		c.WriteString("\t}\n}\n\n")
 	}
 	for _, rt := range rowTypes {
-		fmt.Fprintf(&c, "// %s is one row of %s. Style says how the row is drawn.\ntype %s struct {\n", rt.name, rt.input, rt.name)
+		var d strings.Builder
+		fmt.Fprintf(&d, "// %s is one row of %s. Style says how the row is drawn.\ntype %s struct {\n", rt.name, rt.input, rt.name)
 		for i, f := range rt.fields {
 			what := "a cell"
 			if rt.colour[i] {
 				what = "a colour"
 			}
-			fmt.Fprintf(&c, "\t// %s is %s.\n\t%s string\n", f, what, f)
+			fmt.Fprintf(&d, "\t// %s is %s.\n\t%s string\n", f, what, f)
 		}
 		for _, f := range rt.fields {
-			fmt.Fprintf(&c, "\t// %sStyle restyles the %s cell of this row; the zero value keeps the column's style.\n\t%sStyle CellStyle\n", f, f, f)
+			fmt.Fprintf(&d, "\t// %sStyle restyles the %s cell of this row; the zero value keeps the column's style.\n\t%sStyle CellStyle\n", f, f, f)
 		}
-		c.WriteString("\t// Style is how the row is drawn: RowNormal, RowSelected, RowDim or RowAccent.\n\tStyle RowStyle\n}\n\n")
+		d.WriteString("\t// Style is how the row is drawn: RowNormal, RowSelected, RowDim or RowAccent.\n\tStyle RowStyle\n}\n\n")
+		c.WriteString(d.String())
+		sc.shared = append(sc.shared, sharedType{name: rt.name, field: rt.input, signature: rt.signature, decl: d.String()})
 	}
 	for _, ht := range hintTypes {
-		fmt.Fprintf(&c, "// %s is one hint of the key bar %s.\ntype %s struct{ Key, Label string }\n\n", ht.name, ht.input, ht.name)
-		fmt.Fprintf(&c, "// %sAt is the index of the hint of %s under column x of the bar (X of the\n// click's event), and false between hints.\nfunc %sAt(p %sProps, x int) (int, bool) {\n\tkeys := make([][2]string, len(p.%s))\n\tfor i, h := range p.%s {\n\t\tkeys[i] = [2]string{h.Key, h.Label}\n\t}\n\treturn hintIndexAt(keys, %d, x)\n}\n\n",
+		decl := fmt.Sprintf("// %s is one hint of the key bar %s.\ntype %s struct{ Key, Label string }\n\n", ht.name, ht.input, ht.name)
+		at := fmt.Sprintf("// %sAt is the index of the hint of %s under column x of the bar (X of the\n// click's event), and false between hints.\nfunc %sAt(p %sProps, x int) (int, bool) {\n\tkeys := make([][2]string, len(p.%s))\n\tfor i, h := range p.%s {\n\t\tkeys[i] = [2]string{h.Key, h.Label}\n\t}\n\treturn hintIndexAt(keys, %d, x)\n}\n\n",
 			ht.name, ht.input, ht.name, ident, ht.field, ht.field, ht.gap)
+		c.WriteString(decl + at)
+		sc.shared = append(sc.shared, sharedType{name: ht.name, field: ht.field, hint: true, decl: decl, at: at})
 	}
 	fmt.Fprintf(&c, "// Default%sProps is the screen as it was designed: each input holds the value\n// it had in the design.\nfunc Default%sProps() %sProps {\n\treturn %sProps{\n", ident, ident, ident, ident)
 	for _, in := range inputs {
@@ -611,6 +641,7 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 	fmt.Fprintf(&v, "var %sParts = []screenPart[%sProps]{\n", lower, ident)
 	for _, ps := range parts {
 		l := ps.l
+		partStart := v.Len()
 		fmt.Fprintf(&v, "\t{\n\t\tplaced: placed{Kind: %s, Name: %s, X: %d, Y: %d, W: %d, H: %d, Props: map[string]string{%s}",
 			strconv.Quote(l.Kind), strconv.Quote(l.Name), l.Rect.X, l.Rect.Y, l.Rect.W, l.Rect.H, propsSource(l.Props))
 		if !l.Layout.IsZero() {
@@ -643,8 +674,15 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 			v.WriteString("\t\t\treturn " + show + "\n\t\t},\n")
 		}
 		v.WriteString("\t},\n")
+		sc.partNames = append(sc.partNames, l.Name)
+		sc.partTexts = append(sc.partTexts, v.String()[partStart:])
 	}
 	v.WriteString("}\n\n")
+	sc.inputs = inputs
+	sc.palette = len(palette) > 0
+	// A container or a colour picker is state the program owns, with code of
+	// its own in the page; those pages keep their parts.
+	sc.sharable = len(containers) == 0 && !usesColourPicker
 	fmt.Fprintf(&v, "// %s draws the screen in an area of w by h cells for the values in p.\nfunc %s(p %sProps, w, h int) Frame {\n\treturn drawScreen(%sParts, p, p.Theme, w, h, %sBackground, %sEnv)\n}\n\n", ident, ident, ident, lower, lower, lower)
 	fmt.Fprintf(&v, "// %sSize is the size of area the screen was designed for.\nfunc %sSize() (w, h int) { return %sWidth, %sHeight }\n\n", ident, ident, lower, lower)
 	fmt.Fprintf(&v, "// %sLayout is the screen without its drawing: the frame has the regions of the\n// visible components, so a program can size a model of its own before it is\n// drawn into one of them.\nfunc %sLayout(p %sProps, w, h int) Frame {\n\treturn layoutScreen(%sParts, p, p.Theme, w, h, %sEnv)\n}\n\n", ident, ident, ident, lower, lower)

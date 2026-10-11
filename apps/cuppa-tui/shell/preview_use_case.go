@@ -2,9 +2,9 @@ package shell
 
 import (
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/preview"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/preview"
 )
 
 // Previewing reports whether the design is being run instead of edited.

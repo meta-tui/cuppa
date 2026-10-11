@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/variablesdialog"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/variablesdialog"
 )
 
 func TestVariablesDialogListsNamesAndGoesToTheComponent(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 func itoa(n int) string { return strconv.Itoa(n) }

@@ -10,9 +10,9 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/canvas/shape"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/shape"
 )
 
 // Tool is one of the drawing tools.

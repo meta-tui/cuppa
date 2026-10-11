@@ -1,6 +1,6 @@
 package scheme
 
-import "github.com/meta-tui/cuppa/libs/color/space"
+import "github.com/meta-ui-labs/cuppa/libs/color/space"
 
 // ThemeColours are the five colours a design's theme takes from a scheme.
 type ThemeColours struct {

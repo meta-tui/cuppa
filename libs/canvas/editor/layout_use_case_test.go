@@ -3,7 +3,7 @@ package editor
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // topBar is a box that is the full width and as short as a box can be.

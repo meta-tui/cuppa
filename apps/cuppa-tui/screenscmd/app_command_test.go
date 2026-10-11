@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/cuppafile/disk"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // An application written by --app opens again from its main.go.

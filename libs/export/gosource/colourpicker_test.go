@@ -8,14 +8,14 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
-	colourpicker "github.com/meta-tui/bubble-colourpicker"
+	colourpicker "github.com/meta-ui-labs/bubble-colourpicker"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/scene"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/scene"
 )
 
-const libraryModule = "github.com/meta-tui/bubble-colourpicker"
+const libraryModule = "github.com/meta-ui-labs/bubble-colourpicker"
 
 // libraryFile reads a file of the published module (the version in go.mod).
 func libraryFile(t *testing.T, name string) string {

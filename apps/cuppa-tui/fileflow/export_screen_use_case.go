@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/prompt"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/export/gosource"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/export/gosource"
 )
 
 // ExportScreen asks for a folder and writes the design there as a screen of a

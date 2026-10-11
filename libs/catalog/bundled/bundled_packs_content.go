@@ -6,7 +6,7 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
 )
 
 //go:embed packs/*.cupp

@@ -3,7 +3,7 @@ package editor
 import (
 	"fmt"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // How far a duplicate sits from its original, in cells.

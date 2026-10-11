@@ -1,8 +1,8 @@
 package editor
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/container"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // MoveSelectionBy shifts every selected node by (dx, dy), as a group, stopping

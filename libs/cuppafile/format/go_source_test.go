@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func TestADesignComesBackOutOfTheGoSource(t *testing.T) {

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 func TestShippedDefinitionsAreConsistent(t *testing.T) {

@@ -3,7 +3,7 @@ package hittest
 import (
 	"math"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // ResizeModifiers are the keys that change how a drag resizes, as in an image

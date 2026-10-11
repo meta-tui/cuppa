@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
 )
 
 // barWidth is how many cells a slider's gradient bar has.

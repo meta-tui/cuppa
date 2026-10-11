@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // generateApp is the program of a design with pages: every page a screen of

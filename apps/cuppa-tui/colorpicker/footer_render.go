@@ -6,7 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
 )
 
 // footer is the preview, the value field, an error line and the buttons. It is

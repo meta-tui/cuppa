@@ -1,11 +1,11 @@
-module github.com/meta-tui/cuppa/apps/cuppa-web
+module github.com/meta-ui-labs/cuppa/apps/cuppa-web
 
 go 1.27
 
 require (
 	charm.land/bubbletea/v2 v2.1.0
-	github.com/meta-tui/cuppa/apps/cuppa-tui v0.0.0-20261009072816-3dfdeccc01f3
-	github.com/meta-tui/cuppa/libs/catalog v0.0.0-20261009072816-3dfdeccc01f3
+	github.com/meta-ui-labs/cuppa/apps/cuppa-tui v0.0.0-00010101000000-000000000000
+	github.com/meta-ui-labs/cuppa/libs/catalog v0.0.0-00010101000000-000000000000
 	github.com/meta-tui/treactui/packages/tty-go v0.1.4
 )
 
@@ -37,11 +37,11 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.30 // indirect
-	github.com/meta-tui/cuppa/libs/canvas v0.0.0-20261009072816-3dfdeccc01f3 // indirect
-	github.com/meta-tui/cuppa/libs/cuppafile v0.0.0-20261009072816-3dfdeccc01f3 // indirect
-	github.com/meta-tui/cuppa/libs/document v0.0.0-20261009072816-3dfdeccc01f3 // indirect
-	github.com/meta-tui/cuppa/libs/export v0.0.0-20261009072816-3dfdeccc01f3 // indirect
-	github.com/meta-tui/cuppa/libs/render v0.0.0-20261009072816-3dfdeccc01f3 // indirect
+	github.com/meta-ui-labs/cuppa/libs/canvas v0.0.0-00010101000000-000000000000 // indirect
+	github.com/meta-ui-labs/cuppa/libs/cuppafile v0.0.0-00010101000000-000000000000 // indirect
+	github.com/meta-ui-labs/cuppa/libs/document v0.0.0-00010101000000-000000000000 // indirect
+	github.com/meta-ui-labs/cuppa/libs/export v0.0.0-00010101000000-000000000000 // indirect
+	github.com/meta-ui-labs/cuppa/libs/render v0.0.0-00010101000000-000000000000 // indirect
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pkg/errors v0.9.1 // indirect
@@ -56,4 +56,15 @@ require (
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.39.0 // indirect
+)
+
+// The monorepo modules are the ones beside this one.
+replace (
+	github.com/meta-ui-labs/cuppa/apps/cuppa-tui => ../../apps/cuppa-tui
+	github.com/meta-ui-labs/cuppa/libs/canvas => ../../libs/canvas
+	github.com/meta-ui-labs/cuppa/libs/catalog => ../../libs/catalog
+	github.com/meta-ui-labs/cuppa/libs/cuppafile => ../../libs/cuppafile
+	github.com/meta-ui-labs/cuppa/libs/document => ../../libs/document
+	github.com/meta-ui-labs/cuppa/libs/export => ../../libs/export
+	github.com/meta-ui-labs/cuppa/libs/render => ../../libs/render
 )

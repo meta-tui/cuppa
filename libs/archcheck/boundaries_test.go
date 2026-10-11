@@ -24,7 +24,7 @@ type importRule struct {
 var rules = []importRule{
 	{name: "libs stay headless: no Bubble Tea", forbidden: "charm.land/bubbletea", allowedIn: nil},
 	{name: "libs stay headless: no Bubbles", forbidden: "charm.land/bubbles", allowedIn: nil},
-	{name: "libs never import apps", forbidden: "github.com/meta-tui/cuppa/apps/", allowedIn: nil},
+	{name: "libs never import apps", forbidden: "github.com/meta-ui-labs/cuppa/apps/", allowedIn: nil},
 	{name: "only render styles output", forbidden: "charm.land/lipgloss", allowedIn: []string{"render"}},
 }
 

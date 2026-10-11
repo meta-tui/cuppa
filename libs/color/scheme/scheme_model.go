@@ -3,7 +3,7 @@
 // of colours; picking one stores a plain hex colour, so no file format changes.
 package scheme
 
-import "github.com/meta-tui/cuppa/libs/color/space"
+import "github.com/meta-ui-labs/cuppa/libs/color/space"
 
 // Scheme is one terminal colour scheme.
 type Scheme struct {

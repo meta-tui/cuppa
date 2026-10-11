@@ -9,7 +9,7 @@ one. A desktop front end could have been a second UI (HTML components calling
 the engine through bindings). That would mean designing and maintaining the
 same palette, canvas and inspector twice.
 
-[TReactUI](https://github.com/meta-tui/treactui) (`@treactui/tty`, `tty-go`)
+[TReactUI](https://github.com/meta-ui-labs/treactui) (`@treactui/tty`, `tty-go`)
 shows a Bubble Tea program in a web page as a real terminal (xterm.js) over a
 WebSocket, with an accessibility layer beside it. It is by the same author and
 is built to be hosted by exactly this kind of window.
@@ -37,7 +37,7 @@ the stable line.
 - The first-run Freeze notice and everything else in the shell work unchanged.
 
 Because `tty-go` serves Bubble Tea v2, it was migrated from v1 first
-(`meta-tui/treactui` #27). Two things surfaced while running Cuppa in the page
+(`meta-ui-labs/treactui` #27). Two things surfaced while running Cuppa in the page
 and were fixed there: a v2 program asks for mouse mode and the alternate
 screen from its `View` (so late-joining browsers are put in the same terminal
 modes), and v2's bare line feeds must not be turned into carriage returns by

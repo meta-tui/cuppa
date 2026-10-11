@@ -1,6 +1,6 @@
 package hittest
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // Handle names the part of a selected node's outline that resizes it.
 type Handle int

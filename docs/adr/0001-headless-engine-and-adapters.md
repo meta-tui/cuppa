@@ -29,7 +29,7 @@ re-implement it.
 
 mnci generates one Go module per project plus a root `go.work` (confirmed in
 issue #5, contrary to mnci's `mnci-details.md` which describes a single root
-`go.mod`). Module paths are `github.com/meta-tui/cuppa/<dir>`.
+`go.mod`). Module paths are `github.com/meta-ui-labs/cuppa/<dir>`.
 
 ## Consequences
 

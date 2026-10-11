@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/cuppafile/format"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/format"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Load reads the design stored at path: a .cuppa file, or the Go source of an

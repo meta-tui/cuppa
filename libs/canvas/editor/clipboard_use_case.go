@@ -1,6 +1,6 @@
 package editor
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // Copy remembers the selected components. The clipboard belongs to the editor,
 // not the document, so it survives New and Open: a design can be pasted into

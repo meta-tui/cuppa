@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-// colourPickerLibrary is colourpicker.go of github.com/meta-tui/bubble-colourpicker,
+// colourPickerLibrary is colourpicker.go of github.com/meta-ui-labs/bubble-colourpicker,
 // byte for byte (a test compares it with the module). The exported program
 // carries a renamed copy of it, so the component the designer shows and the
 // one in the program are the same code.
@@ -15,7 +15,7 @@ import (
 var colourPickerLibrary string
 
 // colourPickerVersion is the release of the library the copy is of.
-const colourPickerVersion = "v0.1.2"
+const colourPickerVersion = "v0.1.3"
 
 // colourPickerNames are the exported names of the library. In a program they
 // share a package with the rest of the generated code, so each is prefixed.
@@ -53,7 +53,7 @@ func colourPickerSource() string {
 		return loc[1] + name
 	})
 	header := "// colourpicker.go is the colour picker component, a copy of colourpicker.go of\n" +
-		"// github.com/meta-tui/bubble-colourpicker " + colourPickerVersion + ", with the exported names prefixed\n" +
+		"// github.com/meta-ui-labs/bubble-colourpicker " + colourPickerVersion + ", with the exported names prefixed\n" +
 		"// (Model is ColourPicker, New is NewColourPicker) so they can share a package.\n" +
 		"// Use the module itself for a program of your own.\n\n"
 	return header + src + colourPickerGlue

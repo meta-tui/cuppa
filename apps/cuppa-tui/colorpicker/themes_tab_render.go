@@ -6,9 +6,9 @@ import (
 	"unicode"
 
 	"charm.land/lipgloss/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/color/scheme"
-	"github.com/meta-tui/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/color/scheme"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
 )
 
 // letters are the jump targets above the swatches: "#" is every name that

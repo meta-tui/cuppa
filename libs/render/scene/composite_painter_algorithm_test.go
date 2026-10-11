@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func teaPack() cupp.Pack {

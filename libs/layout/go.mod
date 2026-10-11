@@ -1,4 +1,4 @@
-module github.com/meta-tui/cuppa/libs/layout
+module github.com/meta-ui-labs/cuppa/libs/layout
 
 go 1.27
 

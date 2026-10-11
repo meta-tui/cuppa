@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintBarChart draws ntcharts' bar chart: bars of equal width one cell apart,

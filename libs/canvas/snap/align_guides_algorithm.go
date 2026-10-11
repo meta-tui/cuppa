@@ -1,7 +1,7 @@
 // Package snap finds the alignment a moving rectangle should snap to.
 package snap
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // Guide is an alignment line: a vertical line at column Pos when Vertical,
 // otherwise a horizontal line at row Pos.

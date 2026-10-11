@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Catalog is what FromGroup needs to find the properties of the grouped parts.

@@ -1,8 +1,8 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/color/space"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // blendBorder recolours the outline of g from the colour from at the left edge

@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/layout/expr"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/layout/expr"
 )
 
 // ReadInputs are the inputs that a layout expression or a condition reads and

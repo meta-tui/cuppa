@@ -3,9 +3,9 @@ package scene
 import (
 	"strconv"
 
-	"github.com/meta-tui/cuppa/libs/color/space"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // applyProfile reduces every colour in g to what the target terminal can show:

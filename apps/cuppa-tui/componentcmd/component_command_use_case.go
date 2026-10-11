@@ -12,7 +12,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/meta-tui/cuppa/libs/catalog/component"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/component"
 )
 
 const usage = `usage:

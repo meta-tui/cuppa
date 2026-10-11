@@ -1,10 +1,10 @@
 package stage
 
 import (
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
-	"github.com/meta-tui/cuppa/libs/render/scene"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/scene"
 )
 
 // render draws the visible part of the canvas, the selection and the drag

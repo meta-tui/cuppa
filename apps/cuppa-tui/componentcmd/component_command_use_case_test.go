@@ -7,10 +7,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/cuppafile/disk"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 const good = `{
@@ -30,9 +30,9 @@ func TestLocationUnderstandsFilesAddressesAndRepositories(t *testing.T) {
 		isFile    bool
 	}{
 		{file, file, true},
-		{"github.com/meta-tui/bubble-colourpicker", "https://raw.githubusercontent.com/meta-tui/bubble-colourpicker/HEAD/cuppa.component.json", false},
-		{"github.com/meta-tui/bubble-colourpicker@v0.1.1", "https://raw.githubusercontent.com/meta-tui/bubble-colourpicker/v0.1.1/cuppa.component.json", false},
-		{"https://github.com/meta-tui/bubble-colourpicker/", "https://raw.githubusercontent.com/meta-tui/bubble-colourpicker/HEAD/cuppa.component.json", false},
+		{"github.com/meta-ui-labs/bubble-colourpicker", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/HEAD/cuppa.component.json", false},
+		{"github.com/meta-ui-labs/bubble-colourpicker@v0.1.1", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/v0.1.1/cuppa.component.json", false},
+		{"https://github.com/meta-ui-labs/bubble-colourpicker/", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/HEAD/cuppa.component.json", false},
 		{"https://example.com/x/cuppa.component.json", "https://example.com/x/cuppa.component.json", false},
 	}
 	for _, c := range cases {

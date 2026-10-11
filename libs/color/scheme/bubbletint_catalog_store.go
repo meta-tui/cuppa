@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	tint "github.com/lrstanley/bubbletint/v2"
-	"github.com/meta-tui/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
 )
 
 var (

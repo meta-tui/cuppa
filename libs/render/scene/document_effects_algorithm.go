@@ -1,8 +1,8 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // shadowColour is the ANSI 256 grey of a drop shadow.

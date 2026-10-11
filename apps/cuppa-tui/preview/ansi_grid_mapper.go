@@ -7,7 +7,7 @@ import (
 
 	"github.com/charmbracelet/x/ansi"
 	uv "github.com/charmbracelet/ultraviolet"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 func fmtSscan(s string, n *int) (int, error) { return fmt.Sscan(strings.TrimSpace(s), n) }

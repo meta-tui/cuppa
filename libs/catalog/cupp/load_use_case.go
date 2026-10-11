@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/registry"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/registry"
 )
 
 // LoadDir reads every .cupp file in dir, in name order. A file that cannot be

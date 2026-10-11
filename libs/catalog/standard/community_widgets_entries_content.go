@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // communityWidgetEntries are components of community libraries found through
 // the research on docs/catalog/community-components.md. Like the other

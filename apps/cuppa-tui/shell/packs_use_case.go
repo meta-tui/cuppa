@@ -5,12 +5,12 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/packsdialog"
-	"github.com/meta-tui/cuppa/libs/catalog/bundled"
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/catalog/packstate"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/packsdialog"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/bundled"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/packstate"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // restorePacks brings back which packs the user switched off and starts

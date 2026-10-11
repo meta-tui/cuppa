@@ -1,6 +1,6 @@
 package editor
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // CanGroup reports whether Group would do something: two or more selected
 // components, none of them locked.

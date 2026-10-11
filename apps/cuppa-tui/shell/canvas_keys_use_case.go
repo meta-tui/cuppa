@@ -2,10 +2,10 @@ package shell
 
 import (
 	"fmt"
-	"github.com/meta-tui/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // paletteKey handles a key while the palette has the keyboard. It reports

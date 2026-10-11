@@ -1,8 +1,8 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintDrawLayer paints the drawing: only the cells that were painted, so the

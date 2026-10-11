@@ -3,7 +3,7 @@ package scene
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintTextInput draws the text input as it is before it has the keyboard: the

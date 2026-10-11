@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
-	"github.com/meta-tui/cuppa/libs/render/scene"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/libs/render/scene"
 )
 
 func TestSavingTheSelectionAsAComponentMakesItAvailableEverywhere(t *testing.T) {

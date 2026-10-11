@@ -5,10 +5,10 @@
   "description": "Tabs for the 16 and 256 terminal palettes and for RGB and HSL sliders, a preview and the value; keyboard and mouse.",
   "version": "0.1.2",
   "license": "MIT",
-  "homepage": "https://github.com/meta-tui/bubble-colourpicker",
+  "homepage": "https://github.com/meta-ui-labs/bubble-colourpicker",
   "go": {
-    "module": "github.com/meta-tui/bubble-colourpicker",
-    "import": "github.com/meta-tui/bubble-colourpicker",
+    "module": "github.com/meta-ui-labs/bubble-colourpicker",
+    "import": "github.com/meta-ui-labs/bubble-colourpicker",
     "package": "colourpicker",
     "bubbletea": 2,
     "model": "Model",

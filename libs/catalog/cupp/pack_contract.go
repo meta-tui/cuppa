@@ -6,7 +6,7 @@ package cupp
 import (
 	"errors"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Magic opens every .cupp file.

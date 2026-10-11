@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/cuppafile/disk"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func saveDesign(t *testing.T, dir, name string) {

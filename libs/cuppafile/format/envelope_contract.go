@@ -3,7 +3,7 @@ package format
 import (
 	"encoding/json"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // envelope is the JSON body of the current version.

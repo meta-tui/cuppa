@@ -4,7 +4,7 @@
 // the properties whose ports the new component has too.
 package compat
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // Move is a property of the old component whose value and binding go to a
 // property of the new one.

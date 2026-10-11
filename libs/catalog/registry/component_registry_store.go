@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 // Registry is an immutable set of component definitions and the packs they

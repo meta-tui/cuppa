@@ -5,12 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/confirm"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/filedialog"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/packsdialog"
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/confirm"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/filedialog"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/packsdialog"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 // afterPacksDialog acts on how the Packs dialog ended: Add and Remove change

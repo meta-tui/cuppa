@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 func fixture() (*Model, map[definition.Family]bool) {

@@ -3,8 +3,8 @@ package gosource
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // drawRunKind is the generated component a run of drawn cells becomes.

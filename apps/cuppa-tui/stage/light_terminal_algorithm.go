@@ -1,6 +1,6 @@
 package stage
 
-import "github.com/meta-tui/cuppa/libs/render/grid"
+import "github.com/meta-ui-labs/cuppa/libs/render/grid"
 
 // A light terminal is previewed with a pale canvas and dark default text: what
 // a program that sets no colours of its own looks like there.

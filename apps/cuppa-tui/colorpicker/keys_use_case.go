@@ -4,8 +4,8 @@ import (
 	"math"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/color/scheme"
-	"github.com/meta-tui/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/color/scheme"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
 )
 
 // Nav implements modal.Navigator.

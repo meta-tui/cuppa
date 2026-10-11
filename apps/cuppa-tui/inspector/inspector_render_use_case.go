@@ -187,6 +187,9 @@ func (m *Model) panelSpecs() []panelSpec {
 		if len(m.layoutInputs()) > 0 {
 			specs = append(specs, panelSpec{id: panelInputs, title: "Layout inputs", fill: m.inputsPanel})
 		}
+		if len(m.ed.InputNames()) > 0 {
+			specs = append(specs, panelSpec{id: panelAppDefaults, title: "App defaults", fill: m.appDefaultsPanel})
+		}
 		if len(m.ed.MasterInputs()) > 0 {
 			specs = append(specs, panelSpec{id: panelMasterText, title: "Master text", fill: m.masterTextPanel})
 		}
@@ -651,6 +654,31 @@ func (m *Model) inputsPanel(b *builder) {
 		b.end()
 	}
 	b.text(" " + theme.Faded("read by expressions, not bound")).end()
+	m.messageRow(b)
+}
+
+// appDefaultsPanel gives each input the value the exported Default props start
+// from, where the application wants another than the one the design shows (an
+// optional part hidden, a layout-only input neutral). The designer keeps
+// previewing the design's own value. Click one to type it; "(empty)" starts the
+// input empty, and an empty entry takes the default away.
+func (m *Model) appDefaultsPanel(b *builder) {
+	defaults := m.ed.Defaults()
+	for _, name := range m.ed.InputNames() {
+		field := "default:" + name
+		value, has := defaults[name]
+		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
+		switch {
+		case m.editing == field:
+			b.text(m.buf + "█")
+		case has:
+			b.add(theme.Bold(theme.Fit(value, max(m.content()-b.x, 1))), func() { m.startEdit(field, value) })
+		default:
+			b.add(theme.Faded("(as designed)"), func() { m.startEdit(field, "") })
+		}
+		b.end()
+	}
+	b.text(" " + theme.Faded("what the app's Default props start from")).end()
 	m.messageRow(b)
 }
 

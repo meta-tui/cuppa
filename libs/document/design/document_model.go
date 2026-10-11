@@ -47,7 +47,12 @@ type Document struct {
 	// number ("38"). An input a property is bound to keeps that property's
 	// value.
 	Samples map[string]string `json:"samples,omitempty"`
-	Pages   []Page            `json:"pages,omitempty"`
+	// Defaults are the values the exported Default<Screen>Props starts from,
+	// input name to text, where the application wants another than the one the
+	// design shows (an optional part hidden, a layout-only input neutral). The
+	// designer keeps previewing the design's own values.
+	Defaults map[string]string `json:"defaults,omitempty"`
+	Pages    []Page            `json:"pages,omitempty"`
 	// PerPage says each page keeps its own samples and keys. A design saved
 	// without it had one set of each for every page.
 	PerPage bool `json:"perPage,omitempty"`
@@ -174,10 +179,11 @@ func (d Document) Clone() Document {
 		}
 		d.Samples = samples
 	}
+	d.Defaults = cloneSamples(d.Defaults)
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
-			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
+			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Defaults: cloneSamples(p.Defaults), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
 			for _, n := range p.Nodes {
 				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
 			}

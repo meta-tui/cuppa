@@ -64,6 +64,7 @@ func (e *Editor) stashPage() {
 	if e.doc.IsPaged() {
 		e.doc.Pages[e.doc.ActivePage()].Nodes = e.doc.Nodes
 		e.doc.Pages[e.doc.ActivePage()].Samples = e.doc.Samples
+		e.doc.Pages[e.doc.ActivePage()].Defaults = e.doc.Defaults
 		e.doc.Pages[e.doc.ActivePage()].Keys = e.doc.Keys
 	}
 }
@@ -77,6 +78,8 @@ func (e *Editor) showPage(i int) {
 	e.doc.Pages[i].Nodes = nil
 	e.doc.Samples = e.doc.Pages[i].Samples
 	e.doc.Pages[i].Samples = nil
+	e.doc.Defaults = e.doc.Pages[i].Defaults
+	e.doc.Pages[i].Defaults = nil
 	e.doc.Keys = e.doc.Pages[i].Keys
 	e.doc.Pages[i].Keys = nil
 	e.doc.Page = i

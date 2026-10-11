@@ -22,6 +22,9 @@ type Page struct {
 	// being edited; the shown page's are Document.Samples. Two pages may read
 	// the same input with different values.
 	Samples map[string]string `json:"samples,omitempty"`
+	// Defaults are the app defaults of the page when it is not the one being
+	// edited; the shown page's are Document.Defaults.
+	Defaults map[string]string `json:"defaults,omitempty"`
 	// Keys are the keys of the page when it is not the one being edited; the
 	// shown page's are Document.Keys.
 	Keys []KeyBinding `json:"keys,omitempty"`
@@ -93,6 +96,7 @@ func (d Document) Screens() []Document {
 		} else {
 			s.Nodes = p.Nodes
 			s.Samples = p.Samples
+			s.Defaults = p.Defaults
 			s.Keys = p.Keys
 		}
 		s.Nodes = append(d.ShownMaster(i), s.Nodes...)

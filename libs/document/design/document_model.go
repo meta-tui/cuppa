@@ -51,6 +51,9 @@ type Document struct {
 	// PerPage says each page keeps its own samples and keys. A design saved
 	// without it had one set of each for every page.
 	PerPage bool `json:"perPage,omitempty"`
+	// Export says where the Go source of the design goes; empty until the
+	// person exports it.
+	Export ExportSettings `json:"export,omitzero"`
 	// Folder is the folder of the page this screen is, set by Screens; it is
 	// not part of a design's file.
 	Folder string `json:"-"`

@@ -154,3 +154,24 @@ func TestEachPageKeepsItsOwnSamplesAndFolder(t *testing.T) {
 		t.Fatal("a folder outside the export was accepted")
 	}
 }
+
+func TestTheExportSettingsAreOneUndoStepAndKeepTheirRules(t *testing.T) {
+	ed, _, _ := twoPages(t)
+	if err := ed.SetExportSettings(design.ExportSettings{Layout: "zip", Dir: "x"}); err == nil {
+		t.Fatal("an unknown layout was accepted")
+	}
+	if err := ed.SetExportSettings(design.ExportSettings{Layout: design.ExportSlices, Library: true, Dir: "libs/core"}); err == nil {
+		t.Fatal("a library without an import path was accepted")
+	}
+	s := design.ExportSettings{Layout: design.ExportSlices, Library: true, Dir: "libs/core", Module: "m/core"}
+	if err := ed.SetExportSettings(s); err != nil {
+		t.Fatal(err)
+	}
+	if ed.ExportSettings() != s || !ed.Dirty() {
+		t.Fatalf("settings %+v dirty %v", ed.ExportSettings(), ed.Dirty())
+	}
+	ed.Undo()
+	if ed.ExportSettings().IsSet() {
+		t.Fatal("undo kept the settings")
+	}
+}

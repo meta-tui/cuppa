@@ -25,8 +25,10 @@ type Reporter func(title, body string)
 type item struct {
 	label   string
 	current bool
-	// separator draws a rule and does nothing.
+	// separator draws a rule and does nothing; with a heading it draws the
+	// heading of a group of pages instead.
 	separator bool
+	heading   string
 	disabled  bool
 	act       func()
 }
@@ -125,11 +127,46 @@ func (m *Model) build() {
 	names := m.ed.PageNames()
 	cur := m.ed.ActivePage()
 	m.items = m.items[:0]
-	for i, n := range names {
+	m.at = 0
+	add := func(i int) {
 		page := i
-		m.items = append(m.items, item{label: n, current: i == cur, act: func() { m.ed.SwitchPage(page) }})
+		if i == cur {
+			m.at = len(m.items)
+		}
+		m.items = append(m.items, item{label: names[i], current: i == cur, act: func() { m.ed.SwitchPage(page) }})
 	}
-	m.at = cur
+	// Pages that have a folder are listed under it, so a design of many pages
+	// is as easy to read as the folders its export makes.
+	grouped := false
+	for i := range names {
+		if m.ed.PageFolder(i) != "" {
+			grouped = true
+		}
+	}
+	if !grouped {
+		for i := range names {
+			add(i)
+		}
+	} else {
+		var order []string
+		members := map[string][]int{}
+		for i := range names {
+			g := "pages"
+			if f := m.ed.PageFolder(i); f != "" {
+				g, _, _ = strings.Cut(f, "/")
+			}
+			if _, ok := members[g]; !ok {
+				order = append(order, g)
+			}
+			members[g] = append(members[g], i)
+		}
+		for _, g := range order {
+			m.items = append(m.items, item{separator: true, heading: g + "/"})
+			for _, i := range members[g] {
+				add(i)
+			}
+		}
+	}
 	m.items = append(m.items,
 		item{separator: true},
 		item{label: "Add page", act: m.add},
@@ -165,7 +202,19 @@ func (m *Model) folder(i int) {
 	if m.ask == nil {
 		return
 	}
-	m.ask("Folder of the page (empty: pages/<page>)", m.ed.PageFolder(i), func(value string) {
+	title := "Folder of the page (empty: pages/<page>)"
+	seen := map[string]bool{}
+	var known []string
+	for j := range m.ed.PageNames() {
+		if f := m.ed.PageFolder(j); f != "" && !seen[f] {
+			seen[f] = true
+			known = append(known, f)
+		}
+	}
+	if len(known) > 0 {
+		title += ". In use: " + strings.Join(known, ", ")
+	}
+	m.ask(title, m.ed.PageFolder(i), func(value string) {
 		if err := m.ed.SetPageFolder(i, value); err != nil && m.report != nil {
 			m.report("Cannot set the folder", strings.TrimPrefix(err.Error(), "editor: "))
 		}
@@ -196,7 +245,7 @@ func (m *Model) Overlay(barX, barY int) (x, y int, lines []string) {
 	}
 	width := 12
 	for _, it := range m.items {
-		width = max(width, ansi.StringWidth(it.label)+6)
+		width = max(width, ansi.StringWidth(it.label)+6, ansi.StringWidth(it.heading)+2)
 	}
 	body := make([]string, len(m.items))
 	for i, it := range m.items {

@@ -247,3 +247,26 @@ func (e *Editor) retarget(old, to string) {
 		walk(e.doc.Pages[i].Nodes)
 	}
 }
+
+// ExportSettings is where the design says its Go source goes.
+func (e *Editor) ExportSettings() design.ExportSettings { return e.doc.Export }
+
+// SetExportSettings records where the design's Go source goes, as one undo
+// step: the design is the one file that knows the structure of the program.
+func (e *Editor) SetExportSettings(s design.ExportSettings) error {
+	s = s.Clean()
+	if s.Layout == "" {
+		return fmt.Errorf("editor: an export needs a layout and a folder")
+	}
+	if s.Library && s.Module == "" {
+		return fmt.Errorf("editor: a library export needs the import path of its folder")
+	}
+	if e.doc.Export == s {
+		return nil
+	}
+	e.apply(func() bool {
+		e.doc.Export = s
+		return true
+	})
+	return nil
+}

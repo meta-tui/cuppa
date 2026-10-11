@@ -17,6 +17,7 @@ const (
 	panelKeys       panelID = "keys"
 	panelDisplay    panelID = "display"
 	panelInputs     panelID = "inputs"
+	panelMasterText panelID = "mastertext"
 	panelLayers     panelID = "layers"
 )
 
@@ -44,6 +45,7 @@ var panelDefaults = map[panelID]panelDefault{
 	panelKeys:       {want: 3, min: 2, closed: true},
 	panelDisplay:    {want: 8, min: 3},
 	panelInputs:     {want: 4, min: 2},
+	panelMasterText: {want: 4, min: 2},
 	panelLayers:     {want: 8, min: 3},
 }
 

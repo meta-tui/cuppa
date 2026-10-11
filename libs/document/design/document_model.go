@@ -177,7 +177,7 @@ func (d Document) Clone() Document {
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
-			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...)}
+			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
 			for _, n := range p.Nodes {
 				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
 			}

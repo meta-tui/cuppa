@@ -30,6 +30,10 @@ type Page struct {
 	Master bool `json:"master,omitempty"`
 	// Hide are the master components this page does not show.
 	Hide []NodeID `json:"hide,omitempty"`
+	// Values give, for this page, the text of a property of a master component
+	// that is bound to an input: input name to value. The master has one value
+	// for it; this page previews and starts from its own.
+	Values map[string]string `json:"values,omitempty"`
 }
 
 // PageCount is how many pages the design has: at least one.
@@ -143,9 +147,21 @@ func (d Document) ShownMaster(i int) []Node {
 	}
 	var out []Node
 	for _, n := range d.MasterNodes() {
-		if !hidden[n.ID] {
-			out = append(out, prefixed(n))
+		if hidden[n.ID] {
+			continue
 		}
+		n = prefixed(n)
+		for prop, input := range n.Bind {
+			if v, ok := d.Pages[i].Values[input]; ok {
+				props := make(map[string]string, len(n.Props)+1)
+				for k, pv := range n.Props {
+					props[k] = pv
+				}
+				props[prop] = v
+				n.Props = props
+			}
+		}
+		out = append(out, n)
 	}
 	return out
 }

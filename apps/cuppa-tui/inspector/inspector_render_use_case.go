@@ -187,6 +187,9 @@ func (m *Model) panelSpecs() []panelSpec {
 		if len(m.layoutInputs()) > 0 {
 			specs = append(specs, panelSpec{id: panelInputs, title: "Layout inputs", fill: m.inputsPanel})
 		}
+		if len(m.ed.MasterInputs()) > 0 {
+			specs = append(specs, panelSpec{id: panelMasterText, title: "Master text", fill: m.masterTextPanel})
+		}
 		return append(specs, layers)
 	case len(m.ed.Selected()) > 1:
 		return []panelSpec{layers}
@@ -648,5 +651,26 @@ func (m *Model) inputsPanel(b *builder) {
 		b.end()
 	}
 	b.text(" " + theme.Faded("read by expressions, not bound")).end()
+	m.messageRow(b)
+}
+
+// masterTextPanel gives the page its own text for each input the master binds a
+// property to, so each page previews and starts from its own title.
+func (m *Model) masterTextPanel(b *builder) {
+	for _, name := range m.ed.MasterInputs() {
+		field := "mvalue:" + name
+		value, has := m.ed.PageValue(name)
+		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
+		switch {
+		case m.editing == field:
+			b.text(m.buf + "█")
+		case has:
+			b.add(theme.Bold(theme.Fit(value, max(m.content()-b.x, 1))), func() { m.startEdit(field, value) })
+		default:
+			b.add(theme.Faded("(master's text)"), func() { m.startEdit(field, "") })
+		}
+		b.end()
+	}
+	b.text(" " + theme.Faded("this page's own text for the master")).end()
 	m.messageRow(b)
 }

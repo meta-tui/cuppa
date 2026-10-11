@@ -45,23 +45,26 @@ func liftMaster(pages []design.Page, min int, base *design.Document) ([]design.N
 	var master []design.Node
 	var report []string
 	liftedAs := map[string]design.NodeID{}
-	usedNames := map[string]bool{}
+	liftedNode := map[string]design.Node{}
+	usedNames := map[string]design.Node{}
 	for _, key := range order {
 		g := groups[key]
 		if len(g.pages) < min {
 			continue
 		}
-		if usedNames[g.node.Name] {
+		if lifted, taken := usedNames[g.node.Name]; taken {
 			// A master keeps one component of a name, so the names in a layout
 			// expression mean one component.
-			report = append(report, fmt.Sprintf("kept on its %d pages: a second %q that differs from the lifted one", len(g.pages), g.node.Name))
+			report = append(report, fmt.Sprintf("kept on its %d pages: a second %q that differs from the lifted one in %s",
+				len(g.pages), g.node.Name, strings.Join(differences(lifted, g.node), ", ")))
 			continue
 		}
-		usedNames[g.node.Name] = true
 		n := g.node.Clone()
+		usedNames[g.node.Name] = g.node
 		n.ID = base.NewID()
 		master = append(master, n)
 		liftedAs[key] = n.ID
+		liftedNode[key] = n
 		names := make([]string, len(g.pages))
 		for k, pi := range g.pages {
 			names[k] = pages[pi].Name
@@ -75,8 +78,17 @@ func liftMaster(pages []design.Page, min int, base *design.Document) ([]design.N
 		var rest []design.Node
 		for _, n := range pages[i].Nodes {
 			key := liftKey(n)
-			if _, ok := liftedAs[key]; ok && !n.IsContainer() && n.In == "" && len(n.Children) == 0 && !have[key] {
+			if master, ok := liftedNode[key]; ok && !n.IsContainer() && n.In == "" && len(n.Children) == 0 && !have[key] {
 				have[key] = true
+				// A bound property keeps this page's own text as the page's value.
+				for prop, input := range n.Bind {
+					if n.Props[prop] != master.Props[prop] {
+						if pages[i].Values == nil {
+							pages[i].Values = map[string]string{}
+						}
+						pages[i].Values[input] = n.Props[prop]
+					}
+				}
 				continue
 			}
 			rest = append(rest, n)

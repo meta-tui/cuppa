@@ -100,3 +100,8 @@ page's own components.
 - Exports are unchanged in shape: each page's code still draws the master's
   components itself (step 2 would write them once). Older files open as before;
   a design with no master has no `master` or `hide` fields.
+- A property of a master component that is bound to an input has one value on
+  the master; a page may give the input its own text (`values` on the page,
+  "Master text" in the designer's canvas panels), which the page's drawing, its
+  screen and its `Default()` start from. `design merge --master` records the
+  text each page had.

@@ -160,5 +160,10 @@ for line in f:
    app (no terminal needed).
 2. `cuppa-tui`: Connect…, Disconnect, live values on the canvas, `--connect`.
 3. Events from the preview to the app.
-4. `cuppa design contract`, and the generated page registry for Go.
+4. `cuppa design contract`, and the generated page registry for Go. Built: the
+   command prints each page's inputs (name, kind, fields of rows and hints) and
+   events as JSON; each exported page also has `<Page>Inputs(props)`, the props
+   by the input names of the design, and `<Page>EventNamed(name, x, y)`, the
+   typed event of a name (the registry the sketch above calls `pages`; it is
+   plain functions, so it needs no library).
 5. The user-guide section and the agent instructions; MVD adopts it first.

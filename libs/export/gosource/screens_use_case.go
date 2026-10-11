@@ -156,6 +156,10 @@ type screen struct {
 	// each part, the hint and row types, and whether the page can share at all.
 	inputs    []input
 	partNames []string
+	// events are the names of the events the screen raises, as the design
+	// writes them, and eventTypes the Go name of each.
+	events     []string
+	eventNames map[string]string
 	partTexts []string
 	shared    []sharedType
 	palette   bool
@@ -660,6 +664,21 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		fmt.Fprintf(&c, "// %s is raised by %s. X and Y are the cell inside the component that was\n// clicked, and 0 for a key.\ntype %s struct{ X, Y int }\n\nfunc (%s) is%sEvent() {}\n\n",
 			name, eventSources(e, placed, doc.Keys), name, name, ident)
 	}
+	// What the live connection (ADR 0016) needs of a screen: its props by the
+	// input names of the design, and an event made from its name.
+	fmt.Fprintf(&c, "// %sInputs is the props by the input names of the design, as the live\n// connection publishes them.\nfunc %sInputs(p %sProps) map[string]any {\n\treturn map[string]any{\n", ident, ident, ident)
+	for _, in := range inputs {
+		if strings.HasPrefix(in.typ, "func") {
+			continue
+		}
+		fmt.Fprintf(&c, "\t\t%s: p.%s,\n", strconv.Quote(in.name), in.field)
+	}
+	c.WriteString("\t}\n}\n\n")
+	fmt.Fprintf(&c, "// %sEventNamed is the event the design calls name, with the cell x, y inside\n// the component that raised it; false when the screen has no such event.\nfunc %sEventNamed(name string, x, y int) (%sEvent, bool) {\n\tswitch name {\n", ident, ident, ident)
+	for _, e := range events {
+		fmt.Fprintf(&c, "\tcase %s:\n\t\treturn %s%s{X: x, Y: y}, true\n", strconv.Quote(e), ident, eventOf[e])
+	}
+	c.WriteString("\t}\n\treturn nil, false\n}\n\n")
 	fmt.Fprintf(&c, "// %sKeys are the keys of the screen, for a key bar.\nvar %sKeys = []KeyHint{\n", ident, ident)
 	for _, k := range doc.Keys {
 		fmt.Fprintf(&c, "\t{Key: %s, Label: %s, Event: %s},\n", strconv.Quote(k.Key), strconv.Quote(k.Label), strconv.Quote(k.Event))
@@ -737,6 +756,8 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 	}
 	v.WriteString("}\n\n")
 	sc.inputs = inputs
+	sc.events = events
+	sc.eventNames = eventOf
 	sc.palette = len(palette) > 0
 	// A container or a colour picker is state the program owns, with code of
 	// its own in the page; those pages keep their parts.

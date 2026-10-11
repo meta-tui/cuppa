@@ -4,11 +4,13 @@
 package designcmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
 	"github.com/meta-ui-labs/cuppa/libs/cuppafile/format"
@@ -20,6 +22,7 @@ const usage = `usage:
   cuppa design json  <file.cuppa>             print a design as editable JSON
   cuppa design build <file.json> [out.cuppa]  check the JSON and write the design
   cuppa design check <file.cuppa|file.json>   list what is wrong with a design and what it exports
+  cuppa design contract <file.cuppa>          print each page's inputs and events as JSON
   cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa>   one design with a page per design
 
 A design is {"document": {"name", "width", "height", "background", "theme",
@@ -49,6 +52,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		err = build(args[1], out, stdout)
 	case "check":
 		err = check(args[1], stdout)
+	case "contract":
+		err = contract(args[1], stdout)
 	case "merge":
 		err = merge(args[1:], stdout)
 	default:
@@ -210,4 +215,23 @@ func masterClashes(s design.Document) []string {
 		}
 	}
 	return out
+}
+
+// contract prints each page's inputs (name, kind) and events (name) as JSON, so
+// a program in any language can check itself against the design (ADR 0016).
+func contract(path string, stdout io.Writer) error {
+	doc, err := disk.Load(path)
+	if err != nil {
+		return err
+	}
+	cat := cupp.Adopt(standard.Default(), doc.Embedded)
+	data, err := json.MarshalIndent(struct {
+		Design string                  `json:"design"`
+		Pages  []gosource.PageContract `json:"pages"`
+	}{doc.Name, gosource.Contract(doc, cat)}, "", "  ")
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Fprintln(stdout, string(data))
+	return err
 }

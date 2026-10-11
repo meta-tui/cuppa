@@ -1,6 +1,6 @@
 # ADR 0014: A bar for pages under the canvas
 
-Status: proposed (plan; nothing is built yet)
+Status: accepted
 
 ## Context
 

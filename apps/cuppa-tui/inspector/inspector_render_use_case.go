@@ -120,7 +120,6 @@ func (m *Model) Lines() []string {
 	b.text(title)
 	m.modeButtons(b)
 	b.end()
-	m.history(b)
 
 	specs := m.panelSpecs()
 	m.views = make([]panelView, len(specs))
@@ -175,7 +174,6 @@ func (m *Model) Lines() []string {
 // are in the contextual bar above the canvas.
 func (m *Model) panelSpecs() []panelSpec {
 	layers := panelSpec{id: panelLayers, title: "Layers", fill: m.layers, trash: true}
-	pages := panelSpec{id: panelPages, title: "Pages", fill: m.pagesPanel}
 	n, ok := m.ed.Primary()
 	switch {
 	case !ok:
@@ -189,14 +187,13 @@ func (m *Model) panelSpecs() []panelSpec {
 		if len(m.layoutInputs()) > 0 {
 			specs = append(specs, panelSpec{id: panelInputs, title: "Layout inputs", fill: m.inputsPanel})
 		}
-		return append(specs, pages, layers)
+		return append(specs, layers)
 	case len(m.ed.Selected()) > 1:
-		return []panelSpec{pages, layers}
+		return []panelSpec{layers}
 	}
 	return []panelSpec{
 		{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }},
 		{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
-		pages,
 		layers,
 	}
 }
@@ -248,12 +245,6 @@ func (m *Model) revealSelection() {
 			m.reveal(v.start + 1 + len(doc.Nodes) - 1 - doc.Index(id))
 		}
 	}
-}
-
-func (m *Model) history(b *builder) {
-	b.text(" ").
-		add(theme.Button("[Undo]", m.ed.CanUndo()), func() { m.ed.Undo() }).text(" ").
-		add(theme.Button("[Redo]", m.ed.CanRedo()), func() { m.ed.Redo() }).end()
 }
 
 // snapRow is the "snap to guides" checkbox.
@@ -617,40 +608,6 @@ func (m *Model) gotoRow(b *builder, n design.Node) {
 	b.text("  ")
 	m.selectRow(b, shown, "Go to page", items, nil)
 	b.end()
-}
-
-// pagesPanel lists the pages of the design: pressing a name shows that page,
-// the arrows move it, the pencil renames it and [x] deletes it with what is on
-// it. [+ Page] adds one.
-func (m *Model) pagesPanel(b *builder) {
-	names := m.ed.PageNames()
-	active := m.ed.ActivePage()
-	for i, name := range names {
-		page, pageName := i, name
-		mark := " "
-		if i == active {
-			mark = theme.Title("▸")
-		}
-		field := "pagename:" + strconv.Itoa(i)
-		b.text(" " + mark + " ")
-		if m.editing == field {
-			b.text(m.buf + "█").end()
-			continue
-		}
-		room := max(m.content()-lipgloss.Width(b.cur)-13, 4)
-		b.add(theme.Bold(theme.Fit(ansi.Truncate(name, room, "…"), room)), func() { m.ed.SwitchPage(page) })
-		if len(names) > 1 {
-			b.text(" ")
-			b.addMouse(theme.Button("↑", i > 0), func() { m.ed.MovePage(page, page-1) })
-			b.addMouse(theme.Button("↓", i < len(names)-1), func() { m.ed.MovePage(page, page+1) })
-		}
-		b.text(" ").addMouse(theme.Button("✎", true), func() { m.startEdit(field, pageName) })
-		if len(names) > 1 {
-			b.text(" ").addMouse(theme.Button("[x]", true), func() { m.report(m.ed.DeletePage(page)) })
-		}
-		b.end()
-	}
-	b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddPage("")) }).end()
 }
 
 // layoutInputs are the names the panel lists: the inputs that expressions and

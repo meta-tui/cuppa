@@ -22,6 +22,7 @@ import (
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
   cuppa screens <design.cuppa> [--check] [--keep-stale] [--update-mod]   (to the folder and layout the design has saved)
+  cuppa screens <design.cuppa> --golden <folder> [--sizes 80x24,120x30] [--generated] [--check]
   cuppa screens <design.cuppa> -o <folder> --app
   cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
   cuppa screens <design.cuppa> -o <folder> --layout slices --library -m <import path of the folder> [--router]
@@ -57,6 +58,14 @@ go.mod is written once and then is yours: the command lists the requirements
 the components need that it lacks, and those only a removed component needed;
 --update-mod changes it (go mod tidy then makes go.sum).
 
+With --golden each page of a design is drawn with its samples at the given
+sizes (the design's own by default) into <folder>/<page>_<w>x<h>.ansi, and
+--check compares the drawings with those files. The drawing is Cuppa's own;
+--generated builds the Go the export writes for the design and draws the pages
+with it, which is what an application ships (it needs the go tool and the
+network the first time). The two draw the same picture with different escape
+bytes, so keep to one of them for a folder.
+
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
 can tell that the generated package is out of date.
@@ -67,6 +76,7 @@ can tell that the generated package is out of date.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
 	out, pkg, layout, module := "", "", gosource.LayoutFlat, ""
+	golden, sizes, generated := "", "", false
 	check, app, library, router, keepStale, updateMod := false, false, false, false, false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
@@ -74,6 +84,18 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			app = true
 		case "--check":
 			check = true
+		case "--golden":
+			i++
+			if i < len(args) {
+				golden = args[i]
+			}
+		case "--sizes":
+			i++
+			if i < len(args) {
+				sizes = args[i]
+			}
+		case "--generated":
+			generated = true
 		case "--keep-stale":
 			keepStale = true
 		case "--update-mod":
@@ -105,6 +127,17 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		default:
 			inputs = append(inputs, args[i])
 		}
+	}
+	if golden != "" {
+		if len(inputs) != 1 {
+			_, _ = fmt.Fprintln(stderr, "cuppa screens: --golden takes one design")
+			return 2
+		}
+		if err := runGolden(inputs[0], golden, sizes, generated, check, stdout); err != nil {
+			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
+			return 1
+		}
+		return 0
 	}
 	if out == "" && len(inputs) == 1 && !library && !router && layout == gosource.LayoutFlat && module == "" {
 		// No folder given: the design says where its Go source goes.

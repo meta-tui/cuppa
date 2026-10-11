@@ -498,8 +498,20 @@ func buildScreen(doc design.Document, ident string, placed []leaf, cat Catalog) 
 		if _, known := index[ref]; known {
 			continue
 		}
-		if _, ok := register(ref, "int", "0", "read by a layout expression or a condition"); ok {
-			note("input %q is read by a condition or a layout expression and bound to no property: it is a number (0 by default)", ref)
+		typ, lit := "int", "0"
+		if f, ok := design.SampleNumber(doc.Samples[ref]); ok {
+			// The design gave it a value to preview with: the default is that.
+			if f == float64(int(f)) {
+				lit = strconv.Itoa(int(f))
+			} else {
+				typ, lit = "float64", strconv.FormatFloat(f, 'f', -1, 64)
+			}
+		}
+		if _, ok := register(ref, typ, lit, "read by a layout expression or a condition"); ok {
+			if _, sampled := doc.Samples[ref]; sampled {
+				continue
+			}
+			note("input %q is read by a condition or a layout expression and bound to no property: it is a number (0 by default); give it a sample value in the designer's Layout inputs", ref)
 		}
 	}
 	for _, k := range doc.Keys {

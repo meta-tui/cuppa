@@ -74,7 +74,29 @@ func normalise(doc design.Document) design.Document {
 	doc.Embedded = cleanEmbedded(doc.Embedded)
 	doc.Nodes = nodes
 	doc = cleanPages(doc)
+	doc.Samples = cleanSamples(doc.Samples)
 	return doc
+}
+
+// maxSamples bounds how many sample values a file may carry.
+const maxSamples = 256
+
+// cleanSamples keeps the samples that name a valid input and hold a number.
+func cleanSamples(in map[string]string) map[string]string {
+	var out map[string]string
+	for name, v := range in {
+		if !design.ValidInputName(name) || len(out) >= maxSamples {
+			continue
+		}
+		if _, ok := design.SampleNumber(v); !ok {
+			continue
+		}
+		if out == nil {
+			out = map[string]string{}
+		}
+		out[name] = strings.TrimSpace(v)
+	}
+	return out
 }
 
 // maxPages bounds how many pages a file may carry.

@@ -3,6 +3,7 @@ package inspector
 import (
 	"github.com/meta-tui/cuppa/libs/document/container"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -178,15 +179,17 @@ func (m *Model) panelSpecs() []panelSpec {
 	n, ok := m.ed.Primary()
 	switch {
 	case !ok:
-		return []panelSpec{
+		specs := []panelSpec{
 			{id: panelCanvas, title: "Canvas", fill: m.canvasPanel},
 			{id: panelTheme, title: "Theme", fill: m.themePanel},
 			{id: panelColours, title: "Named colours", fill: func(b *builder) { m.paletteRows(b, m.ed.Document()) }},
 			{id: panelKeys, title: "Screen keys", fill: m.keysPanel},
 			{id: panelDisplay, title: "Display", fill: m.displayPanel},
-			pages,
-			layers,
 		}
+		if len(m.layoutInputs()) > 0 {
+			specs = append(specs, panelSpec{id: panelInputs, title: "Layout inputs", fill: m.inputsPanel})
+		}
+		return append(specs, pages, layers)
 	case len(m.ed.Selected()) > 1:
 		return []panelSpec{pages, layers}
 	}
@@ -648,4 +651,45 @@ func (m *Model) pagesPanel(b *builder) {
 		b.end()
 	}
 	b.text(" ").add(theme.Button("[+ Page]", true), func() { m.report(m.ed.AddPage("")) }).end()
+}
+
+// layoutInputs are the names the panel lists: the inputs that expressions and
+// conditions read with no property bound to them, and the ones that already
+// have a sample.
+func (m *Model) layoutInputs() []string {
+	names := m.ed.ReadInputs()
+	seen := map[string]bool{}
+	for _, n := range names {
+		seen[n] = true
+	}
+	for name := range m.ed.Samples() {
+		if !seen[name] {
+			names = append(names, name)
+		}
+	}
+	sort.Strings(names)
+	return names
+}
+
+// inputsPanel gives each such input the value the designer previews it with,
+// and the exported screen starts from: a number, or true and false. Click one
+// to type it; an empty value takes it away.
+func (m *Model) inputsPanel(b *builder) {
+	samples := m.ed.Samples()
+	for _, name := range m.layoutInputs() {
+		field := "sample:" + name
+		value, has := samples[name]
+		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
+		switch {
+		case m.editing == field:
+			b.text(m.buf + "█")
+		case has:
+			b.add(theme.Bold(value), func() { m.startEdit(field, value) })
+		default:
+			b.add(theme.Faded("0 (set)"), func() { m.startEdit(field, "") })
+		}
+		b.end()
+	}
+	b.text(" " + theme.Faded("read by expressions, not bound")).end()
+	m.messageRow(b)
 }

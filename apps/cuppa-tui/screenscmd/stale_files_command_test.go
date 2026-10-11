@@ -27,7 +27,7 @@ func TestTheFilesOfAGonePageAreListedAndCanBeKept(t *testing.T) {
 	if code := Run([]string{file}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit %d: %s%s", code, stdout.String(), stderr.String())
 	}
-	left := filepath.Join(dir, "app", "pages", "settings", "settings.go")
+	left := filepath.Join(dir, "app", "pages", "settings", "settings.cuppa.go")
 	if _, err := os.Stat(left); err != nil {
 		t.Fatalf("the page was not written: %v", err)
 	}
@@ -40,7 +40,7 @@ func TestTheFilesOfAGonePageAreListedAndCanBeKept(t *testing.T) {
 	if code := Run([]string{file, "--keep-stale"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit %d: %s%s", code, stdout.String(), stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "kept pages/settings/settings.go") {
+	if !strings.Contains(stdout.String(), "kept pages/settings/settings.cuppa.go") {
 		t.Errorf("the kept file is listed: %s", stdout.String())
 	}
 	if _, err := os.Stat(left); err != nil {
@@ -51,7 +51,7 @@ func TestTheFilesOfAGonePageAreListedAndCanBeKept(t *testing.T) {
 	if code := Run([]string{file}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit %d: %s%s", code, stdout.String(), stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "removed pages/settings/settings.go") {
+	if !strings.Contains(stdout.String(), "removed pages/settings/settings.cuppa.go") {
 		t.Errorf("the removed file is listed: %s", stdout.String())
 	}
 	if _, err := os.Stat(left); err == nil {

@@ -37,7 +37,7 @@ myapp/
     app.go                     the router: Page, Props, Default, View, Handle, Press (ADR 0012)
   pages/
     home/
-      home.go                  the page: Props, Default, View, Layout, Handle, Press, events, Keys, Size
+      home.cuppa.go            the page: Props, Default, View, Layout, Handle, Press, events, Keys, Size
       <your own files>.go      untouched by the export
     settings/
       settings.go

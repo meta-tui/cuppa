@@ -38,7 +38,7 @@ func TestTheFilesOfAGonePageAreReportedAndCanBeKept(t *testing.T) {
 	if len(gone) == 0 || !strings.Contains(strings.Join(gone, " "), "settings") {
 		t.Fatalf("the page that is gone is reported: %v", gone)
 	}
-	if _, err := os.Stat(filepath.Join(dir, "pages", "settings", "settings.go")); err != nil {
+	if _, err := os.Stat(filepath.Join(dir, "pages", "settings", "settings.cuppa.go")); err != nil {
 		t.Fatalf("reporting must not remove anything: %v", err)
 	}
 

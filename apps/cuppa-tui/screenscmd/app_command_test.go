@@ -57,7 +57,7 @@ func TestLayoutSlicesWritesFoldersChecksAndOpensBack(t *testing.T) {
 	if code := Run([]string{src, "-o", out, "--layout", "slices", "-m", "example.com/shop"}, &stdout, &stderr); code != 0 {
 		t.Fatalf("exit %d: %s", code, stderr.String())
 	}
-	for _, name := range []string{"main.go", "go.mod", "app/app.go", "pages/home/home.go", "pages/cart/cart.go", "internal/cuppa/runtime.go"} {
+	for _, name := range []string{"main.go", "go.mod", "app/app.go", "pages/home/home.cuppa.go", "pages/cart/cart.cuppa.go", "internal/cuppa/runtime.go"} {
 		if _, err := os.Stat(filepath.Join(out, filepath.FromSlash(name))); err != nil {
 			t.Errorf("no %s: %v", name, err)
 		}

@@ -38,14 +38,14 @@ func TestTheMasterIsWrittenOnceInTheSliceLayout(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	src, ok := p.Files["internal/components/master/master.go"]
+	src, ok := p.Files["internal/components/master/master.cuppa.go"]
 	if !ok {
 		t.Fatalf("no master package; files: %v", fileNames(p))
 	}
 	if strings.Count(src, `"lipgloss.keybar"`) != 1 {
 		t.Error("the master's package does not hold the key bar once")
 	}
-	for _, page := range []string{"pages/home/home.go", "pages/cart/cart.go"} {
+	for _, page := range []string{"pages/home/home.cuppa.go", "pages/cart/cart.cuppa.go"} {
 		page := p.Files[page]
 		if strings.Contains(page, "lipgloss.keybar") || strings.Contains(page, `Name: "Title"`) {
 			t.Errorf("a page still draws the master's parts itself:\n%s", page)
@@ -54,7 +54,7 @@ func TestTheMasterIsWrittenOnceInTheSliceLayout(t *testing.T) {
 			t.Errorf("a page does not take the master's parts from the package")
 		}
 	}
-	cart := p.Files["pages/cart/cart.go"]
+	cart := p.Files["pages/cart/cart.cuppa.go"]
 	if !strings.Contains(cart, `master.PartsFor(masterProps, "Key bar")`) {
 		t.Errorf("Cart does not hide the key bar:\n%s", cart)
 	}
@@ -62,7 +62,7 @@ func TestTheMasterIsWrittenOnceInTheSliceLayout(t *testing.T) {
 		t.Errorf("Cart does not start from its own text for the title")
 	}
 	// The page's API is unchanged.
-	home := p.Files["pages/home/home.go"]
+	home := p.Files["pages/home/home.cuppa.go"]
 	for _, want := range []string{"func View(", "func Default()", "func Layout(", "func Handle(", "func HintsHintAt(p Props, x int)", "type HintsHint = master.HintsHint"} {
 		if !strings.Contains(home, want) {
 			t.Errorf("Home has no %q", want)

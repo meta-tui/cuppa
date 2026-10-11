@@ -160,10 +160,7 @@ func liveList(n design.Node, items []any) (string, map[string]string, bool) {
 			}
 			return strings.Join(cells, ","), nil, true
 		}
-		var columns []string
-		for _, c := range splitColumns(n.Props["columns"]) {
-			columns = append(columns, c)
-		}
+		columns := splitColumns(n.Props["columns"])
 		rows := make([]string, len(objs))
 		styles := make([]string, len(objs))
 		for i, o := range objs {

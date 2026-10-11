@@ -184,3 +184,58 @@ func TestEditorAndPreviewButtonsSwitchTheMode(t *testing.T) {
 		t.Fatal("Editor should go back to editing")
 	}
 }
+
+func TestThePagesPanelAddsSwitchesRenamesAndDeletesPages(t *testing.T) {
+	m, ed, _ := setup(t, "lipgloss.box")
+	ed.Clear()
+	m.Lines()
+	clickText(t, m, "[+ Page]", "[+ Page]")
+	if got := ed.PageNames(); len(got) != 2 || ed.ActivePage() != 1 {
+		t.Fatalf("pages %v active %d", got, ed.ActivePage())
+	}
+	// Back to the first page by its name.
+	clickText(t, m, "Page 1", "Page 1")
+	if ed.ActivePage() != 0 {
+		t.Fatalf("active = %d", ed.ActivePage())
+	}
+	// Rename the second page: the pencil on its row, then the new name.
+	lines := plainLines(m)
+	row := rowOf(lines, "Page 2")
+	x := strings.Index(lines[row], "✎")
+	m.Handle(pointer.Event{X: len([]rune(lines[row][:x])), Y: row, Phase: pointer.Down, Left: true})
+	for range "Page 2" {
+		m.Key("", true, false, false)
+	}
+	for _, r := range "Settings" {
+		m.Key(string(r), false, false, false)
+	}
+	m.Key("", false, true, false)
+	if got := ed.PageNames(); got[1] != "Settings" {
+		t.Fatalf("pages = %v (message %q)", got, m.message)
+	}
+	// Delete it with [x].
+	m.Lines()
+	lines = plainLines(m)
+	row = rowOf(lines, "Settings")
+	x = strings.Index(lines[row], "[x]")
+	m.Handle(pointer.Event{X: len([]rune(lines[row][:x])) + 1, Y: row, Phase: pointer.Down, Left: true})
+	if ed.Document().IsPaged() {
+		t.Fatalf("pages = %v", ed.PageNames())
+	}
+}
+
+func TestAComponentCanGoToAnotherPageFromTheBehaviourPanel(t *testing.T) {
+	m, ed, id := setup(t, "lipgloss.box")
+	if err := ed.AddPage("Settings"); err != nil {
+		t.Fatal(err)
+	}
+	ed.SwitchPage(0)
+	ed.Select(id)
+	m.Lines()
+	clickText(t, m, "Click goes to", "Click goes to")
+	clickText(t, m, "(none)", "(none)")
+	clickText(t, m, "Settings", "Settings")
+	if n, _ := ed.Document().Get(id); n.Goto != "Settings" {
+		t.Fatalf("goto = %q (message %q)", n.Goto, m.message)
+	}
+}

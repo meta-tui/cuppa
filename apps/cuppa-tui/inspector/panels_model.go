@@ -16,6 +16,7 @@ const (
 	panelColours    panelID = "colours"
 	panelKeys       panelID = "keys"
 	panelDisplay    panelID = "display"
+	panelPages      panelID = "pages"
 	panelLayers     panelID = "layers"
 )
 
@@ -36,12 +37,13 @@ type panelDefault struct {
 
 var panelDefaults = map[panelID]panelDefault{
 	panelProperties: {want: 12, min: 3},
-	panelBehaviour:  {want: 4, min: 2},
+	panelBehaviour:  {want: 6, min: 2},
 	panelCanvas:     {want: 5, min: 2},
 	panelTheme:      {want: 8, min: 3},
 	panelColours:    {want: 6, min: 2, closed: true},
 	panelKeys:       {want: 3, min: 2, closed: true},
 	panelDisplay:    {want: 8, min: 3},
+	panelPages:      {want: 4, min: 2},
 	panelLayers:     {want: 8, min: 3},
 }
 

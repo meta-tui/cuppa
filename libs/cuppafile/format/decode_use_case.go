@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 	"io"
+	"strings"
 
 	"github.com/meta-tui/cuppa/libs/color/space"
 	"github.com/meta-tui/cuppa/libs/document/design"
@@ -72,6 +73,47 @@ func normalise(doc design.Document) design.Document {
 	nodes := cleanNodes(doc.Nodes, 0)
 	doc.Embedded = cleanEmbedded(doc.Embedded)
 	doc.Nodes = nodes
+	doc = cleanPages(doc)
+	return doc
+}
+
+// maxPages bounds how many pages a file may carry.
+const maxPages = 64
+
+// cleanPages keeps the pages that have a usable, unused name, cleans the
+// components of those that are not shown, and keeps the shown page inside the
+// pages. A single page is no split at all.
+func cleanPages(doc design.Document) design.Document {
+	if len(doc.Pages) == 0 {
+		doc.Page = 0
+		return doc
+	}
+	seen := map[string]bool{}
+	var pages []design.Page
+	active := -1
+	for i, p := range doc.Pages {
+		p.Name = strings.TrimSpace(p.Name)
+		if design.ValidPageName(p.Name) != nil || seen[p.Name] || len(pages) >= maxPages {
+			if i == doc.Page {
+				active = len(pages)
+			}
+			continue
+		}
+		seen[p.Name] = true
+		if i == doc.Page {
+			active = len(pages)
+		}
+		p.Nodes = cleanNodes(p.Nodes, 0)
+		pages = append(pages, p)
+	}
+	if len(pages) == 0 {
+		doc.Pages, doc.Page = nil, 0
+		return doc
+	}
+	doc.Pages = pages
+	doc.Page = min(max(active, 0), len(pages)-1)
+	// The shown page keeps its components in Nodes.
+	doc.Pages[doc.Page].Nodes = nil
 	return doc
 }
 

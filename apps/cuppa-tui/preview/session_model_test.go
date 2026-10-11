@@ -256,3 +256,22 @@ func TestPressingATabInThePreviewChangesThePage(t *testing.T) {
 		t.Error("the preview changed the design")
 	}
 }
+
+// In the preview, a component that goes to a page takes the person there.
+func TestAComponentThatGoesToAPageChangesThePageInThePreview(t *testing.T) {
+	cat := standard.Default()
+	doc := design.NewDocument("t", 40, 8)
+	doc.Add(design.Node{Component: "lipgloss.label", Name: "Go", Rect: design.Rect{X: 1, Y: 1, W: 12, H: 1},
+		Props: map[string]string{"text": "HOME PAGE"}, Goto: "Two"})
+	doc.Pages = []design.Page{{Name: "One"}, {Name: "Two", Nodes: []design.Node{
+		{ID: "n9", Component: "lipgloss.label", Name: "Other", Rect: design.Rect{X: 1, Y: 1, W: 12, H: 1}, Props: map[string]string{"text": "SECOND PAGE"}},
+	}}}
+	s, _ := Start(doc, cat)
+	if v := text(s.Render()); !strings.Contains(v, "HOME PAGE") {
+		t.Fatalf("at the start:\n%s", v)
+	}
+	s.Press(2, 1)
+	if v := text(s.Render()); !strings.Contains(v, "SECOND PAGE") || strings.Contains(v, "HOME PAGE") {
+		t.Fatalf("after the click:\n%s", v)
+	}
+}

@@ -35,6 +35,9 @@ type Node struct {
 	ShowIf string `json:"showIf,omitempty"`
 	// Event names the screen event raised when the component is clicked.
 	Event string `json:"event,omitempty"`
+	// Goto names the page a click on the component shows (ADR 0012), in the
+	// preview and in the exported application, with no code.
+	Goto string `json:"goto,omitempty"`
 	// Children are set on a group: the components it holds, with rectangles
 	// relative to the group's top-left, laid out for a box of BaseW x BaseH. A
 	// placed group scales them with its own size.

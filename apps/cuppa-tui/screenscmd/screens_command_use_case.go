@@ -21,10 +21,16 @@ import (
 
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
+  cuppa screens <design.cuppa> -o <folder> --app
 
 Writes one contract and one view file per design, and the shared runtime, into
 <folder> (a package of its own). Files it wrote earlier are replaced and the
 files of designs that are gone are removed; any other file stops the export.
+
+A design with pages gives one screen per page and a router file with the props
+of the pages and which one is shown. With --app the folder is a whole
+application instead: go.mod, main.go that runs the pages, the screens and the
+router, in an empty folder; "cuppa main.go" opens its design again.
 
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
@@ -36,9 +42,11 @@ can tell that the generated package is out of date.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
 	out, pkg := "", ""
-	check := false
+	check, app := false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
+		case "--app":
+			app = true
 		case "--check":
 			check = true
 		case "-o", "--out":
@@ -58,6 +66,13 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	if out == "" || len(inputs) == 0 {
 		_, _ = fmt.Fprint(stderr, usage)
 		return 2
+	}
+	if app {
+		if err := runApp(inputs, out, stdout); err != nil {
+			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
+			return 1
+		}
+		return 0
 	}
 	if err := run(inputs, out, pkg, check, stdout); err != nil {
 		_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
@@ -85,7 +100,15 @@ func run(inputs []string, out, pkg string, check bool, stdout io.Writer) error {
 		pkg = filepath.Base(filepath.Clean(out))
 	}
 	cat := cupp.Adopt(standard.Default(), embedded)
-	project := gosource.GenerateScreens(docs, cat, pkg)
+	var opts gosource.Options
+	if len(docs) == 1 {
+		// A single design travels with its screens, so it can be opened again
+		// from them.
+		if data, err := format.Encode(docs[0]); err == nil {
+			opts.Source = data
+		}
+	}
+	project := gosource.GenerateScreensWith(docs, cat, pkg, opts)
 	if check {
 		diffs := gosource.CheckScreens(out, project)
 		if len(diffs) == 0 {
@@ -141,4 +164,33 @@ func designFiles(inputs []string) ([]string, error) {
 		return nil, fmt.Errorf("no %s designs found", format.Extension)
 	}
 	return paths, nil
+}
+
+// runApp writes one design as a whole application: the screens of its pages,
+// the router, main.go and go.mod.
+func runApp(inputs []string, out string, stdout io.Writer) error {
+	paths, err := designFiles(inputs)
+	if err != nil {
+		return err
+	}
+	if len(paths) != 1 {
+		return fmt.Errorf("--app takes one design, got %d", len(paths))
+	}
+	doc, err := disk.Load(paths[0])
+	if err != nil {
+		return fmt.Errorf("%s: %w", paths[0], err)
+	}
+	opts := gosource.Options{}
+	if data, err := format.Encode(doc); err == nil {
+		opts.Source = data
+	}
+	project := gosource.GenerateWith(doc, cupp.Adopt(standard.Default(), doc.Embedded), opts)
+	if err := gosource.Write(out, project); err != nil {
+		return err
+	}
+	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\nNext: cd %s && go mod tidy && go run .\n", doc.PageCount(), len(project.Files), out, out)
+	for _, n := range project.Notes {
+		_, _ = fmt.Fprintln(stdout, "note:", n)
+	}
+	return nil
 }

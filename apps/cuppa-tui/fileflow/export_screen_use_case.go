@@ -24,7 +24,7 @@ func (f *Flow) ExportScreen() {
 		if o.Canceled {
 			return
 		}
-		project := gosource.GenerateScreens([]design.Document{doc}, f.cat, filepath.Base(o.Value))
+		project := gosource.GenerateScreensWith([]design.Document{doc}, f.cat, filepath.Base(o.Value), gosource.Options{Source: f.source(doc)})
 		if err := gosource.WriteScreens(o.Value, project); err != nil {
 			f.Notice("Cannot export Go screen", err.Error())
 			return

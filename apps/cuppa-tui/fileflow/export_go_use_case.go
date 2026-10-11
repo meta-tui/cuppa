@@ -124,7 +124,9 @@ func (f *Flow) storedDir(dir string) string {
 	return filepath.ToSlash(rel)
 }
 
-// runExport generates the project the settings ask for and writes it.
+// runExport generates the project the settings ask for and writes it. When the
+// design no longer has a page or a component whose Go files are in the folder,
+// it asks whether to delete them before anything is written.
 func (f *Flow) runExport(s design.ExportSettings) {
 	doc := f.ed.Document()
 	dir := gosource.ExportDir(s, f.path)
@@ -133,7 +135,31 @@ func (f *Flow) runExport(s design.ExportSettings) {
 		f.Notice("Cannot export Go source", err.Error())
 		return
 	}
-	if err := gosource.WriteExport(dir, s, project); err != nil {
+	gone := gosource.ObsoleteExport(dir, s, project)
+	if len(gone) == 0 {
+		f.writeExport(dir, s, project, nil)
+		return
+	}
+	shown, more := gone, ""
+	if len(shown) > 12 {
+		more = fmt.Sprintf("\n… and %d more", len(shown)-12)
+		shown = shown[:12]
+	}
+	body := fmt.Sprintf("The design no longer has what these generated files were written for:\n\n%s%s\n\nDelete them from %s?", strings.Join(shown, "\n"), more, dir)
+	f.show(confirm.New("Delete Go files", body, "Delete", "Keep", "Cancel"), func(o modal.Outcome) {
+		switch o.Button {
+		case "Delete":
+			f.writeExport(dir, s, project, nil)
+		case "Keep":
+			f.writeExport(dir, s, project, gone)
+		}
+	})
+}
+
+// writeExport writes the project, leaving the files in keep where they are, and
+// says what was written.
+func (f *Flow) writeExport(dir string, s design.ExportSettings, project gosource.Project, keep []string) {
+	if err := gosource.WriteExportKeeping(dir, s, project, keep); err != nil {
 		f.Notice("Cannot export Go source", err.Error())
 		return
 	}
@@ -143,6 +169,9 @@ func (f *Flow) runExport(s design.ExportSettings) {
 		body += "Your module imports the pages from " + s.Module + "."
 	} else {
 		body += "Next: go mod tidy && go run ."
+	}
+	if len(keep) > 0 {
+		body += fmt.Sprintf("\n\n%d files of pages or components that are gone were kept.", len(keep))
 	}
 	if len(project.Requires) > 0 && s.Library {
 		body += "\n\nNeeds in go.mod:\n- " + strings.Join(project.Requires, "\n- ")

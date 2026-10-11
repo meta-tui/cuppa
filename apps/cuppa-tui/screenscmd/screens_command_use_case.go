@@ -21,7 +21,7 @@ import (
 
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
-  cuppa screens <design.cuppa> [--check]     (to the folder and layout the design has saved)
+  cuppa screens <design.cuppa> [--check] [--keep-stale]   (to the folder and layout the design has saved)
   cuppa screens <design.cuppa> -o <folder> --app
   cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
   cuppa screens <design.cuppa> -o <folder> --layout slices --library -m <import path of the folder> [--router]
@@ -50,6 +50,9 @@ Without -o, a design that was exported from the designer is exported again to
 the folder, with the layout and the module it saved (the same as Export, Go
 source), so the one design file is all there is to remember.
 
+A generated file whose page or component is no longer in the design is removed
+and listed; --keep-stale leaves such files where they are (the designer asks).
+
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
 can tell that the generated package is out of date.
@@ -60,13 +63,15 @@ can tell that the generated package is out of date.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
 	out, pkg, layout, module := "", "", gosource.LayoutFlat, ""
-	check, app, library, router := false, false, false, false
+	check, app, library, router, keepStale := false, false, false, false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
 		case "--app":
 			app = true
 		case "--check":
 			check = true
+		case "--keep-stale":
+			keepStale = true
 		case "--library":
 			library = true
 		case "--router":
@@ -97,7 +102,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	if out == "" && len(inputs) == 1 && !library && !router && layout == gosource.LayoutFlat && module == "" {
 		// No folder given: the design says where its Go source goes.
-		if handled, err := runSaved(inputs[0], check, stdout); handled {
+		if handled, err := runSaved(inputs[0], check, keepStale, stdout); handled {
 			if err != nil {
 				_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 				return 1
@@ -125,7 +130,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		app = true
 	}
 	if app {
-		if err := runApp(inputs, out, layout, module, library, router, check, stdout); err != nil {
+		if err := runApp(inputs, out, layout, module, library, router, check, keepStale, stdout); err != nil {
 			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 			return 1
 		}
@@ -225,7 +230,7 @@ func designFiles(inputs []string) ([]string, error) {
 
 // runApp writes one design as a whole application: the screens of its pages,
 // the router, main.go and go.mod.
-func runApp(inputs []string, out, layout, module string, library, router, check bool, stdout io.Writer) error {
+func runApp(inputs []string, out, layout, module string, library, router, check, keepStale bool, stdout io.Writer) error {
 	paths, err := designFiles(inputs)
 	if err != nil {
 		return err
@@ -260,7 +265,8 @@ func runApp(inputs []string, out, layout, module string, library, router, check 
 			}
 			return fmt.Errorf("%s is out of date with the design: run cuppa screens again", out)
 		}
-		if err := gosource.ReplaceProject(out, project); err != nil {
+		keep := keptOf(gosource.Obsolete(out, project), keepStale, stdout)
+		if err := gosource.ReplaceProjectKeeping(out, project, keep); err != nil {
 			return err
 		}
 	} else if err := gosource.Write(out, project); err != nil {
@@ -273,9 +279,26 @@ func runApp(inputs []string, out, layout, module string, library, router, check 
 	return nil
 }
 
+// keptOf lists the generated files the design no longer has and says what
+// happens to them: they are removed by the write, unless keepStale asks to
+// leave them, in which case they are the ones to keep.
+func keptOf(gone []string, keepStale bool, stdout io.Writer) []string {
+	for _, name := range gone {
+		verb := "removed"
+		if keepStale {
+			verb = "kept"
+		}
+		_, _ = fmt.Fprintf(stdout, "%s %s (no longer in the design)\n", verb, name)
+	}
+	if keepStale {
+		return gone
+	}
+	return nil
+}
+
 // runSaved exports a design to where it says its Go source goes. It reports
 // false when the input is not a design that says so.
-func runSaved(path string, check bool, stdout io.Writer) (bool, error) {
+func runSaved(path string, check, keepStale bool, stdout io.Writer) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil || info.IsDir() || !strings.EqualFold(filepath.Ext(path), format.Extension) {
 		return false, nil
@@ -305,7 +328,8 @@ func runSaved(path string, check bool, stdout io.Writer) (bool, error) {
 		}
 		return true, fmt.Errorf("%s is out of date with the design: run cuppa screens again", dir)
 	}
-	if err := gosource.WriteExport(dir, s, project); err != nil {
+	keep := keptOf(gosource.ObsoleteExport(dir, s, project), keepStale, stdout)
+	if err := gosource.WriteExportKeeping(dir, s, project, keep); err != nil {
 		return true, err
 	}
 	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\n", doc.ScreenCount(), len(project.Files), dir)

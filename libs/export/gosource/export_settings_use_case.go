@@ -34,8 +34,24 @@ func GenerateExport(doc design.Document, cat Catalog, s design.ExportSettings, s
 // header, rewrites the files it has and removes nothing. go.mod and README.md
 // are written only the first time.
 func WriteExport(dir string, s design.ExportSettings, p Project) error {
+	return WriteExportKeeping(dir, s, p, nil)
+}
+
+// ObsoleteExport are the generated files WriteExport would remove from dir: the
+// ones of a page or a component the design no longer has. The one-folder layout
+// removes nothing.
+func ObsoleteExport(dir string, s design.ExportSettings, p Project) []string {
+	if s.Layout != design.ExportSlices {
+		return nil
+	}
+	return Obsolete(dir, p)
+}
+
+// WriteExportKeeping is WriteExport that leaves the files named in keep, which
+// ObsoleteExport reported, in place.
+func WriteExportKeeping(dir string, s design.ExportSettings, p Project, keep []string) error {
 	if s.Layout == design.ExportSlices {
-		return ReplaceProject(dir, p)
+		return ReplaceProjectKeeping(dir, p, keep)
 	}
 	for name, content := range p.Files {
 		path := filepath.Join(dir, filepath.FromSlash(name))

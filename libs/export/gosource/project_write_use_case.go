@@ -21,7 +21,15 @@ func isGenerated(data []byte) bool { return strings.HasPrefix(string(data), Gene
 // files of a page that is gone are removed, and a file Cuppa did not generate
 // is never touched; the call refuses the whole folder when one is in the way.
 // go.mod and README.md are written once and then belong to the person.
-func ReplaceProject(dir string, p Project) error {
+func ReplaceProject(dir string, p Project) error { return ReplaceProjectKeeping(dir, p, nil) }
+
+// ReplaceProjectKeeping is ReplaceProject that leaves the generated files named
+// in keep where they are, for a person who chose to keep a page's files.
+func ReplaceProjectKeeping(dir string, p Project, keep []string) error {
+	kept := map[string]bool{}
+	for _, name := range keep {
+		kept[filepath.ToSlash(name)] = true
+	}
 	for name := range p.Files {
 		data, err := os.ReadFile(filepath.Join(dir, filepath.FromSlash(name)))
 		if err != nil || keepsOwn[name] {
@@ -44,6 +52,9 @@ func ReplaceProject(dir string, p Project) error {
 		}
 	}
 	for _, stale := range staleFiles(dir, p) {
+		if kept[stale] {
+			continue
+		}
 		if err := os.Remove(filepath.Join(dir, filepath.FromSlash(stale))); err != nil {
 			return err
 		}
@@ -56,6 +67,10 @@ func ReplaceProject(dir string, p Project) error {
 	}
 	return nil
 }
+
+// Obsolete are the generated Go files under dir that the project no longer has,
+// as slash paths: what ReplaceProject would remove. Nothing is changed.
+func Obsolete(dir string, p Project) []string { return staleFiles(dir, p) }
 
 // staleFiles are the generated Go files under dir that the project no longer
 // has, as slash paths.

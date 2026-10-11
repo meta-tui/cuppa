@@ -21,7 +21,7 @@ import (
 
 const usage = `usage:
   cuppa screens <design.cuppa|folder>... -o <folder> [-p <package>] [--check]
-  cuppa screens <design.cuppa> [--check] [--keep-stale]   (to the folder and layout the design has saved)
+  cuppa screens <design.cuppa> [--check] [--keep-stale] [--update-mod]   (to the folder and layout the design has saved)
   cuppa screens <design.cuppa> -o <folder> --app
   cuppa screens <design.cuppa> -o <folder> --layout slices [-m <module path>]
   cuppa screens <design.cuppa> -o <folder> --layout slices --library -m <import path of the folder> [--router]
@@ -53,6 +53,10 @@ source), so the one design file is all there is to remember.
 A generated file whose page or component is no longer in the design is removed
 and listed; --keep-stale leaves such files where they are (the designer asks).
 
+go.mod is written once and then is yours: the command lists the requirements
+the components need that it lacks, and those only a removed component needed;
+--update-mod changes it (go mod tidy then makes go.sum).
+
 With --check nothing is written: the command exits 1 and lists the files that
 are missing, differ from what the designs export, or are left over, so a CI job
 can tell that the generated package is out of date.
@@ -63,7 +67,7 @@ can tell that the generated package is out of date.
 func Run(args []string, stdout, stderr io.Writer) int {
 	var inputs []string
 	out, pkg, layout, module := "", "", gosource.LayoutFlat, ""
-	check, app, library, router, keepStale := false, false, false, false, false
+	check, app, library, router, keepStale, updateMod := false, false, false, false, false, false
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
 		case "--app":
@@ -72,6 +76,8 @@ func Run(args []string, stdout, stderr io.Writer) int {
 			check = true
 		case "--keep-stale":
 			keepStale = true
+		case "--update-mod":
+			updateMod = true
 		case "--library":
 			library = true
 		case "--router":
@@ -102,7 +108,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 	}
 	if out == "" && len(inputs) == 1 && !library && !router && layout == gosource.LayoutFlat && module == "" {
 		// No folder given: the design says where its Go source goes.
-		if handled, err := runSaved(inputs[0], check, keepStale, stdout); handled {
+		if handled, err := runSaved(inputs[0], check, keepStale, updateMod, stdout); handled {
 			if err != nil {
 				_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 				return 1
@@ -130,7 +136,7 @@ func Run(args []string, stdout, stderr io.Writer) int {
 		app = true
 	}
 	if app {
-		if err := runApp(inputs, out, layout, module, library, router, check, keepStale, stdout); err != nil {
+		if err := runApp(inputs, out, layout, module, library, router, check, keepStale, updateMod, stdout); err != nil {
 			_, _ = fmt.Fprintln(stderr, "cuppa screens:", err)
 			return 1
 		}
@@ -230,7 +236,7 @@ func designFiles(inputs []string) ([]string, error) {
 
 // runApp writes one design as a whole application: the screens of its pages,
 // the router, main.go and go.mod.
-func runApp(inputs []string, out, layout, module string, library, router, check, keepStale bool, stdout io.Writer) error {
+func runApp(inputs []string, out, layout, module string, library, router, check, keepStale, updateMod bool, stdout io.Writer) error {
 	paths, err := designFiles(inputs)
 	if err != nil {
 		return err
@@ -269,6 +275,9 @@ func runApp(inputs []string, out, layout, module string, library, router, check,
 		if err := gosource.ReplaceProjectKeeping(out, project, keep); err != nil {
 			return err
 		}
+		if err := modStep(out, project, updateMod, stdout); err != nil {
+			return err
+		}
 	} else if err := gosource.Write(out, project); err != nil {
 		return err
 	}
@@ -296,9 +305,34 @@ func keptOf(gone []string, keepStale bool, stdout io.Writer) []string {
 	return nil
 }
 
+// modStep lists what go.mod lacks or no longer needs and, with --update-mod,
+// changes it. go.mod belongs to the person, so without the flag it is only
+// reported; go.sum is made by go mod tidy.
+func modStep(dir string, project gosource.Project, update bool, stdout io.Writer) error {
+	plan := gosource.PlanMod(dir, project)
+	for _, a := range plan.Add {
+		_, _ = fmt.Fprintf(stdout, "go.mod needs %s\n", a)
+	}
+	for _, r := range plan.Remove {
+		_, _ = fmt.Fprintf(stdout, "go.mod no longer needs %s\n", r)
+	}
+	if plan.Empty() {
+		return nil
+	}
+	if !update {
+		_, _ = fmt.Fprintln(stdout, "go.mod was not changed: --update-mod does it, then go mod tidy makes go.sum")
+		return nil
+	}
+	if err := gosource.ApplyMod(dir, plan); err != nil {
+		return err
+	}
+	_, _ = fmt.Fprintln(stdout, "go.mod updated: run go mod tidy to update go.sum")
+	return nil
+}
+
 // runSaved exports a design to where it says its Go source goes. It reports
 // false when the input is not a design that says so.
-func runSaved(path string, check, keepStale bool, stdout io.Writer) (bool, error) {
+func runSaved(path string, check, keepStale, updateMod bool, stdout io.Writer) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil || info.IsDir() || !strings.EqualFold(filepath.Ext(path), format.Extension) {
 		return false, nil
@@ -330,6 +364,9 @@ func runSaved(path string, check, keepStale bool, stdout io.Writer) (bool, error
 	}
 	keep := keptOf(gosource.ObsoleteExport(dir, s, project), keepStale, stdout)
 	if err := gosource.WriteExportKeeping(dir, s, project, keep); err != nil {
+		return true, err
+	}
+	if err := modStep(dir, project, updateMod, stdout); err != nil {
 		return true, err
 	}
 	_, _ = fmt.Fprintf(stdout, "%d pages, %d files written to %s\n", doc.ScreenCount(), len(project.Files), dir)

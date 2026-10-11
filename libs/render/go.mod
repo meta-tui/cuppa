@@ -1,4 +1,4 @@
-module github.com/meta-tui/cuppa/libs/render
+module github.com/meta-ui-labs/cuppa/libs/render
 
 go 1.27
 

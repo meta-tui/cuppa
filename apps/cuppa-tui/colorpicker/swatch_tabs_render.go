@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/meta-tui/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
 )
 
 // swatchOf draws one colour as a block w cells wide. Palette colours are sent

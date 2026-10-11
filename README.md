@@ -19,16 +19,16 @@ Think Lucidchart or Figma, but for [Bubble Tea](https://github.com/charmbracelet
 - **Generate Go source**: a Bubble Tea program that places the real Bubbles models where your design has them.
 
 **Desktop window.** `apps/cuppa-desktop` runs the same app in a [Wails](https://wails.io) window, through
-[TReactUI](https://github.com/meta-tui/treactui). Release zips for Windows, macOS and Linux are attached to each release; or build it with
+[TReactUI](https://github.com/meta-ui-labs/treactui). Release zips for Windows, macOS and Linux are attached to each release; or build it with
 `npx nx run cuppa-desktop:bundle` (see [its README](apps/cuppa-desktop/README.md)).
 
-**In your browser.** [Try Cuppa online](https://meta-tui.github.io/cuppa/): the same app compiled to WebAssembly, nothing to install. Files cannot be opened or saved there yet (see [its README](apps/cuppa-web/README.md)).
+**In your browser.** [Try Cuppa online](https://meta-ui-labs.github.io/cuppa/): the same app compiled to WebAssembly, nothing to install. Files cannot be opened or saved there yet (see [its README](apps/cuppa-web/README.md)).
 
 Cuppa is early: the previews are faithful sketches of each component, not live widgets, and keyboard navigation is still to come (see the [roadmap](#roadmap)).
 
 ## Install
 
-Download the zip for your system from the [latest release](https://github.com/meta-tui/cuppa/releases/latest) (Windows, macOS and Linux, Intel/AMD and ARM), unzip it and run `cuppa-tui`:
+Download the zip for your system from the [latest release](https://github.com/meta-ui-labs/cuppa/releases/latest) (Windows, macOS and Linux, Intel/AMD and ARM), unzip it and run `cuppa-tui`:
 
 ```sh
 cuppa-tui                # start with an empty design
@@ -64,7 +64,7 @@ Colour and plain-text export work without it.
 
 ## Roadmap
 
-Tracked in [GitHub issues](https://github.com/meta-tui/cuppa/issues): keyboard-first editing, exporting a design as Go source, live component previews, light/dark themes, and more front ends (a web app, an npm package) on the same engine.
+Tracked in [GitHub issues](https://github.com/meta-ui-labs/cuppa/issues): keyboard-first editing, exporting a design as Go source, live component previews, light/dark themes, and more front ends (a web app, an npm package) on the same engine.
 
 ## License
 

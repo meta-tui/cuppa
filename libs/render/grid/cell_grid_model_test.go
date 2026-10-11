@@ -6,7 +6,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func plain(lines []string) []string {

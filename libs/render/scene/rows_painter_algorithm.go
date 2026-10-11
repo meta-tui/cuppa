@@ -4,8 +4,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // rowsColumn is one column of the Rows component: its name, its width (0 for

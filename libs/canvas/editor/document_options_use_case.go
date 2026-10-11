@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/meta-tui/cuppa/libs/color/space"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Effect names accepted by SetEffect.

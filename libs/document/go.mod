@@ -1,3 +1,3 @@
-module github.com/meta-tui/cuppa/libs/document
+module github.com/meta-ui-labs/cuppa/libs/document
 
 go 1.27

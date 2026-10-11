@@ -6,7 +6,7 @@ import (
 	"encoding/binary"
 	"encoding/json"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Encode returns the bytes of a .cuppa file holding doc.

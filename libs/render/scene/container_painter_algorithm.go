@@ -3,9 +3,9 @@ package scene
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/container"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // containerNode is the container a painter was given: a node the size of the

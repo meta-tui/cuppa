@@ -3,7 +3,7 @@ package shape
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 func at(cells []drawlayer.Cell, x, y int) (drawlayer.Cell, bool) {

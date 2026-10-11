@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Decode reads a .cupp file. Components that cannot be used are dropped and

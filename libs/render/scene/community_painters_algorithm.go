@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintBubbleTableCommunity draws Evertras' bubble table: a heavy frame, equal

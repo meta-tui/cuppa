@@ -4,8 +4,8 @@ import (
 	"strings"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
 )
 
 // menuRows is the most options a dropdown shows at once; more scroll.

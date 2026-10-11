@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
 )
 
 func TestCtrlCAndCtrlVCopyAndPaste(t *testing.T) {

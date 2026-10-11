@@ -50,12 +50,8 @@ github.com/leaanthony/clir v1.3.0/go.mod h1:k/RBkdkFl18xkkACMCLt09bhiZnrGORoxmom
 github.com/leaanthony/winicon v1.0.0/go.mod h1:en5xhijl92aphrJdmRPlh4NI1L6wq3gEm0LpXAPghjU=
 github.com/lithammer/fuzzysearch v1.1.8/go.mod h1:IdqeyBClc3FFqSzYq/MXESsS4S0FsZ5ajtkr5xPLts4=
 github.com/mattn/go-runewidth v0.0.27/go.mod h1:3qAiGCV4Koz/yuveO58qUefmUTRm8r0IGEXZ9jeHp/8=
-github.com/meta-tui/bubble-colourpicker v0.1.0 h1:kgXYIVOIOfjc1rpPopoo50xFDZUlKTOuBkPzk3L7iqk=
-github.com/meta-tui/bubble-colourpicker v0.1.0/go.mod h1:DOBGejznVTKPE0tuJw1fu6ysl51qM9zh+JL1fShEZgc=
-github.com/meta-tui/bubble-colourpicker v0.1.1 h1:zTtHUmg+/ZcwuP+fP6gfai78s6z7cxAaJo+YWjVETck=
-github.com/meta-tui/bubble-colourpicker v0.1.1/go.mod h1:DOBGejznVTKPE0tuJw1fu6ysl51qM9zh+JL1fShEZgc=
-github.com/meta-tui/bubble-colourpicker v0.1.2 h1:HbodStTibraMZ0FG7sdLra7nBbzgheQcLoKGVgjYjhg=
-github.com/meta-tui/bubble-colourpicker v0.1.2/go.mod h1:DOBGejznVTKPE0tuJw1fu6ysl51qM9zh+JL1fShEZgc=
+github.com/meta-ui-labs/bubble-colourpicker v0.1.3 h1:03p+jExo7UOv5+T8184Lc0x8o2cJZYwEj42XAYxnpXc=
+github.com/meta-ui-labs/bubble-colourpicker v0.1.3/go.mod h1:NMKhJ0v0YNbscOpj3Or9P8KwdNzIwQlbr7SELy/0J+0=
 github.com/microcosm-cc/bluemonday v1.0.27/go.mod h1:jFi9vgW+H7c3V0lb6nR74Ib/DIB5OBs92Dimizgw2cA=
 github.com/muesli/reflow v0.3.0/go.mod h1:pbwTDkVPibjO2kyvBQRBxTWEEGDGq0FlB1BIKtnHY/8=
 github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a/go.mod h1:hxSnBBYLK21Vtq/PHd0S2FYCxBXzBua8ov5s1RobyRQ=

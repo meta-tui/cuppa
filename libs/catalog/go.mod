@@ -1,3 +1,3 @@
-module github.com/meta-tui/cuppa/libs/catalog
+module github.com/meta-ui-labs/cuppa/libs/catalog
 
 go 1.27

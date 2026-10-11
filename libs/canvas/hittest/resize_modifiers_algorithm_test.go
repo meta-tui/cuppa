@@ -3,7 +3,7 @@ package hittest
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func TestFromCenterMovesBothEdges(t *testing.T) {

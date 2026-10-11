@@ -7,7 +7,7 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // GoDirective starts the line of a generated Go file that carries the design

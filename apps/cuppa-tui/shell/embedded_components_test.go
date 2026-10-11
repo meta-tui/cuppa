@@ -5,9 +5,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/cuppafile/disk"
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/render/scene"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/render/scene"
 )
 
 func painted(m *Model) string {

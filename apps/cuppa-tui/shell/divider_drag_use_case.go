@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
 )
 
 // handleDivider takes the pointer when it presses a divider or is dragging one,

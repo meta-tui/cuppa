@@ -222,7 +222,7 @@ user has them after the next release, listed with the built-in packs. Anyone can
 1. **Fork and clone** the repository, then branch:
 
    ```sh
-   gh repo fork meta-tui/cuppa --clone
+   gh repo fork meta-ui-labs/cuppa --clone
    cd cuppa
    git checkout -b feat/pack-tea-shop
    ```

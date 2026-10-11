@@ -3,7 +3,7 @@ package scene
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // huhHead draws the title and the description shared by every form field and

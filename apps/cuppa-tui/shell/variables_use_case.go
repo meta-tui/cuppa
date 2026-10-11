@@ -3,12 +3,12 @@ package shell
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/confirm"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/prompt"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/variablesdialog"
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/confirm"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/variablesdialog"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // openVariables shows every named colour, input and event of the design.

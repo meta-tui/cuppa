@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/a11y"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
 )
 
 // flatten lists "role: label = value" for every node, depth first.

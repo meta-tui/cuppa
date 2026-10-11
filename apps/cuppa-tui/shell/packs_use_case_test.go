@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 func paletteText(m *Model) string {

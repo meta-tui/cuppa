@@ -3,8 +3,8 @@
 package modal
 
 import (
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Outcome is how a dialog ended.

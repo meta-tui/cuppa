@@ -1,4 +1,4 @@
-module github.com/meta-tui/cuppa/libs/color
+module github.com/meta-ui-labs/cuppa/libs/color
 
 go 1.27
 

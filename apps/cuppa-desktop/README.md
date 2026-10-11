@@ -2,7 +2,7 @@
 
 Cuppa in a desktop window: a [Wails](https://wails.io) v2 shell around the very
 same terminal app as `cuppa-tui`, shown in a real terminal emulator by
-[TReactUI](https://github.com/meta-tui/treactui). See
+[TReactUI](https://github.com/meta-ui-labs/treactui). See
 [ADR 0004](../../docs/adr/0004-desktop-app-wails-and-treactui.md).
 
 ```

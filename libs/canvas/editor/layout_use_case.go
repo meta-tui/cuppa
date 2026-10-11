@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/layout/expr"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/layout/expr"
 )
 
 // Axes accepted by SetLayout.

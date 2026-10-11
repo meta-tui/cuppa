@@ -3,7 +3,7 @@ package editor
 import (
 	"reflect"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 const maxHistory = 200

@@ -3,7 +3,7 @@ package scene
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // keybarHints reads the hints property: "key:label" items separated by commas;

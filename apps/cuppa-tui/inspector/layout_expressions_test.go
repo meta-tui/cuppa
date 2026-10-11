@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
 )
 
 func typeValue(m *Model, s string) {

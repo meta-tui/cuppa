@@ -1,7 +1,7 @@
 # Moving an app's screens to Cuppa (guide for agents)
 
 For an agent (or a person) with a Bubble Tea v2 app that draws its screens by hand and wants them drawn from
-Cuppa designs. First worked through on MVD (https://github.com/meta-tui/cuppa, ADRs 0007 to 0009). Written
+Cuppa designs. First worked through on MVD (https://github.com/meta-ui-labs/cuppa, ADRs 0007 to 0009). Written
 as a working checklist; the reasons are in the ADRs.
 
 ## The idea in one paragraph
@@ -15,7 +15,7 @@ package of **data-agnostic screens**: for a design called *Colours* you get `Col
 ## Commands
 
 ```sh
-# Build cuppa (or use a release): from a clone of github.com/meta-tui/cuppa
+# Build cuppa (or use a release): from a clone of github.com/meta-ui-labs/cuppa
 cd apps/cuppa-tui && go build -o cuppa.exe .
 
 cuppa design json   screens/colours.cuppa          # a design as JSON (read it, diff it, review it)
@@ -143,4 +143,4 @@ files that are missing, differ from what the designs export, or are left over.
 One message per gap, first line `GAP <screen>: <what>`, then the exact old output with row/column (plain text
 and colours as 256 numbers or hex), what Cuppa draws, and how to reproduce (state, size). A gap becomes a
 property or a component of Cuppa; a new component is its own library with a `cuppa.component.json`
-(see `docs/spec/cuppa-component.md` and github.com/meta-tui/bubble-colourpicker as the example).
+(see `docs/spec/cuppa-component.md` and github.com/meta-ui-labs/bubble-colourpicker as the example).

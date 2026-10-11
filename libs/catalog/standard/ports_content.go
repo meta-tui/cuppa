@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // ports says, for the components that show or take data, which property
 // carries which kind of data. Two components can take each other's place in a

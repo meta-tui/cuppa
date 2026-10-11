@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // shell is the top bar, a left bar and the main area of an app.

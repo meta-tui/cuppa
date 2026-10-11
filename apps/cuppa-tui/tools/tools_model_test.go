@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/libs/canvas/shape"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/shape"
 )
 
 func TestShortcutLettersChooseTheTools(t *testing.T) {

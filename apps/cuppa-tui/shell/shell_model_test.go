@@ -7,7 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 )
 
 func newShell(t *testing.T) *Model {

@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/container"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // shiftMembers moves the members of a container by how far the body of their

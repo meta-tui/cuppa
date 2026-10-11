@@ -1,8 +1,8 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // maxCompositeDepth stops a component that contains itself, directly or

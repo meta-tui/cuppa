@@ -3,7 +3,7 @@ package registry
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 func sample() []definition.Definition {

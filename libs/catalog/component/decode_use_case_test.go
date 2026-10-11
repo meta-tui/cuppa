@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 )
 
 func libraryDescription(t *testing.T) []byte {
@@ -25,7 +25,7 @@ func TestTheColourPickersDescriptionIsClean(t *testing.T) {
 	if len(issues) != 0 {
 		t.Fatalf("issues: %v", issues)
 	}
-	if d.ID() != "community.colourpicker" || d.Go.Import != "github.com/meta-tui/bubble-colourpicker" {
+	if d.ID() != "community.colourpicker" || d.Go.Import != "github.com/meta-ui-labs/bubble-colourpicker" {
 		t.Errorf("id %q import %q", d.ID(), d.Go.Import)
 	}
 	def := d.Definition()
@@ -70,7 +70,7 @@ func TestADescriptionThatIsWrongSaysWhy(t *testing.T) {
 		{"version", `"cuppa": 1`, `"cuppa": 7`, "cuppa is 7"},
 		{"name", `"name": "colourpicker"`, `"name": "Colour Picker"`, "must be lowercase"},
 		{"licence", `"license": "MIT"`, `"license": ""`, "license is empty"},
-		{"import", `"import": "github.com/meta-tui/bubble-colourpicker"`, `"import": ""`, "go.import is empty"},
+		{"import", `"import": "github.com/meta-ui-labs/bubble-colourpicker"`, `"import": ""`, "go.import is empty"},
 		{"bubbletea", `"bubbletea": 2`, `"bubbletea": 3`, "go.bubbletea is 3"},
 		{"kind", `"kind": "choice"`, `"kind": "dropdown"`, `kind "dropdown"`},
 		{"default", `"default": "RGB"`, `"default": "XYZ"`, `default "XYZ" is not one of the choices`},

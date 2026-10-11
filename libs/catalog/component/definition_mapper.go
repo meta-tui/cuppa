@@ -1,6 +1,6 @@
 package component
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // ID is the catalog id of the component: its family and its name.
 func (d Description) ID() string {

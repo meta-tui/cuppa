@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 const huhImport = "charm.land/huh/v2"
 

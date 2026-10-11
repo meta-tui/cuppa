@@ -5,12 +5,12 @@ import (
 	"os"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/componentcmd"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/designcmd"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/packcmd"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/screenscmd"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/shell"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/componentcmd"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/designcmd"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/packcmd"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/screenscmd"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 )
 
 // version is stamped at build time via -ldflags "-X main.version=...".

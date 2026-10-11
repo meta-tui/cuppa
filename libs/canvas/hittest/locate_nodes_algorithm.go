@@ -2,9 +2,9 @@
 package hittest
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/container"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // Node returns the topmost visible node covering the cell (x, y). Hidden

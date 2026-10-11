@@ -7,7 +7,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/menubar"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/menubar"
 )
 
 func ctrl(r rune) tea.Msg { return tea.KeyPressMsg{Code: r, Mod: tea.ModCtrl} }

@@ -3,8 +3,8 @@ package editor
 import (
 	"fmt"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/layout/expr"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/layout/expr"
 )
 
 // SetBinding ties a property of the component to a named screen input, or

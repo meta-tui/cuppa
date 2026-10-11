@@ -1,8 +1,8 @@
 package standard
 
 import (
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // drawEntries is the drawing layer. The drawing tools make it; it is not in

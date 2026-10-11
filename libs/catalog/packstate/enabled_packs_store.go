@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"sort"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 )
 
 // State is the set of disabled packs, optionally kept in a file. Packs are on

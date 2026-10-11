@@ -4,13 +4,13 @@ import (
 	"fmt"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/prompt"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/tools"
-	"github.com/meta-tui/cuppa/libs/canvas/shape"
-	"github.com/meta-tui/cuppa/libs/canvas/snap"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/tools"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/shape"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/snap"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // gesture is a drawing drag in progress.

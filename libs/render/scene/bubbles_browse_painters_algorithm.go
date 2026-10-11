@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintTextArea draws the text area: the prompt bar down its left edge, the

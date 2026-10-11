@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // prefsScreen is a settings screen: a title, the rows of settings with their

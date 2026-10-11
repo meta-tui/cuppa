@@ -1,5 +1,5 @@
-module github.com/meta-tui/cuppa/libs/export
+module github.com/meta-ui-labs/cuppa/libs/export
 
 go 1.27
 
-require github.com/meta-tui/bubble-colourpicker v0.1.2
+require github.com/meta-ui-labs/bubble-colourpicker v0.1.3

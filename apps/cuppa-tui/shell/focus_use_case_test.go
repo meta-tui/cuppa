@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func key(code rune, mod tea.KeyMod) tea.Msg { return tea.KeyPressMsg{Code: code, Mod: mod} }

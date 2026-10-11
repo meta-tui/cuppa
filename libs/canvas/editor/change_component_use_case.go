@@ -5,9 +5,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/compat"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/compat"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // lister is the catalog that can say which components it has.

@@ -5,10 +5,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/modal"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/prompt"
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/modal"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Where components made by the user are kept.

@@ -11,7 +11,7 @@
 //
 // The value is "" (none), a palette number such as "212", or "#rrggbb".
 //
-// The package is one file on purpose: Cuppa (https://github.com/meta-tui/cuppa)
+// The package is one file on purpose: Cuppa (https://github.com/meta-ui-labs/cuppa)
 // copies it into the programs it exports. Its description for tools is in
 // cuppa.component.json.
 package colourpicker

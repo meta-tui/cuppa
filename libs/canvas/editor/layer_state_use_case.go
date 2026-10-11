@@ -1,6 +1,6 @@
 package editor
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // SetHidden shows or hides a layer, as one undo step. A hidden layer is not
 // drawn, exported or hit by the pointer, and it leaves the selection.

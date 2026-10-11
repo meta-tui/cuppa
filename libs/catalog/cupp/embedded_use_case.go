@@ -1,9 +1,9 @@
 package cupp
 
 import (
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/catalog/registry"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/registry"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Where components that only exist inside a design are listed.

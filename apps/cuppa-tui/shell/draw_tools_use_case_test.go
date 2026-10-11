@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/tools"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/tools"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // toolRowY is the screen row of a tool in the left bar (row 0 is the title

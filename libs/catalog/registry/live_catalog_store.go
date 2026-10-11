@@ -1,6 +1,6 @@
 package registry
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // Live is a catalog that can be swapped for a new registry while the app runs
 // (a pack was added, removed or created). Everything that holds the Live sees

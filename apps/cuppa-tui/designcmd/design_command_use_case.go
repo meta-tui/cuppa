@@ -9,11 +9,11 @@ import (
 	"os"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/cuppafile/disk"
-	"github.com/meta-tui/cuppa/libs/cuppafile/format"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/export/gosource"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
+	"github.com/meta-ui-labs/cuppa/libs/cuppafile/format"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/export/gosource"
 )
 
 const usage = `usage:

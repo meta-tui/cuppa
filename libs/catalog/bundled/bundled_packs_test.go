@@ -3,8 +3,8 @@ package bundled
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 )
 
 // A pack added to packs/ must be clean and must not clash with anything else

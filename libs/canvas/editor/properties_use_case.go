@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/color/space"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Rename sets the node's display name.

@@ -1,9 +1,9 @@
 package shell
 
 import (
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/inspector"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/tools"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/inspector"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/tools"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // layout places the three panes below the title bar and above the status bar.

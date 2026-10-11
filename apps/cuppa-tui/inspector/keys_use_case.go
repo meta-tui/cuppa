@@ -3,7 +3,7 @@ package inspector
 import (
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // focusStop is the stop to draw as focused: none while the bar does not have

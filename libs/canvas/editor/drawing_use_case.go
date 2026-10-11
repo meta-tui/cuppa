@@ -1,8 +1,8 @@
 package editor
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 )
 
 // drawingNode is the drawing layer's node, if the design has one.

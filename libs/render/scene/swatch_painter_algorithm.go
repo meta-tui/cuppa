@@ -1,8 +1,8 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintSwatch draws a colour as a block with its value and a label, the way a

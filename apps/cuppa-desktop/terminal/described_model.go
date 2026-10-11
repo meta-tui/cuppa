@@ -2,7 +2,7 @@ package terminal
 
 import (
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/a11y"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
 	ttygo "github.com/meta-tui/treactui/packages/tty-go"
 )
 

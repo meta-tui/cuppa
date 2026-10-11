@@ -7,7 +7,7 @@ properties and generate the Go that uses it.
 
 The reference implementation is `libs/catalog/component` in Cuppa; `cuppa component check <file | address |
 github.com/owner/repo[@ref]>` reads a description and lists what is wrong with it. The first module that
-publishes one is [bubble-colourpicker](https://github.com/meta-tui/bubble-colourpicker).
+publishes one is [bubble-colourpicker](https://github.com/meta-ui-labs/bubble-colourpicker).
 
 ## Example
 
@@ -19,10 +19,10 @@ publishes one is [bubble-colourpicker](https://github.com/meta-tui/bubble-colour
   "description": "Tabs for the 16 and 256 terminal palettes and for RGB and HSL sliders.",
   "version": "0.1.2",
   "license": "MIT",
-  "homepage": "https://github.com/meta-tui/bubble-colourpicker",
+  "homepage": "https://github.com/meta-ui-labs/bubble-colourpicker",
   "go": {
-    "module": "github.com/meta-tui/bubble-colourpicker",
-    "import": "github.com/meta-tui/bubble-colourpicker",
+    "module": "github.com/meta-ui-labs/bubble-colourpicker",
+    "import": "github.com/meta-ui-labs/bubble-colourpicker",
     "package": "colourpicker",
     "bubbletea": 2,
     "model": "Model", "constructor": "New",

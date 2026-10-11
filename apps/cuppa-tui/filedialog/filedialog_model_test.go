@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/charmbracelet/x/ansi"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
 )
 
 func fixture(t *testing.T) string {

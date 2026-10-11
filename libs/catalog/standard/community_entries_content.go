@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 // Community entries are drawn as faithful approximations. Which Bubble Tea
 // major version each library targets is recorded in docs/catalog/community-components.md.

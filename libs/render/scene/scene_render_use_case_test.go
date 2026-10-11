@@ -4,9 +4,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 func text(lines []string) string {

@@ -1,6 +1,6 @@
 package standard
 
-import "github.com/meta-tui/cuppa/libs/catalog/definition"
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 
 const lipglossImport = "charm.land/lipgloss/v2"
 
@@ -50,8 +50,8 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.colourpicker", Name: "Colour picker", Family: definition.FamilyLipgloss,
-			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From github.com/meta-tui/bubble-colourpicker, which any Bubble Tea v2 program can use. Bind the value so the program owns it: the screen then takes a ColourPicker it updates with the keys and the mouse. The width is 46; the 256 tab needs 23 rows.",
-			DefaultSize: size(46, 10), MinSize: size(46, 4), Import: "github.com/meta-tui/bubble-colourpicker", Status: definition.StatusSupported,
+			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From github.com/meta-ui-labs/bubble-colourpicker, which any Bubble Tea v2 program can use. Bind the value so the program owns it: the screen then takes a ColourPicker it updates with the keys and the mouse. The width is 46; the 256 tab needs 23 rows.",
+			DefaultSize: size(46, 10), MinSize: size(46, 4), Import: "github.com/meta-ui-labs/bubble-colourpicker", Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				colorProp("value", "Colour (empty for none)", "#ff007f"),
 				textProp("tabs", "Tabs (16, 256, RGB, HSL)", "16,256,RGB,HSL"),

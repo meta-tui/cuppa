@@ -3,7 +3,7 @@ package shell
 import (
 	"fmt"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/a11y"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
 )
 
 // Describe is what a screen reader should hear about the screen right now. An

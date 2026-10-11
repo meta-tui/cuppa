@@ -9,7 +9,7 @@ You need Go (see `go.work` for the version), Node 24 with npm 11, and Git.
 Freeze is optional (only for trying picture export).
 
 ```sh
-git clone https://github.com/meta-tui/cuppa
+git clone https://github.com/meta-ui-labs/cuppa
 cd cuppa
 npm ci
 npx nx run cuppa-tui:start      # run the app

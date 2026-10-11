@@ -3,15 +3,15 @@
 package stage
 
 import (
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
-	"github.com/meta-tui/cuppa/libs/canvas/hittest"
-	"github.com/meta-tui/cuppa/libs/canvas/snap"
-	"github.com/meta-tui/cuppa/libs/catalog/definition"
-	"github.com/meta-tui/cuppa/libs/document/design"
-	"github.com/meta-tui/cuppa/libs/document/drawlayer"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/hittest"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/snap"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // Catalog is what the stage needs to know about components.

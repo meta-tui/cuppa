@@ -6,8 +6,8 @@ import (
 	figure "github.com/common-nighthawk/go-figure"
 	qrcode "github.com/skip2/go-qrcode"
 
-	"github.com/meta-tui/cuppa/libs/color/space"
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/color/space"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // figletFonts are the fonts the catalog offers. go-figure stops the whole

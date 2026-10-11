@@ -1,6 +1,6 @@
 package inspector
 
-import "github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
+import "github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
 
 // panelID names a panel of the bar. The state of a panel (open or closed, how
 // tall, how far it is scrolled) belongs to the name, not to the selection, so

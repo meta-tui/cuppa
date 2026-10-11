@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"charm.land/lipgloss/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // canvasPanel is the canvas size and the buttons for the usual terminal sizes.

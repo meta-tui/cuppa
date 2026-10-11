@@ -1,7 +1,7 @@
 package scene
 
 import (
-	"github.com/meta-tui/cuppa/libs/render/grid"
+	"github.com/meta-ui-labs/cuppa/libs/render/grid"
 )
 
 // paintTabs draws the Lip Gloss "layout" tabs: a row of tabs whose active tab

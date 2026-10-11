@@ -1,10 +1,10 @@
 package inspector
 
 import (
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-tui/cuppa/libs/document/container"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
+	"github.com/meta-ui-labs/cuppa/libs/document/container"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // layerDrag is a layer being dragged in the list. Pressing a layer does

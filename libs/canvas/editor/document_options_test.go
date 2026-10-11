@@ -3,8 +3,8 @@ package editor
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func blank() *Editor { return New(standard.Default(), design.NewDocument("t", 100, 40)) }

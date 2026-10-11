@@ -3,7 +3,7 @@ package stage
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/pointer"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
 )
 
 func dragWith(m *Model, x, y int, shift, alt bool) {

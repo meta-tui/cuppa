@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/a11y"
-	"github.com/meta-tui/cuppa/libs/canvas/editor"
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
+	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 // Describe says what the details bar shows: the selection's settings, or the

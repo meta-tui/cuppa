@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/meta-tui/cuppa/libs/catalog/cupp"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/cupp"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 )
 
 const usage = `usage:

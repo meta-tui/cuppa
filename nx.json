@@ -39,7 +39,7 @@
     {
       "plugin": "@nx-go/nx-go",
       "options": {
-        "modulePrefix": "github.com/meta-tui/cuppa"
+        "modulePrefix": "github.com/meta-ui-labs/cuppa"
       }
     }
   ],

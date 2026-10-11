@@ -2,7 +2,7 @@
 // line, the points of a brush stroke, a word) into painted cells.
 package shape
 
-import "github.com/meta-tui/cuppa/libs/document/drawlayer"
+import "github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 
 // Corner styles of a rectangle.
 const (

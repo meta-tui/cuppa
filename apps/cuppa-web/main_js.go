@@ -11,8 +11,8 @@ import (
 	"syscall/js"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/meta-tui/cuppa/apps/cuppa-tui/shell"
-	"github.com/meta-tui/cuppa/libs/catalog/standard"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
 	ttygo "github.com/meta-tui/treactui/packages/tty-go"
 )
 

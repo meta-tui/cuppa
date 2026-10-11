@@ -3,7 +3,7 @@ package format
 import (
 	"testing"
 
-	"github.com/meta-tui/cuppa/libs/document/design"
+	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 func TestAPagedDesignSurvivesTheFile(t *testing.T) {

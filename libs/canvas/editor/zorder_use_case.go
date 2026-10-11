@@ -1,6 +1,6 @@
 package editor
 
-import "github.com/meta-tui/cuppa/libs/document/design"
+import "github.com/meta-ui-labs/cuppa/libs/document/design"
 
 // Order is a z-order operation.
 type Order int

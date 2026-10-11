@@ -1,6 +1,6 @@
 package shape
 
-import "github.com/meta-tui/cuppa/libs/document/drawlayer"
+import "github.com/meta-ui-labs/cuppa/libs/document/drawlayer"
 
 // Ends of a path.
 const (

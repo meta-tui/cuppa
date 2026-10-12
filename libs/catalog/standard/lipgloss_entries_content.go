@@ -39,7 +39,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.swatch", Name: "Colour swatch", Family: definition.FamilyLipgloss,
-			Description: "A colour shown as a block with its value and a label, like a row of a colour list. Bind the colour so a program can change it.",
+			Description: "A colour shown as a block with its value and a label, like a row of a colour list.",
 			DefaultSize: size(30, 1), MinSize: size(4, 1), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("label", "Label", "Accent"),
@@ -52,7 +52,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.colourpicker", Name: "Colour picker", Family: definition.FamilyLipgloss,
-			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From github.com/meta-ui-labs/bubble-colourpicker, which any Bubble Tea v2 program can use. Bind the value so the program owns it: the screen then takes a ColourPicker it updates with the keys and the mouse. The width is 46; the 256 tab needs 23 rows.",
+			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From github.com/meta-ui-labs/bubble-colourpicker, which any Bubble Tea v2 program can use. The width is 46; the 256 tab needs 23 rows.",
 			DefaultSize: size(46, 10), MinSize: size(46, 4), Import: "github.com/meta-ui-labs/bubble-colourpicker", Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				colorProp("value", "Colour (empty for none)", "#ff007f"),
@@ -64,7 +64,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.rows", Name: "Rows", Family: definition.FamilyLipgloss,
-			Description: "A repeated row: the design names the columns, the program gives the rows and the style of each (normal, selected, dim, accent). Bind rows to make a typed list in the screen's contract.",
+			Description: "A repeated row: the design names the columns, the rows and the style of each (normal, selected, dim, accent) are properties.",
 			DefaultSize: size(44, 5), MinSize: size(8, 1), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("columns", "Columns (Name:width, add :colour for colours)", "Cursor:2,Name:14,Swatch:6:colour,Value"),
@@ -79,7 +79,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.progressline", Name: "Progress line", Family: definition.FamilyLipgloss,
-			Description: "A progress bar followed by a text, such as 34.2% of 112.4MiB at 8.1MiB/s. Bind the value (a number with a fraction) and the suffix.",
+			Description: "A progress bar followed by a text, such as 34.2% of 112.4MiB at 8.1MiB/s.",
 			DefaultSize: size(70, 1), MinSize: size(4, 1), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				floatProp("value", "Done (0 to 100)", 34.2, 0, 100),
@@ -95,7 +95,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.keybar", Name: "Key bar", Family: definition.FamilyLipgloss,
-			Description: "A line of key hints: the key in bold, its label after it. Bind the hints and the program says which ones show; a click raises the component's event with the column.",
+			Description: "A line of key hints: the key in bold, its label after it.",
 			DefaultSize: size(60, 1), MinSize: size(4, 1), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("hints", "Hints (key:label, comma separated)", "↑↓:move,enter:edit,s:save,esc:back"),
@@ -106,7 +106,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "cuppa.tabs", Name: "Tab pages", Family: definition.FamilyLipgloss,
-			Description: "A bar of tabs whose pages hold components: place components on the shown page and they appear only while their tab is chosen. Pressing a tab shows its page, in the designer and in the program, with no code. Bind the active page to read or set it.",
+			Description: "A bar of tabs whose pages hold components: place components on the shown page and they appear only while their tab is chosen. Pressing a tab shows its page in the preview.",
 			DefaultSize: size(40, 12), MinSize: size(12, 4), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("pages", "Pages (comma separated)", "Page 1,Page 2"),
@@ -118,7 +118,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "cuppa.panels", Name: "Panels", Family: definition.FamilyLipgloss,
-			Description: "A stack of collapsible sections, like the side bar of an image editor. Components placed on a section show only while it is open; pressing its header opens or closes it, in the designer and in the program. With Exclusive it is an accordion. Bind the open sections to read or set them.",
+			Description: "A stack of collapsible sections, like the side bar of an image editor. Components placed on a section show only while it is open; pressing its header opens or closes it in the preview. With Exclusive it is an accordion.",
 			DefaultSize: size(40, 16), MinSize: size(12, 3), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("pages", "Sections (comma separated)", "Details,Properties,Layers"),
@@ -131,7 +131,7 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.slot", Name: "Model view", Family: definition.FamilyLipgloss,
-			Description: "The place of a view the program draws itself: bind the view and give it what a Bubbles model of the program rendered (a text area with its real cursor, a viewport). The design places and cuts it; its text is shown here only as a sample.",
+			Description: "The place of a view a program draws itself, such as a text area with its real cursor or a viewport. The design places and cuts it; its text is shown as a sample.",
 			DefaultSize: size(40, 6), MinSize: size(1, 1), Import: lipglossImport, Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				textProp("view", "Sample view (| starts a line)", "The program's own view|is drawn here"),

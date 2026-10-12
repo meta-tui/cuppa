@@ -10,13 +10,11 @@ import (
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
-func buildDesign(t *testing.T, dir, name, w, h, text, sampleValue string) string {
+func buildDesign(t *testing.T, dir, name, w, h, text string) string {
 	t.Helper()
 	json := `{"document": {"name": "` + name + `", "width": ` + w + `, "height": ` + h + `,
-	  "samples": {"Rows": "` + sampleValue + `"},
-	  "keys": [{"key": "esc", "event": "Back` + name + `", "label": "back"}],
 	  "nodes": [{"id": "n1", "component": "lipgloss.label", "name": "Title", "rect": {"X": 1, "Y": 1, "W": 20, "H": 1},
-	   "props": {"text": "` + text + `"}, "layout": {"h": "$Rows"}}]}}`
+	   "props": {"text": "` + text + `"}, "layout": {"h": "50%"}}]}}`
 	src := filepath.Join(dir, name+".json")
 	if err := os.WriteFile(src, []byte(json), 0o644); err != nil {
 		t.Fatal(err)
@@ -28,12 +26,11 @@ func buildDesign(t *testing.T, dir, name, w, h, text, sampleValue string) string
 	return out
 }
 
-// Merging designs gives one page each, in the order given, and a page keeps its
-// own samples and keys.
-func TestMergingDesignsKeepsEachPagesSamplesAndKeys(t *testing.T) {
+// Merging designs gives one page each, in the order given.
+func TestMergingDesignsGivesOnePageEach(t *testing.T) {
 	dir := t.TempDir()
-	a := buildDesign(t, dir, "Setup", "100", "30", "setup", "3")
-	b := buildDesign(t, dir, "Run", "120", "36", "run", "9")
+	a := buildDesign(t, dir, "Setup", "100", "30", "setup")
+	b := buildDesign(t, dir, "Run", "120", "36", "run")
 	out := filepath.Join(dir, "all.cuppa")
 	code, o, e := run(t, "merge", a, b, "-o", out, "--name", "App")
 	if code != 0 {
@@ -47,25 +44,22 @@ func TestMergingDesignsKeepsEachPagesSamplesAndKeys(t *testing.T) {
 		t.Fatalf("got %q with %d pages, %dx%d", doc.Name, doc.PageCount(), doc.Width, doc.Height)
 	}
 	screens := doc.Screens()
-	if screens[0].Name != "Setup" || screens[0].Samples["Rows"] != "3" {
+	if screens[0].Name != "Setup" || len(screens[0].Nodes) != 1 {
 		t.Errorf("first page: %+v", screens[0])
 	}
-	if screens[1].Name != "Run" || screens[1].Samples["Rows"] != "9" || len(screens[1].Keys) != 1 || screens[1].Keys[0].Event != "BackRun" {
-		t.Errorf("second page: name %q samples %v keys %v", screens[1].Name, screens[1].Samples, screens[1].Keys)
-	}
-	if screens[0].Keys[0].Event != "BackSetup" {
-		t.Errorf("first page keys: %v", screens[0].Keys)
+	if screens[1].Name != "Run" || len(screens[1].Nodes) != 1 {
+		t.Errorf("second page: %+v", screens[1])
 	}
 }
 
 func TestMergingRefusesTwoDesignsWithOneName(t *testing.T) {
 	dir := t.TempDir()
-	a := buildDesign(t, dir, "Same", "100", "30", "a", "1")
+	a := buildDesign(t, dir, "Same", "100", "30", "a")
 	sub := filepath.Join(dir, "sub")
 	if err := os.Mkdir(sub, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	b := buildDesign(t, sub, "Same", "100", "30", "b", "2")
+	b := buildDesign(t, sub, "Same", "100", "30", "b")
 	code, _, e := run(t, "merge", a, b, "-o", filepath.Join(dir, "x.cuppa"))
 	if code == 0 || !strings.Contains(e, "Same") {
 		t.Fatalf("merge: %d %s", code, e)
@@ -78,7 +72,7 @@ func TestMergingWithAMasterLiftsWhatPagesShare(t *testing.T) {
 	dir := t.TempDir()
 	var files []string
 	for _, name := range []string{"One", "Two", "Three", "Four"} {
-		files = append(files, buildDesign(t, dir, name, "100", "30", name+" text", "1"))
+		files = append(files, buildDesign(t, dir, name, "100", "30", name+" text"))
 	}
 	plain := filepath.Join(dir, "plain.cuppa")
 	if code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", plain)...); code != 0 {
@@ -103,7 +97,7 @@ func TestTheMasterKeepsEveryScreenWhole(t *testing.T) {
 		json := `{"document": {"name": "` + name + `", "width": 100, "height": 30,
 		  "nodes": [
 		   {"id": "n1", "component": "lipgloss.label", "name": "Title", "rect": {"X": 0, "Y": 0, "W": 100, "H": 1},
-		    "props": {"text": "` + name + `"}, "bind": {"text": "Title"}},
+		    "props": {"text": "Title"}},
 		   {"id": "n2", "component": "lipgloss.box", "name": "` + name + ` box", "rect": {"X": 2, "Y": 3, "W": 20, "H": 5}}]}}`
 		src := filepath.Join(dir, name+".json")
 		if err := os.WriteFile(src, []byte(json), 0o644); err != nil {
@@ -157,68 +151,5 @@ func TestCheckingReportsANameThePageAndTheMasterShare(t *testing.T) {
 	code, o, _ := run(t, "check", file)
 	if code != 1 || !strings.Contains(o, `"Title" on the page and on the master`) {
 		t.Fatalf("check: %d\n%s", code, o)
-	}
-}
-
-// A lifted component keeps what each page had for its bound text, as the
-// page's own value, and a variant that is left says what differs.
-func TestLiftingKeepsEachPagesBoundTextAndSaysWhatDiffers(t *testing.T) {
-	dir := t.TempDir()
-	var files []string
-	for _, name := range []string{"One", "Two", "Three", "Four"} {
-		show := ""
-		if name == "Four" {
-			show = `, "showIf": "Show keys"`
-		}
-		json := `{"document": {"name": "` + name + `", "width": 100, "height": 30,
-		  "nodes": [
-		   {"id": "n1", "component": "lipgloss.label", "name": "Title", "rect": {"X": 0, "Y": 0, "W": 100, "H": 1},
-		    "props": {"text": "App · ` + name + `"}, "bind": {"text": "Title"}},
-		   {"id": "n2", "component": "lipgloss.label", "name": "Footer", "rect": {"X": 0, "Y": 29, "W": 100, "H": 1},
-		    "props": {"text": "keys"}` + show + `}]}}`
-		src := filepath.Join(dir, name+".json")
-		if err := os.WriteFile(src, []byte(json), 0o644); err != nil {
-			t.Fatal(err)
-		}
-		out := filepath.Join(dir, name+".cuppa")
-		if code, o, e := run(t, "build", src, out); code != 0 {
-			t.Fatalf("build: %d %s%s", code, o, e)
-		}
-		files = append(files, out)
-	}
-	out := filepath.Join(dir, "all.cuppa")
-	code, o, e := run(t, append(append([]string{"merge"}, files...), "-o", out, "--master")...)
-	if code != 0 {
-		t.Fatalf("merge: %d\n%s%s", code, o, e)
-	}
-	if !strings.Contains(o, `lifted "Footer"`) || !strings.Contains(o, `lifted "Title"`) {
-		t.Fatalf("report:\n%s", o)
-	}
-	doc, err := disk.Load(out)
-	if err != nil {
-		t.Fatal(err)
-	}
-	screens := doc.Screens()
-	for i, name := range []string{"One", "Two", "Three"} {
-		var title string
-		for _, n := range screens[i].Nodes {
-			if n.Name == "Title" {
-				title = n.Props["text"]
-			}
-		}
-		if title != "App · "+name {
-			t.Errorf("page %s draws the title %q", name, title)
-		}
-	}
-	// Four has a different Footer (it has a condition): it keeps its own and
-	// hides the lifted one.
-	var footers int
-	for _, n := range screens[3].Nodes {
-		if n.Name == "Footer" {
-			footers++
-		}
-	}
-	if footers != 1 {
-		t.Errorf("page Four has %d footers", footers)
 	}
 }

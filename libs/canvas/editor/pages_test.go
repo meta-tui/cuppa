@@ -121,27 +121,3 @@ func TestUndoRestoresThePageStructure(t *testing.T) {
 		t.Fatal("undoing the page leaves one page")
 	}
 }
-
-func TestEachPageKeepsItsOwnSamplesAndFolder(t *testing.T) {
-	ed, _, _ := twoPages(t)
-	if err := ed.SetSample("Rows", "9"); err != nil {
-		t.Fatal(err)
-	}
-	if !ed.SwitchPage(0) {
-		t.Fatal("no switch")
-	}
-	if got := ed.Samples()["Rows"]; got != "" {
-		t.Fatalf("the first page took the sample of the second: %q", got)
-	}
-	if err := ed.SetSample("Rows", "3"); err != nil {
-		t.Fatal(err)
-	}
-	ed.SwitchPage(1)
-	if got := ed.Samples()["Rows"]; got != "9" {
-		t.Fatalf("second page sample = %q", got)
-	}
-	screens := ed.Document().Screens()
-	if screens[0].Samples["Rows"] != "3" || screens[1].Samples["Rows"] != "9" {
-		t.Fatalf("screens: %v %v", screens[0].Samples, screens[1].Samples)
-	}
-}

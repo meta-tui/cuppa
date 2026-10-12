@@ -21,22 +21,8 @@ type Node struct {
 	// Locked nodes are drawn but cannot be moved, resized, deleted or have their
 	// properties changed.
 	Locked bool `json:"locked,omitempty"`
-	// Draggable and Resizable are behaviours of the exported program, not of
-	// the design: the person using the app can move the component (drag it
-	// from anywhere) or resize it (drag its bottom-right corner).
-	Draggable bool `json:"draggable,omitempty"`
-	Resizable bool `json:"resizable,omitempty"`
-	// Bind ties properties to named screen inputs: key is the property, value
-	// the input's name. The value stored in Props stays as the default and as
-	// what the design shows. See ADR 0007.
-	Bind map[string]string `json:"bind,omitempty"`
-	// ShowIf names a yes/no screen input; the component is drawn only while it
-	// is true. Empty means always.
-	ShowIf string `json:"showIf,omitempty"`
-	// Event names the screen event raised when the component is clicked.
-	Event string `json:"event,omitempty"`
 	// Goto names the page a click on the component shows (ADR 0012), in the
-	// preview and in the exported application, with no code.
+	// preview.
 	Goto string `json:"goto,omitempty"`
 	// Children are set on a group: the components it holds, with rectangles
 	// relative to the group's top-left, laid out for a box of BaseW x BaseH. A

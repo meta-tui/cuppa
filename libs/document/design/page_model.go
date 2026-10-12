@@ -15,25 +15,11 @@ import (
 type Page struct {
 	Name  string `json:"name"`
 	Nodes []Node `json:"nodes,omitempty"`
-	// Samples are the layout input samples of the page when it is not the one
-	// being edited; the shown page's are Document.Samples. Two pages may read
-	// the same input with different values.
-	Samples map[string]string `json:"samples,omitempty"`
-	// Defaults are the app defaults of the page when it is not the one being
-	// edited; the shown page's are Document.Defaults.
-	Defaults map[string]string `json:"defaults,omitempty"`
-	// Keys are the keys of the page when it is not the one being edited; the
-	// shown page's are Document.Keys.
-	Keys []KeyBinding `json:"keys,omitempty"`
 	// Master marks the page whose components every other page shows below its
 	// own (ADR 0015). There is at most one, and it is not a screen.
 	Master bool `json:"master,omitempty"`
 	// Hide are the master components this page does not show.
 	Hide []NodeID `json:"hide,omitempty"`
-	// Values give, for this page, the text of a property of a master component
-	// that is bound to an input: input name to value. The master has one value
-	// for it; this page previews and starts from its own.
-	Values map[string]string `json:"values,omitempty"`
 }
 
 // PageCount is how many pages the design has: at least one.
@@ -91,9 +77,6 @@ func (d Document) Screens() []Document {
 			s.Nodes = d.Nodes
 		} else {
 			s.Nodes = p.Nodes
-			s.Samples = p.Samples
-			s.Defaults = p.Defaults
-			s.Keys = p.Keys
 		}
 		s.Nodes = append(d.ShownMaster(i), s.Nodes...)
 		out = append(out, s.Clone())
@@ -151,16 +134,6 @@ func (d Document) ShownMaster(i int) []Node {
 			continue
 		}
 		n = prefixed(n)
-		for prop, input := range n.Bind {
-			if v, ok := d.Pages[i].Values[input]; ok {
-				props := make(map[string]string, len(n.Props)+1)
-				for k, pv := range n.Props {
-					props[k] = pv
-				}
-				props[prop] = v
-				n.Props = props
-			}
-		}
 		out = append(out, n)
 	}
 	return out

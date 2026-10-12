@@ -1,6 +1,6 @@
 # ADR 0015: A master page for what every page shows
 
-Status: accepted; all three steps built (#225, #241)
+Status: accepted; all three steps built (#225, #241). Per-page values of bound master text were removed by ADR 0017.
 
 ## Context
 

@@ -23,7 +23,9 @@ Cuppa is a design tool. It draws screens and exports the drawing.
 - **Removed**: the live connector and the run pane (ADR 0016, `libs/connector`, `libs/runhost`,
   `--connect`, `cuppa run`), the Go export and the contract (ADR 0007, 0013, `cuppa screens`,
   `cuppa design contract`), and the variables of a screen: bindings, show-if, events, screen keys,
-  samples, app defaults, per-page values of the master and layout from inputs (ADR 0010).
+  samples, app defaults, per-page values of the master, layout from inputs (ADR 0010), row
+  templates and ports (ADR 0008, 0009) and the Variables dialog. A component can no longer be
+  changed for a compatible one, and Draggable and Resizable are gone.
 - Files made with earlier versions still open. What no longer exists is ignored, and dropped the
   next time the file is saved.
 

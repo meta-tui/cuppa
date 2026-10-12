@@ -56,11 +56,6 @@ offset  size  field
 | `document.components` | Optional list of `{ "id", "component" }`: a copy of every pack component the design uses (`id` is the catalog id such as `tea-shop.card`, `component` has the shape of a component in a [`.cupp` file](cupp-format.md)), written on save so the file draws without the pack. A reader ignores a copy that is invalid or repeated, keeps at most 256, and prefers an installed pack's component over the copy. |
 | `node.locked` | Optional, `true` for a locked layer: drawn, but it cannot be moved, resized, deleted or edited. Absent means unlocked. |
 | `node.layout` | Optional object of size expressions `x`, `y`, `w`, `h` (strings such as `"50%"`, `"100% - 10"`, `"min(50%, 40)"`; grammar in `libs/layout/expr`). An absent or empty axis is fixed at its `rect` value. `rect` is always the result at the canvas size stored in the file. Absent means every axis is fixed. |
-| `node.bind` | Optional object: property key to the name of a screen input the property is bound to (names start with a letter and hold letters, digits, spaces, `-` and `_`). The stored `props` value stays as the default. A reader drops names that are not valid. See [ADR 0007](adr/0007-screen-contracts.md). |
-| `node.showIf` | Optional name of a yes/no screen input; the component is drawn only while it is true. |
-| `node.event` | Optional name of the screen event raised when the component is clicked. |
-| `document.keys` | Optional list of `{ "key", "event", "label" }`: keys of the screen (Bubble Tea key strings such as `s`, `esc`, `ctrl+s`) and the event each raises. A reader drops entries with no key, a repeated key or an invalid event name. |
-| `node.draggable`, `node.resizable` | Optional, `true` when the person using the exported program may move the component, or resize it by its bottom-right cell. Absent means no. |
 
 ## Reading rules
 
@@ -80,6 +75,14 @@ A reader:
 A writer always writes the current version, and saves atomically: it writes a
 temporary file next to the target and renames it into place, so a crash never
 leaves half a file where the old one was.
+
+## Fields that no longer exist
+
+Files written by cuppa-tui 0.0.88 and before may carry fields of the screen-contract
+features that were removed (ADR 0017): `node.bind`, `node.showIf`, `node.event`,
+`node.draggable`, `node.resizable`, `document.keys`, `document.samples`, `document.defaults`,
+`document.perPage`, `document.export`, `document.run`, and on a page `samples`, `defaults`,
+`keys`, `values` and `folder`. A reader ignores them, and the next save drops them.
 
 ## Changing the format
 

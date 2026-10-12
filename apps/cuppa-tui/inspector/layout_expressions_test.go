@@ -88,17 +88,3 @@ func TestSizeButtonsSetTheCanvas(t *testing.T) {
 		t.Fatalf("canvas = %dx%d", d.Width, d.Height)
 	}
 }
-
-func TestBehaviourCheckboxesSetDraggableAndResizable(t *testing.T) {
-	m, ed, id := setup(t, "lipgloss.box")
-	clickText(t, m, "Draggable", "[ ] Draggable")
-	clickText(t, m, "Resizable", "[ ] Resizable")
-	n, _ := ed.Document().Get(id)
-	if !n.Draggable || !n.Resizable {
-		t.Fatalf("flags = %+v", n)
-	}
-	clickText(t, m, "Draggable", "[x] Draggable")
-	if n, _ := ed.Document().Get(id); n.Draggable {
-		t.Fatal("not unticked")
-	}
-}

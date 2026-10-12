@@ -10,7 +10,6 @@ import (
 
 	"github.com/meta-ui-labs/cuppa/libs/color/space"
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
-	"github.com/meta-ui-labs/cuppa/libs/layout/expr"
 )
 
 // Decode reads a .cuppa file, migrating older versions to the current one.
@@ -68,71 +67,12 @@ func normalise(doc design.Document) design.Document {
 	if !design.ValidProfile(doc.Profile) {
 		doc.Profile = ""
 	}
-	doc.Keys = cleanKeys(doc.Keys)
 	doc.Theme.Palette = cleanPalette(doc.Theme.Palette)
 	nodes := cleanNodes(doc.Nodes, 0)
 	doc.Embedded = cleanEmbedded(doc.Embedded)
 	doc.Nodes = nodes
 	doc = cleanPages(doc)
-	if doc.IsPaged() {
-		for i := range doc.Pages {
-			if i == doc.Page {
-				continue
-			}
-			if !doc.PerPage {
-				// Samples used to be one set for every page.
-				doc.Pages[i].Samples = doc.Samples
-				doc.Pages[i].Keys = doc.Keys
-			}
-			doc.Pages[i].Samples = cleanSamples(doc.Pages[i].Samples)
-			doc.Pages[i].Defaults = cleanDefaults(doc.Pages[i].Defaults)
-			doc.Pages[i].Keys = cleanKeys(doc.Pages[i].Keys)
-		}
-		for i := range doc.Pages {
-			doc.Pages[i].Values = cleanValues(doc.Pages[i].Values)
-		}
-		doc.PerPage = true
-	}
-	doc.Samples = cleanSamples(doc.Samples)
-	doc.Defaults = cleanDefaults(doc.Defaults)
 	return doc
-}
-
-// maxSamples bounds how many sample values a file may carry.
-const maxSamples = 256
-
-// cleanSamples keeps the samples that name a valid input and hold a number.
-func cleanSamples(in map[string]string) map[string]string {
-	var out map[string]string
-	for name, v := range in {
-		if !design.ValidInputName(name) || len(out) >= maxSamples {
-			continue
-		}
-		if _, ok := design.SampleNumber(v); !ok {
-			continue
-		}
-		if out == nil {
-			out = map[string]string{}
-		}
-		out[name] = strings.TrimSpace(v)
-	}
-	return out
-}
-
-// cleanDefaults keeps the app defaults that name a valid input and hold a
-// short single-line value.
-func cleanDefaults(in map[string]string) map[string]string {
-	var out map[string]string
-	for name, v := range in {
-		if !design.ValidInputName(name) || len(out) >= maxSamples || v == "" || len(v) > 200 || strings.ContainsAny(v, "\r\n") {
-			continue
-		}
-		if out == nil {
-			out = map[string]string{}
-		}
-		out[name] = v
-	}
-	return out
 }
 
 // maxPages bounds how many pages a file may carry.
@@ -216,7 +156,6 @@ func cleanNodes(in []design.Node, depth int) []design.Node {
 			continue
 		}
 		seen[n.ID] = true
-		n = cleanScreenNames(n)
 		if n.Component == design.GroupComponent {
 			if depth >= maxGroupDepth || n.BaseW < 1 || n.BaseH < 1 {
 				continue
@@ -233,49 +172,6 @@ func cleanNodes(in []design.Node, depth int) []design.Node {
 	return out
 }
 
-// cleanScreenNames drops screen input and event names a hand-edited file got
-// wrong, so the export never meets one it cannot turn into Go.
-func cleanScreenNames(n design.Node) design.Node {
-	for k, v := range n.Bind {
-		if !design.ValidInputName(v) {
-			delete(n.Bind, k)
-		}
-	}
-	if len(n.Bind) == 0 {
-		n.Bind = nil
-	}
-	if n.ShowIf != "" && !design.ValidInputName(n.ShowIf) && !validCondition(n.ShowIf) {
-		n.ShowIf = ""
-	}
-	if n.Event != "" && !design.ValidInputName(n.Event) {
-		n.Event = ""
-	}
-	return n
-}
-
-// validCondition reports whether a show-if is a condition that parses ("w >=
-// 100", "$Count > 0 && !$Busy").
-func validCondition(s string) bool {
-	if !expr.IsCondition(s) {
-		return false
-	}
-	_, err := expr.ParseCond(s)
-	return err == nil
-}
-
-func cleanKeys(in []design.KeyBinding) []design.KeyBinding {
-	var out []design.KeyBinding
-	seen := map[string]bool{}
-	for _, k := range in {
-		if k.Key == "" || seen[k.Key] || !design.ValidInputName(k.Event) {
-			continue
-		}
-		seen[k.Key] = true
-		out = append(out, k)
-	}
-	return out
-}
-
 // cleanPalette drops swatches with an invalid name or colour and repeated
 // names.
 func cleanPalette(in []design.Swatch) []design.Swatch {
@@ -283,7 +179,7 @@ func cleanPalette(in []design.Swatch) []design.Swatch {
 	seen := map[string]bool{}
 	for _, sw := range in {
 		color, err := space.Normalise(sw.Color)
-		if err != nil || color == "" || !design.ValidInputName(sw.Name) || seen[sw.Name] {
+		if err != nil || color == "" || !design.ValidSwatchName(sw.Name) || seen[sw.Name] {
 			continue
 		}
 		seen[sw.Name] = true
@@ -294,19 +190,3 @@ func cleanPalette(in []design.Swatch) []design.Swatch {
 
 // maxNodesPerPage bounds the list of master components a page hides.
 const maxNodesPerPage = 2048
-
-// cleanValues keeps the values of a page for master inputs that have a usable
-// name and a text of sensible length.
-func cleanValues(in map[string]string) map[string]string {
-	var out map[string]string
-	for k, v := range in {
-		if !design.ValidInputName(k) || len(v) > 500 || len(out) >= 64 {
-			continue
-		}
-		if out == nil {
-			out = map[string]string{}
-		}
-		out[k] = v
-	}
-	return out
-}

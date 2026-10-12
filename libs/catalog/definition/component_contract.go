@@ -83,34 +83,7 @@ type PropSpec struct {
 	// component sets it, it follows that colour. A value stored on the
 	// component, even an empty one, overrides the theme.
 	Role Role
-	// Port is what the property carries in a screen. A component changed for
-	// another keeps the bindings and values of the properties that carry the
-	// same port (see libs/catalog/compat). Empty means the property is only
-	// that component's.
-	Port Port
 }
-
-// Port is a kind of data a property carries: a string, a list of items, the
-// index of the chosen one, and so on. A property has at most one.
-type Port string
-
-// The ports. The string, list and row formats are the ones of the property
-// values: items are separated by commas, rows by semicolons with commas
-// between cells, an outline is lines separated by | and indented two spaces
-// per level, numbers are separated by commas.
-const (
-	PortNone     Port = ""
-	PortValue    Port = "value"    // a string the person edits or the program shows; a colour is one
-	PortItems    Port = "items"    // a list of items, to choose from or to show
-	PortSelected Port = "selected" // the index of the chosen item, or of the active tab or button
-	PortChecked  Port = "checked"  // a yes/no answer
-	PortHeaders  Port = "headers"  // the names of the columns of a table
-	PortRows     Port = "rows"     // the rows of a table
-	PortOutline  Port = "outline"  // lines of text with a depth, such as a tree
-	PortNumbers  Port = "numbers"  // a series of numbers for a chart
-	PortLabels   Port = "labels"   // a label for each number of a series
-	PortPercent  Port = "percent"  // a number from 0 to 100
-)
 
 // MutedKey is the reserved property key under which Effective hands the
 // theme's muted colour to painters ("" when the theme sets none). It is not a
@@ -214,33 +187,6 @@ func (d Definition) Effective(own map[string]string, theme design.Theme, backgro
 	for _, p := range d.Props {
 		if p.Kind == PropColor {
 			out[p.Key] = theme.Resolve(out[p.Key])
-		}
-	}
-	return out
-}
-
-// PropOfPort returns the first property that carries the port.
-func (d Definition) PropOfPort(port Port) (PropSpec, bool) {
-	if port == PortNone {
-		return PropSpec{}, false
-	}
-	for _, p := range d.Props {
-		if p.Port == port {
-			return p, true
-		}
-	}
-	return PropSpec{}, false
-}
-
-// Ports lists the ports the component's properties carry, in property order,
-// each once.
-func (d Definition) Ports() []Port {
-	var out []Port
-	seen := map[Port]bool{}
-	for _, p := range d.Props {
-		if p.Port != PortNone && !seen[p.Port] {
-			seen[p.Port] = true
-			out = append(out, p.Port)
 		}
 	}
 	return out

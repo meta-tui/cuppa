@@ -1,6 +1,6 @@
 # ADR 0012: Pages, a router, and opening an application from its Go
 
-Status: accepted
+Status: accepted; the router, the Go export and opening a design from Go were removed by ADR 0017, pages stay
 
 ## Context
 

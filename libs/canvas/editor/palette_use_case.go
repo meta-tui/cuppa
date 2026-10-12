@@ -14,8 +14,8 @@ import (
 // of the one that has the name. Properties set to "@Name" follow it. One undo
 // step.
 func (e *Editor) SetSwatch(name, color string) error {
-	name = design.CleanInputName(name)
-	if !design.ValidInputName(name) {
+	name = design.CleanSwatchName(name)
+	if !design.ValidSwatchName(name) {
 		return fmt.Errorf("editor: a colour name starts with a letter and has letters, digits, spaces, - or _")
 	}
 	color, err := space.Normalise(color)
@@ -109,9 +109,12 @@ func (e *Editor) isSwatchRef(value string) (ref, exists bool) {
 // uses it. An empty value gives the property no colour of its own and leaves
 // the palette alone. One undo step.
 func (e *Editor) SetColour(id design.NodeID, key, value string) error {
-	n, err := e.screenNode(id)
-	if err != nil {
-		return err
+	n, ok := e.doc.Get(id)
+	if !ok {
+		return fmt.Errorf("editor: no node %q", id)
+	}
+	if n.Locked {
+		return fmt.Errorf("editor: %s is locked", n.Name)
 	}
 	def, ok := e.cat.Get(n.Component)
 	if !ok {
@@ -166,8 +169,8 @@ func (e *Editor) freshSwatchName(label string) string {
 			b.WriteRune(r)
 		}
 	}
-	base := design.CleanInputName(b.String())
-	if !design.ValidInputName(base) {
+	base := design.CleanSwatchName(b.String())
+	if !design.ValidSwatchName(base) {
 		base = "Colour"
 	}
 	name := base
@@ -176,5 +179,52 @@ func (e *Editor) freshSwatchName(label string) string {
 			return name
 		}
 		name = fmt.Sprintf("%s %d", base, i)
+	}
+}
+
+// RenameSwatch gives a palette colour another name everywhere it is used, as
+// one undo step. It refuses a name another colour already has.
+func (e *Editor) RenameSwatch(from, to string) error {
+	to = design.CleanSwatchName(to)
+	if !design.ValidSwatchName(to) {
+		return fmt.Errorf("editor: a name starts with a letter and has letters, digits, spaces, - or _")
+	}
+	if from == to {
+		return nil
+	}
+	if _, ok := e.doc.Theme.Colour(from); !ok {
+		return fmt.Errorf("editor: no colour called %s", from)
+	}
+	if _, ok := e.doc.Theme.Colour(to); ok {
+		return fmt.Errorf("editor: there is already a colour called %s", to)
+	}
+	e.apply(func() bool {
+		palette := append([]design.Swatch(nil), e.doc.Theme.Palette...)
+		for i := range palette {
+			if palette[i].Name == from {
+				palette[i].Name = to
+			}
+		}
+		e.doc.Theme.Palette = palette
+		renameSwatchIn(e.doc.Nodes, from, to)
+		for i := range e.doc.Pages {
+			renameSwatchIn(e.doc.Pages[i].Nodes, from, to)
+		}
+		return true
+	})
+	return nil
+}
+
+// renameSwatchIn rewrites every use of a palette colour in the nodes, groups
+// included.
+func renameSwatchIn(nodes []design.Node, from, to string) {
+	for i := range nodes {
+		n := &nodes[i]
+		for k, v := range n.Props {
+			if v == design.TokenPrefix+from {
+				n.Props[k] = design.TokenPrefix + to
+			}
+		}
+		renameSwatchIn(n.Children, from, to)
 	}
 }

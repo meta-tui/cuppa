@@ -17,27 +17,15 @@ import (
 
 const usage = `usage:
   cuppa component check <file | https://address | github.com/owner/repo[@ref]>
-  cuppa component options <design.cuppa> <node>
-  cuppa component change <design.cuppa> <node> <component> [--allow-loss] [-o <out.cuppa>]
 
 check reads the component description of a module (cuppa.component.json),
 prints what it describes and lists anything that is wrong with it. A repository
 is read from its default branch, or from the tag, branch or commit after @.
-
-options lists the components a node of a design can be changed for without
-losing the variables bound to it. change makes that change in the file (or in
-the file after -o): the node keeps its name, place, size, show-if, event and
-bindings, and the values that are valid for the new component. A change that
-would remove a bound variable is refused unless --allow-loss is given. <node>
-is a name or an id.
 `
 
 // Run executes "cuppa component" with the arguments after the word component
 // and returns the process exit code.
 func Run(args []string, stdout, stderr io.Writer) int {
-	if len(args) > 0 && (args[0] == "options" || args[0] == "change") {
-		return runChange(args, stdout, stderr)
-	}
 	if len(args) != 2 || args[0] != "check" {
 		_, _ = fmt.Fprint(stderr, usage)
 		return 2

@@ -16,7 +16,7 @@ Think Lucidchart or Figma, but for [Bubble Tea](https://github.com/charmbracelet
 - **Undo and redo** everything.
 - **Save and open** `.cuppa` files ([format](docs/spec/cuppa-format.md)).
 - **Export** to PNG, SVG or WebP through [Freeze](https://github.com/charmbracelet/freeze), or to colour or plain text.
-- **Generate Go source**: a Bubble Tea program that places the real Bubbles models where your design has them.
+- **Pages and a master page**: a design can have several screens that share a title bar or a key bar.
 
 **Desktop window.** `apps/cuppa-desktop` runs the same app in a [Wails](https://wails.io) window, through
 [TReactUI](https://github.com/meta-ui-labs/treactui). Release zips for Windows, macOS and Linux are attached to each release; or build it with
@@ -64,7 +64,7 @@ Colour and plain-text export work without it.
 
 ## Roadmap
 
-Tracked in [GitHub issues](https://github.com/meta-ui-labs/cuppa/issues): keyboard-first editing, exporting a design as Go source, live component previews, light/dark themes, and more front ends (a web app, an npm package) on the same engine.
+Tracked in [GitHub issues](https://github.com/meta-ui-labs/cuppa/issues): keyboard-first editing, live component previews, light/dark themes, and more front ends (a web app, an npm package) on the same engine.
 
 ## License
 

@@ -99,5 +99,5 @@ Windows, macOS and Linux. Findings from setting this up are in
 ## Roadmap shape
 
 Because behaviour lives in libraries, most roadmap items add a front end or a
-library, not a rewrite: `codegen` (design to Go source) beside `export`; a
-server wrapping `canvas`; a Wails app or web app as another adapter.
+library, not a rewrite: a server wrapping `canvas`; a Wails app or web app as
+another adapter.

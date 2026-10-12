@@ -1,6 +1,6 @@
 # 9. Ports: changing a component for a compatible one
 
-Status: accepted and built (#188).
+Status: superseded by ADR 0017 (removed in #271)
 
 ## Context
 

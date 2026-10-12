@@ -27,9 +27,12 @@ type RunSettings struct {
 	// Env is added to the environment of Build and Run: name to value. It is how
 	// the program is pointed at a scratch folder instead of the person's own.
 	Env map[string]string `json:"env,omitempty"`
-	// Dir is the working directory of both, relative to the folder of the design
+	// Dir is the working directory of Run, relative to the folder of the design
 	// file (or absolute). Empty is the folder of the design.
 	Dir string `json:"dir,omitempty"`
+	// BuildDir is the working directory of Build, resolved the same way. Empty
+	// follows Dir.
+	BuildDir string `json:"buildDir,omitempty"`
 	// Width and Height fix the size of the program's terminal in cells; zero
 	// follows the size of the pane.
 	Width  int `json:"width,omitempty"`
@@ -48,10 +51,8 @@ func (s RunSettings) Clean() RunSettings {
 	if len(s.Run) == 0 {
 		return RunSettings{}
 	}
-	s.Dir = strings.TrimSpace(s.Dir)
-	if len(s.Dir) > maxRunDirLen || strings.ContainsRune(s.Dir, 0) {
-		s.Dir = ""
-	}
+	s.Dir = cleanRunDir(s.Dir)
+	s.BuildDir = cleanRunDir(s.BuildDir)
 	env := make(map[string]string, len(s.Env))
 	for name, value := range s.Env {
 		name = strings.TrimSpace(name)
@@ -72,8 +73,16 @@ func (s RunSettings) Clean() RunSettings {
 
 // Equal reports whether two settings run the same thing the same way.
 func (s RunSettings) Equal(o RunSettings) bool {
-	return slices.Equal(s.Build, o.Build) && slices.Equal(s.Run, o.Run) && s.Dir == o.Dir &&
+	return slices.Equal(s.Build, o.Build) && slices.Equal(s.Run, o.Run) && s.Dir == o.Dir && s.BuildDir == o.BuildDir &&
 		s.Width == o.Width && s.Height == o.Height && s.OnSave == o.OnSave && mapsEqual(s.Env, o.Env)
+}
+
+func cleanRunDir(dir string) string {
+	dir = strings.TrimSpace(dir)
+	if len(dir) > maxRunDirLen || strings.ContainsRune(dir, 0) {
+		return ""
+	}
+	return dir
 }
 
 func mapsEqual(a, b map[string]string) bool {

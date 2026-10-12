@@ -26,6 +26,23 @@ func TestARelativeDirectoryIsRelativeToTheDesign(t *testing.T) {
 	}
 }
 
+func TestTheBuildAndTheProgramCanRunInDifferentFolders(t *testing.T) {
+	base := t.TempDir()
+	scratch := filepath.Join(base, "scratch")
+	p, err := PlanOf(design.RunSettings{
+		Build:    []string{"go", "build"},
+		Run:      []string{"app"},
+		BuildDir: "..",
+		Dir:      scratch,
+	}, filepath.Join(base, "designs"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if p.Build.Dir != base || p.Run.Dir != scratch {
+		t.Fatalf("build in %q, run in %q", p.Build.Dir, p.Run.Dir)
+	}
+}
+
 func TestABlockWithNothingToRunHasNoPlan(t *testing.T) {
 	if _, err := PlanOf(design.RunSettings{Build: []string{"go", "build"}}, t.TempDir()); err == nil {
 		t.Fatal("a plan with nothing to run")

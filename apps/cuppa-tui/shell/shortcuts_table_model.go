@@ -30,7 +30,7 @@ var shortcuts = []section{
 		{"Ctrl+]", "Forward one"}, {"Ctrl+[", "Back one"},
 		{"Ctrl+Shift+]", "To front"}, {"Ctrl+Shift+[", "To back"},
 		{"Ctrl+A", "Select all"}, {"Ctrl+F", "Search"},
-		{"Ctrl+P", "Preview"}, {"Ctrl+R", "Run the app"}, {"Ctrl+Q", "Quit"},
+		{"Ctrl+P", "Preview"}, {"Ctrl+Q", "Quit"},
 	}},
 	{"Moving around", []binding{
 		{"F6", "Next area"}, {"Shift+F6", "Previous area"},

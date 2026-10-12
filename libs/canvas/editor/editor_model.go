@@ -4,7 +4,6 @@
 package editor
 
 import (
-	"encoding/json"
 	"reflect"
 
 	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
@@ -28,9 +27,6 @@ type Editor struct {
 	// each lands a step further on.
 	clip   []design.Node
 	pastes int
-	// live are the values a running application published, by page name and
-	// input name; they are drawn and never saved (ADR 0016).
-	live map[string]map[string]json.RawMessage
 }
 
 // New returns an editor for doc.

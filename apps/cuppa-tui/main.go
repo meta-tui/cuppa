@@ -8,7 +8,6 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/componentcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/designcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/packcmd"
-	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/runcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/screenscmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
@@ -25,9 +24,6 @@ func main() {
 	if len(os.Args) > 1 && os.Args[1] == "pack" {
 		os.Exit(packcmd.Run(os.Args[2:], os.Stdout, os.Stderr))
 	}
-	if len(os.Args) > 1 && os.Args[1] == "run" {
-		os.Exit(runcmd.Run(os.Args[2:], os.Stdout, os.Stderr))
-	}
 	if len(os.Args) > 1 && os.Args[1] == "screens" {
 		os.Exit(screenscmd.Run(os.Args[2:], os.Stdout, os.Stderr))
 	}
@@ -40,22 +36,12 @@ func main() {
 	app := shell.New(standard.Default())
 	app.RestoreLayout()
 	app.LoadUserPacks()
-	args, connect := os.Args[1:], ""
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--connect" && i+1 < len(args) {
-			connect = args[i+1]
-			args = append(args[:i], args[i+2:]...)
-			break
-		}
-	}
+	args := os.Args[1:]
 	if len(args) > 0 {
 		if err := app.OpenFile(args[0]); err != nil {
 			fmt.Fprintln(os.Stderr, "cuppa:", err)
 			os.Exit(1)
 		}
-	}
-	if connect != "" {
-		app.Connect(connect)
 	}
 	app.Welcome()
 	app.ReportPackProblems()

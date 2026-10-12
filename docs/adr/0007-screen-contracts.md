@@ -1,6 +1,6 @@
 # 7. Screen contracts
 
-Status: accepted and built (epic #162). `examples/mvd-colours.cuppa` is the design of MVD's Colours screen, checked by a test.
+Status: superseded by ADR 0017 (the Go export was removed in #271)
 
 ## Context
 

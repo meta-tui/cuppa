@@ -74,7 +74,6 @@ func normalise(doc design.Document) design.Document {
 	doc.Embedded = cleanEmbedded(doc.Embedded)
 	doc.Nodes = nodes
 	doc = cleanPages(doc)
-	doc.Export = doc.Export.Clean()
 	if doc.IsPaged() {
 		for i := range doc.Pages {
 			if i == doc.Page {
@@ -164,9 +163,6 @@ func cleanPages(doc design.Document) design.Document {
 			active = len(pages)
 		}
 		p.Nodes = cleanNodes(p.Nodes, 0)
-		if design.ValidFolder(p.Folder) != nil || p.Master {
-			p.Folder = ""
-		}
 		if p.Master {
 			if hasMaster {
 				p.Master = false

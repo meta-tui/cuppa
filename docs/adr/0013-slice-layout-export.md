@@ -1,6 +1,6 @@
 # ADR 0013: The slice layout of an exported application
 
-Status: accepted (built; the decisions below are the ones taken)
+Status: superseded by ADR 0017 (the Go export was removed in #271)
 
 ## Context
 

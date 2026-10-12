@@ -15,9 +15,6 @@ import (
 type Page struct {
 	Name  string `json:"name"`
 	Nodes []Node `json:"nodes,omitempty"`
-	// Folder is where an export keeps the page, relative to the export's
-	// root ("setup/preferences"); empty for pages/<page>. See ADR 0013.
-	Folder string `json:"folder,omitempty"`
 	// Samples are the layout input samples of the page when it is not the one
 	// being edited; the shown page's are Document.Samples. Two pages may read
 	// the same input with different values.
@@ -90,7 +87,6 @@ func (d Document) Screens() []Document {
 		s := d
 		s.Pages, s.Page = nil, 0
 		s.Name = p.Name
-		s.Folder = p.Folder
 		if i == active {
 			s.Nodes = d.Nodes
 		} else {
@@ -202,28 +198,6 @@ func ValidPageName(name string) error {
 		digit := r >= '0' && r <= '9'
 		if i == 0 && !letter || !letter && !digit && r != ' ' && r != '-' && r != '_' {
 			return fmt.Errorf("a page name is letters, digits, spaces, - and _, and starts with a letter")
-		}
-	}
-	return nil
-}
-
-// ValidFolder reports whether a folder can be used for a page: relative, in
-// slash form, with lower case letters, digits, - and _ in each element.
-func ValidFolder(folder string) error {
-	if folder == "" {
-		return nil
-	}
-	if len(folder) > 80 {
-		return fmt.Errorf("a folder is at most 80 characters")
-	}
-	for _, el := range strings.Split(folder, "/") {
-		if el == "" || el == "." || el == ".." || el == "internal" {
-			return fmt.Errorf("a folder is names joined by /, such as setup/preferences")
-		}
-		for _, r := range el {
-			if (r < 'a' || r > 'z') && (r < '0' || r > '9') && r != '-' && r != '_' {
-				return fmt.Errorf("a folder uses lower case letters, digits, - and _")
-			}
 		}
 	}
 	return nil

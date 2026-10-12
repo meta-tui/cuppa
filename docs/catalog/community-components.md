@@ -144,11 +144,7 @@ Each row was checked on 2026-10-10 against the repository, its `go.mod` and its 
 
 ### How the new components are drawn
 
-The designer paints them with `libs/render/scene/community_widgets_painters_algorithm.go`; the
-exported program carries the same drawing in `libs/export/gosource/community_widgets_go.txt`
-(standard library and Lip Gloss only, so no extra module). `TestWidgetsDrawTheSameInTheDesignerAndTheProgram`
-builds a program with 17 variants and compares every character, so the two cannot drift. The
-`Import` field of each entry is the real module path, for whoever swaps the sketch for the library.
+The designer paints them with `libs/render/scene/community_widgets_painters_algorithm.go`, from what each library's README shows.
 
 ## 6. bubblyui's component list against the catalog
 
@@ -174,8 +170,7 @@ builds a program with 17 variants and compares every character, so the two canno
 1. **Check it** against "How an entry is chosen" below: visible, permissive licence, not a duplicate, Bubble Tea v2 preferred. Read its `go.mod` on the proxy and its README. Record what you found in a table above.
 2. **Entry**: add a `definition.Definition` in `libs/catalog/standard/` (`community_widgets_entries_content.go` for community ones): `ID` (`family.name`), `Name`, `Family`, one-line `Description`, `DefaultSize`, `MinSize`, `Import` (the real module path, with `/v2` when the module has one), `Status` and the props from the README's options (`textProp`, `intProp`, `boolProp`, `choiceProp`, `colorProp`). Lists are comma separated; multi-line values use `|`.
 3. **Designer painter**: a `paintX(g *grid.Grid, p Props)` in `libs/render/scene/`, registered in `scene_render_use_case.go`. It must survive any size from 0x0 and any prop value.
-4. **Exported drawing**: the same drawing in the runtime, registered in `libs/export/gosource/generate_use_case.go` (`generated` and `extensions`). Names in a runtime file share one package with `runtime.go` and `widgets.go`, so prefix them.
-5. **Ports**: say which of its properties carry a string, items, the chosen item, rows and so on in `libs/catalog/standard/ports_content.go`, so it can take the place of (and be replaced by) compatible components with its variables kept ([ADR 0009](../adr/0009-component-ports.md)).
-6. **Tests**: a case in the painter test, a variant in `TestWidgetsDrawTheSameInTheDesignerAndTheProgram`; the default-registry consistency test runs by itself.
-7. **Docs**: the counts here and in `README.md`, and the user guide if the component has something to learn.
+4. **Ports**: say which of its properties carry a string, items, the chosen item, rows and so on in `libs/catalog/standard/ports_content.go`, so it can take the place of (and be replaced by) compatible components with its variables kept ([ADR 0009](../adr/0009-component-ports.md)).
+5. **Tests**: a case in the painter test; the default-registry consistency test runs by itself.
+6. **Docs**: the counts here and in `README.md`, and the user guide if the component has something to learn.
 8. **Check**: `go test ./...` and `golangci-lint run ./...` in `libs/catalog`, `libs/render`, `libs/export`.

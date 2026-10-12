@@ -2,14 +2,11 @@ package designcmd
 
 import (
 	"bytes"
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 
-	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
-	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 const sample = `{
@@ -71,35 +68,5 @@ func TestAMisspeltFieldAndAnUnknownComponentAreRefused(t *testing.T) {
 	}
 	if code, _, _ := run(t, "nonsense", "x"); code != 2 {
 		t.Errorf("usage exit %d", code)
-	}
-}
-
-func TestContractPrintsInputsAndEventsAsJSON(t *testing.T) {
-	doc := design.NewDocument("Run", 40, 6)
-	doc.Add(design.Node{Component: "lipgloss.box", Name: "Box", Rect: design.Rect{W: 10, H: 3},
-		Props: map[string]string{"title": "x"}, Bind: map[string]string{"title": "Title"}, Event: "Start"})
-	file, err := disk.Save(filepath.Join(t.TempDir(), "run"), doc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	var stdout, stderr bytes.Buffer
-	if code := Run([]string{"contract", file}, &stdout, &stderr); code != 0 {
-		t.Fatalf("exit %d: %s", code, stderr.String())
-	}
-	var got struct {
-		Design string
-		Pages  []struct {
-			Page   string
-			Inputs []struct{ Name, Kind string }
-			Events []struct{ Name string }
-		}
-	}
-	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
-		t.Fatalf("%v\n%s", err, stdout.String())
-	}
-	if got.Design != "Run" || len(got.Pages) != 1 || len(got.Pages[0].Inputs) != 1 ||
-		got.Pages[0].Inputs[0].Name != "Title" || got.Pages[0].Inputs[0].Kind != "string" ||
-		len(got.Pages[0].Events) != 1 || got.Pages[0].Events[0].Name != "Start" {
-		t.Fatalf("contract: %s", stdout.String())
 	}
 }

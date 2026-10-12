@@ -31,9 +31,6 @@ const (
 	ExportWebP     Action = "export.webp"
 	ExportANSI     Action = "export.ansi"
 	ExportText     Action = "export.text"
-	ExportGo       Action = "export.go"
-	ExportCheck    Action = "export.check"
-	ExportScreens  Action = "export.screens"
 	HelpShortcuts  Action = "help.shortcuts"
 	HelpAbout      Action = "help.about"
 	nothing        Action = ""
@@ -97,10 +94,6 @@ var menus = []menu{
 		{separatorLabel, "", nothing},
 		{"Colour text (ANSI)…", "", ExportANSI},
 		{"Plain text…", "", ExportText},
-		{separatorLabel, "", nothing},
-		{"Go source (Bubble Tea)…", "", ExportGo},
-		{"Check Go export", "", ExportCheck},
-		{"Go screen (contract)…", "", ExportScreens},
 	}},
 	{"Help", 'h', []item{
 		{"Shortcuts", "", HelpShortcuts},

@@ -41,18 +41,6 @@ func (e Expr) IsFixed() bool { return e.root == nil || !e.root.usesParent() && !
 // another component.
 func (e Expr) UsesEnv() bool { return e.root != nil && e.root.usesEnv() }
 
-// GoSource writes the expression as a Go float64 expression for generated
-// code. parent is the name of an int variable that holds the parent's size on
-// the axis; the code uses a function div(a, b float64) float64 that gives 0
-// for a division by zero, and the built-in min and max. Wrap it in a rounding
-// down to get whole cells, as Resolve does.
-func (e Expr) GoSource(parent string) string {
-	if e.root == nil {
-		return "0.0"
-	}
-	return e.root.goSource(parent)
-}
-
 // String is the expression as written, trimmed.
 func (e Expr) String() string {
 	if e.root == nil {
@@ -78,9 +66,6 @@ type node interface {
 	usesParent() bool
 	// usesEnv reports whether the node reads an input or a component's place.
 	usesEnv() bool
-	// goSource is the node as a Go float64 expression; parent names the
-	// variable that holds the parent's size.
-	goSource(parent string) string
 }
 
 type number struct{ v float64 }
@@ -88,29 +73,18 @@ type number struct{ v float64 }
 func (n number) eval(float64, *Env) float64 { return n.v }
 func (number) usesParent() bool             { return false }
 func (number) usesEnv() bool                { return false }
-func (n number) goSource(string) string {
-	s := strconv.FormatFloat(n.v, 'f', -1, 64)
-	if !strings.Contains(s, ".") {
-		s += ".0"
-	}
-	return s
-}
 
 type percent struct{ v float64 }
 
 func (p percent) eval(parent float64, _ *Env) float64 { return parent * p.v / 100 }
 func (percent) usesParent() bool                     { return true }
 func (percent) usesEnv() bool                        { return false }
-func (p percent) goSource(parent string) string {
-	return "(float64(" + parent + ") * " + number(p).goSource("") + " / 100.0)"
-}
 
 type negation struct{ x node }
 
 func (n negation) eval(parent float64, env *Env) float64 { return -n.x.eval(parent, env) }
 func (n negation) usesParent() bool                      { return n.x.usesParent() }
 func (n negation) usesEnv() bool                         { return n.x.usesEnv() }
-func (n negation) goSource(parent string) string { return "(-" + n.x.goSource(parent) + ")" }
 
 type binary struct {
 	op   byte
@@ -135,14 +109,6 @@ func (b binary) eval(parent float64, env *Env) float64 {
 func (b binary) usesParent() bool { return b.l.usesParent() || b.r.usesParent() }
 func (b binary) usesEnv() bool    { return b.l.usesEnv() || b.r.usesEnv() }
 
-func (b binary) goSource(parent string) string {
-	l, r := b.l.goSource(parent), b.r.goSource(parent)
-	if b.op == '/' {
-		return "div(" + l + ", " + r + ")"
-	}
-	return "(" + l + " " + string(b.op) + " " + r + ")"
-}
-
 type call struct {
 	fn   string
 	args []node
@@ -159,14 +125,6 @@ func (c call) eval(parent float64, env *Env) float64 {
 		}
 	}
 	return out
-}
-
-func (c call) goSource(parent string) string {
-	args := make([]string, len(c.args))
-	for i, a := range c.args {
-		args[i] = a.goSource(parent)
-	}
-	return c.fn + "(" + strings.Join(args, ", ") + ")"
 }
 
 func (c call) usesParent() bool {

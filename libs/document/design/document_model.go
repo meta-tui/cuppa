@@ -56,12 +56,6 @@ type Document struct {
 	// PerPage says each page keeps its own samples and keys. A design saved
 	// without it had one set of each for every page.
 	PerPage bool `json:"perPage,omitempty"`
-	// Export says where the Go source of the design goes; empty until the
-	// person exports it.
-	Export ExportSettings `json:"export,omitzero"`
-	// Folder is the folder of the page this screen is, set by Screens; it is
-	// not part of a design's file.
-	Folder string `json:"-"`
 	Page  int    `json:"page,omitempty"`
 	// Seq is the counter behind generated node ids; it only ever grows.
 	Seq int `json:"seq"`
@@ -183,7 +177,7 @@ func (d Document) Clone() Document {
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
-			pages[i] = Page{Name: p.Name, Folder: p.Folder, Samples: cloneSamples(p.Samples), Defaults: cloneSamples(p.Defaults), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
+			pages[i] = Page{Name: p.Name, Samples: cloneSamples(p.Samples), Defaults: cloneSamples(p.Defaults), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
 			for _, n := range p.Nodes {
 				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
 			}

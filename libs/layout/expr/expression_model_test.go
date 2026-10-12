@@ -66,22 +66,3 @@ func TestIsFixedAndString(t *testing.T) {
 		t.Error("zero value is the constant 0")
 	}
 }
-
-func TestGoSource(t *testing.T) {
-	for src, want := range map[string]string{
-		"10":           "10.0",
-		"50%":          "(float64(w) * 50.0 / 100.0)",
-		"100% - 10":    "((float64(w) * 100.0 / 100.0) - 10.0)",
-		"10 / 4":       "div(10.0, 4.0)",
-		"-5":           "(-5.0)",
-		"min(50%, 40)": "min((float64(w) * 50.0 / 100.0), 40.0)",
-	} {
-		e, err := Parse(src)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := e.GoSource("w"); got != want {
-			t.Errorf("GoSource(%q) = %q, want %q", src, got, want)
-		}
-	}
-}

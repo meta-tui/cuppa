@@ -175,7 +175,7 @@ func (f *Flow) Quit() { f.guard(func() { f.quit = true }) }
 // Open asks for a file and loads it.
 func (f *Flow) Open() {
 	f.guard(func() {
-		d := filedialog.New(filedialog.Spec{Title: "Open design", Dir: f.dir, Ext: format.Extension, Also: []string{".go"}})
+		d := filedialog.New(filedialog.Spec{Title: "Open design", Dir: f.dir, Ext: format.Extension})
 		f.show(d, func(o modal.Outcome) {
 			if o.Canceled {
 				return
@@ -188,12 +188,6 @@ func (f *Flow) Open() {
 			f.load(doc)
 			f.path, f.dir = o.Path, filepath.Dir(o.Path)
 			f.status = "Opened " + filepath.Base(o.Path)
-			if disk.IsGoSource(o.Path) {
-				// The design came out of Go source: there is no .cuppa to save
-				// over, the first save asks for a name.
-				f.path = ""
-				f.status = "Opened the design in " + filepath.Base(o.Path) + "; save it as a .cuppa file"
-			}
 		})
 	})
 }
@@ -207,10 +201,6 @@ func (f *Flow) OpenPath(path string) error {
 	f.load(doc)
 	f.path, f.dir = path, filepath.Dir(path)
 	f.status = "Opened " + filepath.Base(path)
-	if disk.IsGoSource(path) {
-		f.path = ""
-		f.status = "Opened the design in " + filepath.Base(path) + "; save it as a .cuppa file"
-	}
 	return nil
 }
 

@@ -1,7 +1,6 @@
 package disk
 
 import (
-	"encoding/base64"
 	"errors"
 	"os"
 	"path/filepath"
@@ -48,29 +47,5 @@ func TestLoadErrors(t *testing.T) {
 func TestSaveKeepsExistingExtension(t *testing.T) {
 	if got := WithExtension("a/B.CUPPA"); got != "a/B.CUPPA" {
 		t.Fatal(got)
-	}
-}
-
-// An application's main.go has no design in it, but the router beside it does.
-func TestLoadReadsTheDesignOutOfAnApplicationsGo(t *testing.T) {
-	doc := design.NewDocument("App", 40, 10)
-	doc.Add(design.Node{Component: "lipgloss.box", Name: "Box", Rect: design.Rect{W: 5, H: 3}})
-	data, err := format.Encode(doc)
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir := t.TempDir()
-	_ = os.WriteFile(filepath.Join(dir, "main.go"), []byte("package main\n\nfunc main() {}\n"), 0o644)
-	if _, err := Load(filepath.Join(dir, "main.go")); !errors.Is(err, format.ErrNoDesign) {
-		t.Fatalf("no router yet: %v", err)
-	}
-	router := format.GoDirective + base64.StdEncoding.EncodeToString(data) + "\n\npackage main\n"
-	_ = os.WriteFile(filepath.Join(dir, "app_app.go"), []byte(router), 0o644)
-	got, err := Load(filepath.Join(dir, "main.go"))
-	if err != nil || got.Name != "App" || len(got.Nodes) != 1 {
-		t.Fatalf("load: %v %+v", err, got)
-	}
-	if !IsGoSource(filepath.Join(dir, "main.go")) || IsGoSource("a.cuppa") {
-		t.Error("IsGoSource")
 	}
 }

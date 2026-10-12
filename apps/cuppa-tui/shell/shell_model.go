@@ -4,10 +4,8 @@
 package shell
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pagesbar"
-	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/liveconn"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/prompt"
 	"os"
 	"path/filepath"
@@ -23,7 +21,6 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/palette"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/preview"
-	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/runpane"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/stage"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/themepicker"
@@ -74,17 +71,6 @@ type Model struct {
 	// commands it asked for until Update returns them.
 	run          *preview.Session
 	pending      []tea.Cmd
-	// host is the application the design draws, built and running; hosting is
-	// true while the stage shows it, and hostStale that it was running before
-	// the design was saved again.
-	host      *runpane.Model
-	hosting   bool
-	hostStale bool
-	// live is the running application the designer shows the values of.
-	live *liveconn.Conn
-	// liveStates are the latest values of each page, so a preview that starts
-	// while connected runs with them.
-	liveStates map[string]map[string]json.RawMessage
 	packProblems []error
 	ed           *editor.Editor
 	bar          *menubar.Model
@@ -153,7 +139,6 @@ func New(cat *registry.Registry) *Model {
 	m.flow.SetOnLoad(m.adoptEmbedded)
 	m.ins.BindSnap(m.stg.Snap, m.stg.SetSnap)
 	m.ins.BindPreview(m.Previewing, func(on bool) {
-		m.hideHost()
 		if on != m.Previewing() {
 			m.togglePreview()
 		}
@@ -245,8 +230,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	switch msg := msg.(type) {
-	case runpane.BuiltMsg, runpane.ChangedMsg:
-		m.hostMessage(msg)
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
 	case tea.MouseClickMsg:
@@ -261,8 +244,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.key(msg)
 	case exportDoneMsg:
 		m.flow.Finish(msg.err)
-	case liveconn.ConnectedMsg, liveconn.StateMsg, liveconn.EndedMsg:
-		m.liveMessage(msg)
 	}
 	cmd := tea.Batch(m.settle(), m.takePending())
 	m.settleAnnouncement()
@@ -274,7 +255,6 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 // in step with the editor.
 func (m *Model) settle() tea.Cmd {
 	m.flow.Resolve()
-	m.bar.SetEnabled(menubar.FileDisconnect, m.live != nil)
 	m.bar.SetEnabled(menubar.EditUndo, m.ed.CanUndo())
 	m.bar.SetEnabled(menubar.EditRedo, m.ed.CanRedo())
 	hasSel := len(m.ed.Selected()) > 0
@@ -330,30 +310,19 @@ func (m *Model) perform(a menubar.Action) {
 	if !keepsPreview(a) {
 		m.stopPreview()
 	}
-	if !keepsHost(a) {
-		m.stopHost()
-	}
 	switch a {
 	case menubar.ViewPreview:
-		m.hideHost()
 		m.togglePreview()
-	case menubar.ViewRun:
-		m.toggleHost()
 	case menubar.FileNew:
 		m.flow.NewDesign()
 	case menubar.FileOpen:
 		m.flow.Open()
 	case menubar.FileSave:
 		m.flow.Save()
-		m.afterSave()
 	case menubar.FileSaveAs:
 		m.flow.SaveAs()
 	case menubar.FileQuit:
 		m.flow.Quit()
-	case menubar.FileConnect:
-		m.askConnect()
-	case menubar.FileDisconnect:
-		m.disconnect("")
 	case menubar.EditUndo:
 		m.ed.Undo()
 	case menubar.EditRedo:
@@ -449,10 +418,6 @@ func toEvent(mouse tea.Mouse, phase pointer.Phase) pointer.Event {
 
 // mouse routes one pointer event to the pane that should handle it.
 func (m *Model) mouse(e pointer.Event) {
-	if m.hosting {
-		m.hostMouse(e)
-		return
-	}
 	if m.run != nil {
 		m.previewMouse(e)
 		return
@@ -571,33 +536,23 @@ func (m *Model) key(msg tea.KeyPressMsg) {
 		dlg.Key(k.Text, back, enter, esc)
 		return
 	}
-	if m.hosting && m.hostKey(msg) {
-		return
-	}
 	switch text {
 	case "ctrl+q":
 		m.flow.Quit()
 		return
 	case "ctrl+p":
-		m.hideHost()
 		m.togglePreview()
-		return
-	case "ctrl+r":
-		m.toggleHost()
 		return
 	case "ctrl+n":
 		m.stopPreview()
-		m.stopHost()
 		m.flow.NewDesign()
 		return
 	case "ctrl+o":
 		m.stopPreview()
-		m.stopHost()
 		m.flow.Open()
 		return
 	case "ctrl+s":
 		m.flow.Save()
-		m.afterSave()
 		return
 	case "ctrl+shift+s":
 		m.flow.SaveAs()
@@ -766,7 +721,7 @@ func (m *Model) render() string {
 	pal := append(m.tb.Lines(l.tools.W, false)[:l.tools.H], m.pal.Lines()...)
 	stg := append(m.contextLines(l.options.W), m.stg.Lines()...)
 	if l.pages.H > 0 {
-		stg = append(stg, m.pg.Line(l.pages.W, m.run != nil || m.hosting))
+		stg = append(stg, m.pg.Line(l.pages.W, m.run != nil))
 	}
 	ins := m.ins.Lines()
 	left, right := m.separator(leftDivider), m.separator(rightDivider)
@@ -825,9 +780,6 @@ func (m *Model) statusBar() string {
 			hint = fmt.Sprintf("%s  (%d,%d)  %d×%d", n.Name, n.Rect.X, n.Rect.Y, n.Rect.W, n.Rect.H) + "  ·  " + hint
 		} else if st := m.flow.Status(); st != "" {
 			hint = st + "  ·  " + hint
-		}
-		if m.live != nil {
-			hint = "live: " + m.live.App() + "  ·  " + hint
 		}
 	}
 	return theme.Fit(" "+theme.Dim(hint), m.w)

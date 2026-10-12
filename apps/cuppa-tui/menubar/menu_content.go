@@ -9,8 +9,6 @@ const (
 	FileOpen       Action = "file.open"
 	FileSave       Action = "file.save"
 	FileSaveAs     Action = "file.saveas"
-	FileConnect    Action = "file.connect"
-	FileDisconnect Action = "file.disconnect"
 	FileQuit       Action = "file.quit"
 	EditUndo       Action = "edit.undo"
 	EditRedo       Action = "edit.redo"
@@ -27,7 +25,6 @@ const (
 	EditBackward   Action = "edit.backward"
 	EditToBack     Action = "edit.toback"
 	ViewPreview    Action = "view.preview"
-	ViewRun        Action = "view.run"
 	ViewVariables  Action = "view.variables"
 	ExportPNG      Action = "export.png"
 	ExportSVG      Action = "export.svg"
@@ -65,8 +62,6 @@ var menus = []menu{
 		{"Save", "Ctrl+S", FileSave},
 		{"Save As…", "Ctrl+Shift+S", FileSaveAs},
 		{separatorLabel, "", nothing},
-		{"Connect…", "", FileConnect},
-		{"Disconnect", "", FileDisconnect},
 		{separatorLabel, "", nothing},
 		{"Quit", "Ctrl+Q", FileQuit},
 	}},
@@ -93,7 +88,6 @@ var menus = []menu{
 	}},
 	{"View", 'v', []item{
 		{"Preview design", "Ctrl+P", ViewPreview},
-		{"Run the app", "Ctrl+R", ViewRun},
 		{"Variables…", "", ViewVariables},
 	}},
 	{"Export", 'x', []item{

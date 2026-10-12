@@ -8,11 +8,9 @@ use (
 	./libs/canvas
 	./libs/catalog
 	./libs/color
-	./libs/connector
 	./libs/cuppafile
 	./libs/document
 	./libs/export
 	./libs/layout
 	./libs/render
-	./libs/runhost
 )

@@ -1,6 +1,6 @@
 # ADR 0016: A live connection between a running app and the designer
 
-Status: proposed (#224); nothing is built yet
+Status: superseded by ADR 0017 (removed in #271)
 
 ## Context
 

@@ -9,9 +9,7 @@ import (
 )
 
 // The painters in this file draw components of libraries Cuppa does not link
-// against, from what each library's README shows. The exported program carries
-// the same drawings (libs/export/gosource/community_widgets_go.txt, kept in
-// step by TestWidgetsDrawTheSameInTheDesignerAndTheProgram).
+// against, from what each library's README shows.
 
 // paintDropdown draws bubble-dropdown's "[ Label ▼ ]" trigger and, when open,
 // its panel below: a rounded box with the options, the chosen one inverted.

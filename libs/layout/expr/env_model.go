@@ -2,7 +2,6 @@ package expr
 
 import (
 	"math"
-	"strconv"
 )
 
 // Env is what an expression can read besides the size of its parent: the
@@ -29,9 +28,6 @@ func (n inputRef) eval(_ float64, env *Env) float64 {
 }
 func (inputRef) usesParent() bool { return false }
 func (inputRef) usesEnv() bool    { return true }
-func (n inputRef) goSource(string) string {
-	return "e.In(" + strconv.Quote(n.name) + ")"
-}
 
 // rectRef is below("Name"), right("Name"), top, left, height or width.
 type rectRef struct{ name, field string }
@@ -45,9 +41,6 @@ func (n rectRef) eval(_ float64, env *Env) float64 {
 }
 func (rectRef) usesParent() bool { return false }
 func (rectRef) usesEnv() bool    { return true }
-func (n rectRef) goSource(string) string {
-	return "e.Rect(" + strconv.Quote(n.name) + ", " + strconv.Quote(n.field) + ")"
-}
 
 // fn is the function the reference was written with.
 func (n rectRef) fn() string {
@@ -73,12 +66,6 @@ func (n windowDim) eval(parent float64, env *Env) float64 {
 }
 func (windowDim) usesParent() bool { return false }
 func (windowDim) usesEnv() bool    { return true }
-func (n windowDim) goSource(string) string {
-	if n.axis == 'w' {
-		return "float64(e.W)"
-	}
-	return "float64(e.H)"
-}
 
 // Refs lists the inputs ($Name) and the component names an expression reads.
 func (e Expr) Refs() (inputs, components []string) {

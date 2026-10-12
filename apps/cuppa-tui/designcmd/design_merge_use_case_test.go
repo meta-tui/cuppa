@@ -35,7 +35,7 @@ func TestMergingDesignsKeepsEachPagesSamplesAndKeys(t *testing.T) {
 	a := buildDesign(t, dir, "Setup", "100", "30", "setup", "3")
 	b := buildDesign(t, dir, "Run", "120", "36", "run", "9")
 	out := filepath.Join(dir, "all.cuppa")
-	code, o, e := run(t, "merge", a, b, "-o", out, "--name", "App", "--folder", "Setup=setup/prefs")
+	code, o, e := run(t, "merge", a, b, "-o", out, "--name", "App")
 	if code != 0 {
 		t.Fatalf("merge: %d\n%s%s", code, o, e)
 	}
@@ -47,7 +47,7 @@ func TestMergingDesignsKeepsEachPagesSamplesAndKeys(t *testing.T) {
 		t.Fatalf("got %q with %d pages, %dx%d", doc.Name, doc.PageCount(), doc.Width, doc.Height)
 	}
 	screens := doc.Screens()
-	if screens[0].Name != "Setup" || screens[0].Folder != "setup/prefs" || screens[0].Samples["Rows"] != "3" {
+	if screens[0].Name != "Setup" || screens[0].Samples["Rows"] != "3" {
 		t.Errorf("first page: %+v", screens[0])
 	}
 	if screens[1].Name != "Run" || screens[1].Samples["Rows"] != "9" || len(screens[1].Keys) != 1 || screens[1].Keys[0].Event != "BackRun" {

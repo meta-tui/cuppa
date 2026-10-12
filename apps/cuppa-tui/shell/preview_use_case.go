@@ -47,7 +47,7 @@ func (m *Model) stopPreview() {
 func keepsPreview(a menubar.Action) bool {
 	switch a {
 	case menubar.ViewPreview, menubar.ViewVariables, menubar.HelpShortcuts, menubar.HelpAbout,
-		menubar.ExportANSI, menubar.ExportText, menubar.ExportGo, menubar.ExportCheck, menubar.ExportScreens, menubar.ExportPNG, menubar.ExportSVG, menubar.ExportWebP:
+		menubar.ExportANSI, menubar.ExportText, menubar.ExportPNG, menubar.ExportSVG, menubar.ExportWebP:
 		return true
 	}
 	return false

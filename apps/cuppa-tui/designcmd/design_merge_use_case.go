@@ -5,14 +5,13 @@ import (
 	"io"
 	"reflect"
 	"strconv"
-	"strings"
 
 	"github.com/meta-ui-labs/cuppa/libs/cuppafile/disk"
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
 const mergeUsage = `usage:
-  cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa> [--name <design name>] [--folder <page>=<folder>]...
+  cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa> [--name <design name>]
                      [--master [--master-min <pages>]]
 
 Builds one design with a page per input design, in the order given. With
@@ -20,7 +19,6 @@ Builds one design with a page per input design, in the order given. With
 named after its design, and keeps its components, its samples and its keys; a
 design that has pages gives one page each. The canvas size is the largest of
 the designs, and the theme, palette and background are the first design's.
---folder says where an export keeps a page (setup/preferences).
 --master lifts the components that are the same on at least --master-min pages
 (3 by default) to a master page the pages share (ADR 0015); a page that did not
 have one hides it. It prints what it lifted and what it left.
@@ -32,7 +30,6 @@ func merge(args []string, stdout io.Writer) error {
 	var inputs []string
 	out, name := "", ""
 	lift, liftMin := false, 3
-	folders := map[string]string{}
 	for i := 0; i < len(args); i++ {
 		switch args[i] {
 		case "-o", "--out":
@@ -57,19 +54,6 @@ func merge(args []string, stdout io.Writer) error {
 			if i < len(args) {
 				name = args[i]
 			}
-		case "--folder":
-			i++
-			if i >= len(args) {
-				return fmt.Errorf("--folder takes <page>=<folder>")
-			}
-			page, folder, ok := strings.Cut(args[i], "=")
-			if !ok {
-				return fmt.Errorf("--folder takes <page>=<folder>, got %q", args[i])
-			}
-			if err := design.ValidFolder(folder); err != nil {
-				return fmt.Errorf("--folder %s: %w", page, err)
-			}
-			folders[page] = folder
 		default:
 			inputs = append(inputs, args[i])
 		}
@@ -115,18 +99,9 @@ func merge(args []string, stdout io.Writer) error {
 			return fmt.Errorf("two designs are called %q; a page needs a name of its own", s.Name)
 		}
 		seen[s.Name] = true
-		folder := s.Folder
-		if f, ok := folders[s.Name]; ok {
-			folder = f
-		}
-		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Defaults: s.Defaults, Keys: s.Keys, Folder: folder}
+		pages[i] = design.Page{Name: s.Name, Nodes: s.Nodes, Samples: s.Samples, Defaults: s.Defaults, Keys: s.Keys}
 		if s.Seq > base.Seq {
 			base.Seq = s.Seq
-		}
-	}
-	for page := range folders {
-		if !seen[page] {
-			return fmt.Errorf("--folder: there is no page called %q", page)
 		}
 	}
 	if lift {

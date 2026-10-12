@@ -16,7 +16,6 @@ type Cond struct {
 
 type condNode interface {
 	test(env *Env) bool
-	goSource() string
 	walk(inputs, components *[]string)
 }
 
@@ -50,15 +49,6 @@ func ParseCond(s string) (Cond, error) {
 // Eval is the condition for the window and inputs in env.
 func (c Cond) Eval(env *Env) bool { return c.root == nil || c.root.test(env) }
 
-// GoSource is the condition as a Go bool expression for generated code. It
-// reads the window and the inputs from a variable e (W, H, In).
-func (c Cond) GoSource() string {
-	if c.root == nil {
-		return "true"
-	}
-	return c.root.goSource()
-}
-
 // Refs lists the inputs the condition reads.
 func (c Cond) Refs() []string {
 	var inputs, components []string
@@ -80,7 +70,6 @@ func hasRect(n condNode) bool {
 type condOr struct{ l, r condNode }
 
 func (n condOr) test(env *Env) bool { return n.l.test(env) || n.r.test(env) }
-func (n condOr) goSource() string   { return "(" + n.l.goSource() + " || " + n.r.goSource() + ")" }
 func (n condOr) walk(i, c *[]string) {
 	n.l.walk(i, c)
 	n.r.walk(i, c)
@@ -89,7 +78,6 @@ func (n condOr) walk(i, c *[]string) {
 type condAnd struct{ l, r condNode }
 
 func (n condAnd) test(env *Env) bool { return n.l.test(env) && n.r.test(env) }
-func (n condAnd) goSource() string   { return "(" + n.l.goSource() + " && " + n.r.goSource() + ")" }
 func (n condAnd) walk(i, c *[]string) {
 	n.l.walk(i, c)
 	n.r.walk(i, c)
@@ -98,7 +86,6 @@ func (n condAnd) walk(i, c *[]string) {
 type condNot struct{ x condNode }
 
 func (n condNot) test(env *Env) bool  { return !n.x.test(env) }
-func (n condNot) goSource() string    { return "!" + n.x.goSource() }
 func (n condNot) walk(i, c *[]string) { n.x.walk(i, c) }
 
 // condCmp compares two numbers; with no operator it tests l against 0.
@@ -126,13 +113,6 @@ func (n condCmp) test(env *Env) bool {
 		return l > r
 	}
 	return l < r
-}
-
-func (n condCmp) goSource() string {
-	if n.op == "" {
-		return "(" + n.l.goSource("0") + " != 0)"
-	}
-	return "(" + n.l.goSource("0") + " " + n.op + " " + n.r.goSource("0") + ")"
 }
 
 func (n condCmp) walk(inputs, components *[]string) {

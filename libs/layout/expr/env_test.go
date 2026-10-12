@@ -51,9 +51,6 @@ func TestExpressionsReadInputsAndPlacesOfOtherComponents(t *testing.T) {
 	if len(in) != 2 || in[0] != "A" || len(comp) != 1 || comp[0] != "X" {
 		t.Errorf("refs %v %v", in, comp)
 	}
-	if got := e.GoSource("h"); got != `(min(e.In("A"), e.In("B")) + e.Rect("X", "bottom"))` {
-		t.Errorf("go source %q", got)
-	}
 }
 
 func TestADragLeavesAnExpressionThatReadsInputsAlone(t *testing.T) {

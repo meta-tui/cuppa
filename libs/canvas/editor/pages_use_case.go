@@ -129,39 +129,6 @@ func (e *Editor) RenamePage(i int, name string) error {
 	return nil
 }
 
-// PageFolder is the folder an export keeps page i in ("" for the default).
-func (e *Editor) PageFolder(i int) string {
-	if !e.doc.IsPaged() || i < 0 || i >= len(e.doc.Pages) {
-		return ""
-	}
-	return e.doc.Pages[i].Folder
-}
-
-// SetPageFolder sets the folder an export keeps page i in, as one undo step.
-// An empty folder is pages/<page>. The design is made paged when it had one
-// page only.
-func (e *Editor) SetPageFolder(i int, folder string) error {
-	folder = strings.Trim(strings.TrimSpace(folder), "/")
-	if err := design.ValidFolder(folder); err != nil {
-		return fmt.Errorf("editor: %w", err)
-	}
-	if i != 0 && (!e.doc.IsPaged() || i < 0 || i >= len(e.doc.Pages)) {
-		return fmt.Errorf("editor: no such page")
-	}
-	if e.doc.IsPaged() && e.doc.Pages[i].Master {
-		return fmt.Errorf("editor: the master page has no folder; it is drawn on every page")
-	}
-	if e.doc.IsPaged() && e.doc.Pages[i].Folder == folder {
-		return nil
-	}
-	e.apply(func() bool {
-		e.pages()
-		e.doc.Pages[i].Folder = folder
-		return true
-	})
-	return nil
-}
-
 // DeletePage removes page i with its components, as one undo step. A design
 // keeps at least one page; the components that went to it no longer go
 // anywhere.
@@ -258,27 +225,4 @@ func (e *Editor) retarget(old, to string) {
 	for i := range e.doc.Pages {
 		walk(e.doc.Pages[i].Nodes)
 	}
-}
-
-// ExportSettings is where the design says its Go source goes.
-func (e *Editor) ExportSettings() design.ExportSettings { return e.doc.Export }
-
-// SetExportSettings records where the design's Go source goes, as one undo
-// step: the design is the one file that knows the structure of the program.
-func (e *Editor) SetExportSettings(s design.ExportSettings) error {
-	s = s.Clean()
-	if s.Layout == "" {
-		return fmt.Errorf("editor: an export needs a layout and a folder")
-	}
-	if s.Library && s.Module == "" {
-		return fmt.Errorf("editor: a library export needs the import path of its folder")
-	}
-	if e.doc.Export == s {
-		return nil
-	}
-	e.apply(func() bool {
-		e.doc.Export = s
-		return true
-	})
-	return nil
 }

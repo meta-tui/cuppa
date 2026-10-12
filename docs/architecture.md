@@ -43,7 +43,6 @@ The rationale is in [ADR 0001](adr/0001-headless-engine-and-adapters.md).
 | `document` | `design` | The model: a canvas and nodes in z-order. No behaviour beyond its own invariants. |
 | `catalog` | `definition`, `registry`, `standard` | What a component is (id, family, default size, property schema, import path, status), a lookup, and the shipped entries. |
 | `layout` | `expr` | Size expressions (`50%`, `100% - 10`, `min(50%, 40)`) resolved to whole cells for a parent size. See [ADR 0006](adr/0006-responsive-layout.md). |
-| `export` (screens) | `gosource` | `GenerateScreens` writes a design as a Go package of data-agnostic screens: contract (bound inputs, events), view and handle. See [ADR 0007](adr/0007-screen-contracts.md). |
 | `canvas` | `editor`, `hittest`, `snap` | Intent-based editing with snapshot undo/redo; hit testing and resize handles; alignment snapping. |
 | `render` | `grid`, `scene` | Turns a document into a grid of styled cells. The one place that uses Lip Gloss. |
 | `cuppafile` | `format`, `disk` | The binary + JSON codec with migrations; atomic file read and write. |

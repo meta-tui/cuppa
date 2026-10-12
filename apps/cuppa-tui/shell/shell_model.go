@@ -154,7 +154,6 @@ func New(cat *registry.Registry) *Model {
 			}
 		})
 	}, m.flow.Notice)
-	m.pg.SetStates(m.flow.PageStates)
 	return m
 }
 
@@ -363,12 +362,6 @@ func (m *Model) perform(a menubar.Action) {
 		m.flow.ExportText(true)
 	case menubar.ExportText:
 		m.flow.ExportText(false)
-	case menubar.ExportGo:
-		m.flow.ExportGoSource()
-	case menubar.ExportCheck:
-		m.flow.CheckGoExport()
-	case menubar.ExportScreens:
-		m.flow.ExportScreen()
 	case menubar.HelpShortcuts:
 		m.flow.Notice("Shortcuts", shortcutsText(m.command))
 	case menubar.HelpAbout:

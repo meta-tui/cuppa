@@ -43,7 +43,6 @@ type Model struct {
 	ed     *editor.Editor
 	ask    Asker
 	report Reporter
-	states States
 
 	// open says the list is shown; at is the row the keyboard is on.
 	open  bool
@@ -54,13 +53,6 @@ type Model struct {
 	// box is where the list was drawn, in screen cells.
 	boxX, boxY, boxW, boxH int
 }
-
-// States says, for each page name, how its exported Go files compare with the
-// design ("current", "changed", "new"); nil when the design has no export.
-type States func() map[string]string
-
-// SetStates sets where the list gets the export state of the pages.
-func (m *Model) SetStates(s States) { m.states = s }
 
 // New returns the bar for an editor.
 func New(ed *editor.Editor) *Model { return &Model{ed: ed} }
@@ -140,21 +132,6 @@ func (m *Model) build() {
 	m.items = m.items[:0]
 	m.at = 0
 	onMaster := m.ed.OnMaster()
-	// What the last export did to each page: ✓ current, ● changed since, + not
-	// exported. Worked out when the list opens, not on every redraw.
-	marks := map[string]string{}
-	if m.states != nil {
-		for page, st := range m.states() {
-			switch st {
-			case "current":
-				marks[page] = "  ✓"
-			case "changed":
-				marks[page] = "  ●"
-			case "new":
-				marks[page] = "  +"
-			}
-		}
-	}
 	add := func(i int) {
 		page := i
 		if i == cur {
@@ -164,42 +141,10 @@ func (m *Model) build() {
 		if i == m.ed.MasterPage() {
 			label = "◆ " + label
 		}
-		m.items = append(m.items, item{label: label + marks[names[i]], current: i == cur, act: func() { m.ed.SwitchPage(page) }})
+		m.items = append(m.items, item{label: label, current: i == cur, act: func() { m.ed.SwitchPage(page) }})
 	}
-	// Pages that have a folder are listed under it, so a design of many pages
-	// is as easy to read as the folders its export makes.
-	grouped := false
 	for i := range names {
-		if m.ed.PageFolder(i) != "" {
-			grouped = true
-		}
-	}
-	if !grouped {
-		for i := range names {
-			add(i)
-		}
-	} else {
-		var order []string
-		members := map[string][]int{}
-		for i := range names {
-			g := "pages"
-			if f := m.ed.PageFolder(i); f != "" {
-				g, _, _ = strings.Cut(f, "/")
-			}
-			if i == m.ed.MasterPage() {
-				g = "master"
-			}
-			if _, ok := members[g]; !ok {
-				order = append(order, g)
-			}
-			members[g] = append(members[g], i)
-		}
-		for _, g := range order {
-			m.items = append(m.items, item{separator: true, heading: g + "/"})
-			for _, i := range members[g] {
-				add(i)
-			}
-		}
+		add(i)
 	}
 	m.items = append(m.items,
 		item{separator: true},
@@ -212,7 +157,6 @@ func (m *Model) build() {
 				m.report("Cannot delete page", err.Error())
 			}
 		}},
-		item{label: "Folder…", disabled: onMaster, act: func() { m.folder(cur) }},
 	)
 	// The master page (ADR 0015): the components every page shows.
 	switch {
@@ -243,30 +187,6 @@ func (m *Model) rename(i int) {
 	m.ask("Rename page", names[i], func(value string) {
 		if err := m.ed.RenamePage(i, value); err != nil && m.report != nil {
 			m.report("Cannot rename page", strings.TrimPrefix(err.Error(), "editor: "))
-		}
-	})
-}
-
-// folder asks for the folder an export keeps the page in.
-func (m *Model) folder(i int) {
-	if m.ask == nil {
-		return
-	}
-	title := "Folder of the page (empty: pages/<page>)"
-	seen := map[string]bool{}
-	var known []string
-	for j := range m.ed.PageNames() {
-		if f := m.ed.PageFolder(j); f != "" && !seen[f] {
-			seen[f] = true
-			known = append(known, f)
-		}
-	}
-	if len(known) > 0 {
-		title += ". In use: " + strings.Join(known, ", ")
-	}
-	m.ask(title, m.ed.PageFolder(i), func(value string) {
-		if err := m.ed.SetPageFolder(i, value); err != nil && m.report != nil {
-			m.report("Cannot set the folder", strings.TrimPrefix(err.Error(), "editor: "))
 		}
 	})
 }

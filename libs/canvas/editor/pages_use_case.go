@@ -282,3 +282,19 @@ func (e *Editor) SetExportSettings(s design.ExportSettings) error {
 	})
 	return nil
 }
+
+// RunSettings is how the design says to run the application it draws.
+func (e *Editor) RunSettings() design.RunSettings { return e.doc.Run }
+
+// SetRunSettings records how to run the application, as one undo step. An
+// empty command removes the settings.
+func (e *Editor) SetRunSettings(s design.RunSettings) {
+	s = s.Clean()
+	if e.doc.Run.Equal(s) {
+		return
+	}
+	e.apply(func() bool {
+		e.doc.Run = s
+		return true
+	})
+}

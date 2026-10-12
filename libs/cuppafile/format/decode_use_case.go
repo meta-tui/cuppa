@@ -75,6 +75,7 @@ func normalise(doc design.Document) design.Document {
 	doc.Nodes = nodes
 	doc = cleanPages(doc)
 	doc.Export = doc.Export.Clean()
+	doc.Run = doc.Run.Clean()
 	if doc.IsPaged() {
 		for i := range doc.Pages {
 			if i == doc.Page {

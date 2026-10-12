@@ -59,6 +59,9 @@ type Document struct {
 	// Export says where the Go source of the design goes; empty until the
 	// person exports it.
 	Export ExportSettings `json:"export,omitzero"`
+	// Run says how to run the application the design draws, to host it next to
+	// the editor; empty until the person sets it.
+	Run RunSettings `json:"run,omitzero"`
 	// Folder is the folder of the page this screen is, set by Screens; it is
 	// not part of a design's file.
 	Folder string `json:"-"`

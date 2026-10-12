@@ -12,6 +12,10 @@ import (
 
 func fmtSscan(s string, n *int) (int, error) { return fmt.Sscan(strings.TrimSpace(s), n) }
 
+// GridOf paints a styled string (a program's screen as the terminal emulator
+// renders it) onto a grid of w by h cells, keeping its colours.
+func GridOf(view string, w, h int) *grid.Grid { return gridOf(view, w, h) }
+
 // gridOf paints a styled string (what a Bubbles View returns) onto a grid of
 // the given size, keeping colours and bold or faint text. Every cell is
 // painted, so the component covers whatever is below it.

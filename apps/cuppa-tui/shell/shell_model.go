@@ -23,6 +23,7 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/palette"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/preview"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/runpane"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/stage"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/themepicker"
@@ -73,6 +74,12 @@ type Model struct {
 	// commands it asked for until Update returns them.
 	run          *preview.Session
 	pending      []tea.Cmd
+	// host is the application the design draws, built and running; hosting is
+	// true while the stage shows it, and hostStale that it was running before
+	// the design was saved again.
+	host      *runpane.Model
+	hosting   bool
+	hostStale bool
 	// live is the running application the designer shows the values of.
 	live *liveconn.Conn
 	// liveStates are the latest values of each page, so a preview that starts
@@ -146,6 +153,7 @@ func New(cat *registry.Registry) *Model {
 	m.flow.SetOnLoad(m.adoptEmbedded)
 	m.ins.BindSnap(m.stg.Snap, m.stg.SetSnap)
 	m.ins.BindPreview(m.Previewing, func(on bool) {
+		m.hideHost()
 		if on != m.Previewing() {
 			m.togglePreview()
 		}
@@ -237,6 +245,8 @@ func (m *Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 	switch msg := msg.(type) {
+	case runpane.BuiltMsg, runpane.ChangedMsg:
+		m.hostMessage(msg)
 	case tea.WindowSizeMsg:
 		m.resize(msg.Width, msg.Height)
 	case tea.MouseClickMsg:
@@ -320,15 +330,22 @@ func (m *Model) perform(a menubar.Action) {
 	if !keepsPreview(a) {
 		m.stopPreview()
 	}
+	if !keepsHost(a) {
+		m.stopHost()
+	}
 	switch a {
 	case menubar.ViewPreview:
+		m.hideHost()
 		m.togglePreview()
+	case menubar.ViewRun:
+		m.toggleHost()
 	case menubar.FileNew:
 		m.flow.NewDesign()
 	case menubar.FileOpen:
 		m.flow.Open()
 	case menubar.FileSave:
 		m.flow.Save()
+		m.afterSave()
 	case menubar.FileSaveAs:
 		m.flow.SaveAs()
 	case menubar.FileQuit:
@@ -432,6 +449,10 @@ func toEvent(mouse tea.Mouse, phase pointer.Phase) pointer.Event {
 
 // mouse routes one pointer event to the pane that should handle it.
 func (m *Model) mouse(e pointer.Event) {
+	if m.hosting {
+		m.hostMouse(e)
+		return
+	}
 	if m.run != nil {
 		m.previewMouse(e)
 		return
@@ -550,23 +571,33 @@ func (m *Model) key(msg tea.KeyPressMsg) {
 		dlg.Key(k.Text, back, enter, esc)
 		return
 	}
+	if m.hosting && m.hostKey(msg) {
+		return
+	}
 	switch text {
 	case "ctrl+q":
 		m.flow.Quit()
 		return
 	case "ctrl+p":
+		m.hideHost()
 		m.togglePreview()
+		return
+	case "ctrl+r":
+		m.toggleHost()
 		return
 	case "ctrl+n":
 		m.stopPreview()
+		m.stopHost()
 		m.flow.NewDesign()
 		return
 	case "ctrl+o":
 		m.stopPreview()
+		m.stopHost()
 		m.flow.Open()
 		return
 	case "ctrl+s":
 		m.flow.Save()
+		m.afterSave()
 		return
 	case "ctrl+shift+s":
 		m.flow.SaveAs()
@@ -735,7 +766,7 @@ func (m *Model) render() string {
 	pal := append(m.tb.Lines(l.tools.W, false)[:l.tools.H], m.pal.Lines()...)
 	stg := append(m.contextLines(l.options.W), m.stg.Lines()...)
 	if l.pages.H > 0 {
-		stg = append(stg, m.pg.Line(l.pages.W, m.run != nil))
+		stg = append(stg, m.pg.Line(l.pages.W, m.run != nil || m.hosting))
 	}
 	ins := m.ins.Lines()
 	left, right := m.separator(leftDivider), m.separator(rightDivider)

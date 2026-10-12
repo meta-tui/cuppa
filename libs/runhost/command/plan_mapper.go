@@ -16,14 +16,11 @@ func PlanOf(s design.RunSettings, designDir string) (Plan, error) {
 	if !s.IsSet() {
 		return Plan{}, fmt.Errorf("runhost: the design does not say what to run")
 	}
-	dir := designDir
-	if s.Dir != "" {
-		dir = s.Dir
-		if !filepath.IsAbs(dir) {
-			dir = filepath.Join(designDir, dir)
-		}
+	dir := resolveDir(s.Dir, designDir)
+	buildDir := dir
+	if s.BuildDir != "" {
+		buildDir = resolveDir(s.BuildDir, designDir)
 	}
-	dir = filepath.Clean(dir)
 	env := make([]string, 0, len(s.Env))
 	for name, value := range s.Env {
 		env = append(env, name+"="+value)
@@ -36,7 +33,19 @@ func PlanOf(s design.RunSettings, designDir string) (Plan, error) {
 		OnSave: s.OnSave,
 	}
 	if len(s.Build) > 0 {
-		p.Build = &Command{Argv: s.Build, Dir: dir, Env: env}
+		p.Build = &Command{Argv: s.Build, Dir: buildDir, Env: env}
 	}
 	return p, nil
+}
+
+// resolveDir is dir made absolute against the folder of the design; empty is
+// that folder.
+func resolveDir(dir, designDir string) string {
+	if dir == "" {
+		return filepath.Clean(designDir)
+	}
+	if !filepath.IsAbs(dir) {
+		dir = filepath.Join(designDir, dir)
+	}
+	return filepath.Clean(dir)
 }

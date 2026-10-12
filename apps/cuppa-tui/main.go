@@ -8,6 +8,7 @@ import (
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/componentcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/designcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/packcmd"
+	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/runcmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/screenscmd"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/shell"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/standard"
@@ -23,6 +24,9 @@ func main() {
 	}
 	if len(os.Args) > 1 && os.Args[1] == "pack" {
 		os.Exit(packcmd.Run(os.Args[2:], os.Stdout, os.Stderr))
+	}
+	if len(os.Args) > 1 && os.Args[1] == "run" {
+		os.Exit(runcmd.Run(os.Args[2:], os.Stdout, os.Stderr))
 	}
 	if len(os.Args) > 1 && os.Args[1] == "screens" {
 		os.Exit(screenscmd.Run(os.Args[2:], os.Stdout, os.Stderr))

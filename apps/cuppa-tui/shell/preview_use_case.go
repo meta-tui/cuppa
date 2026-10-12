@@ -96,6 +96,12 @@ func (m *Model) previewKey(msg tea.KeyPressMsg) {
 	m.pending = append(m.pending, cmd)
 }
 
+// keepsHost is true for menu actions that leave the running application
+// alone.
+func keepsHost(a menubar.Action) bool {
+	return a == menubar.ViewRun || a == menubar.FileSave || keepsPreview(a)
+}
+
 // takePending returns the commands the preview asked for since the last call.
 func (m *Model) takePending() tea.Cmd {
 	cmds := m.pending

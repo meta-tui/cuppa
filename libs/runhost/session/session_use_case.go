@@ -1,3 +1,5 @@
+//go:build !js
+
 // Package session runs a program in a pseudo-terminal and keeps its screen.
 package session
 

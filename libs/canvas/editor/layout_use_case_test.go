@@ -137,26 +137,3 @@ func must(t *testing.T, err error) {
 		t.Fatal(err)
 	}
 }
-
-func TestRuntimeBehavioursAreUndoableAndRefusedWhenLocked(t *testing.T) {
-	e := newEditor()
-	id := mustAdd(t, e, "lipgloss.box", 0, 0)
-	if !e.SetDraggable(id, true) || !e.SetResizable(id, true) {
-		t.Fatal("refused")
-	}
-	n, _ := e.Document().Get(id)
-	if !n.Draggable || !n.Resizable {
-		t.Fatalf("flags = %+v", n)
-	}
-	if e.SetDraggable(id, true) {
-		t.Fatal("no change is not a step")
-	}
-	e.Undo()
-	if n, _ := e.Document().Get(id); n.Resizable || !n.Draggable {
-		t.Fatalf("undo: %+v", n)
-	}
-	e.SetLocked(id, true)
-	if e.SetResizable(id, true) {
-		t.Fatal("locked layer accepted a flag")
-	}
-}

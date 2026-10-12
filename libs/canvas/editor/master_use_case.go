@@ -2,7 +2,6 @@ package editor
 
 import (
 	"fmt"
-	"sort"
 
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
@@ -144,70 +143,4 @@ func (e *Editor) RenderDocument() design.Document {
 		}
 	}
 	return doc
-}
-
-// MasterInputs are the inputs the master's components that this page shows
-// bind a property to, in name order: the ones whose text a page can have of
-// its own.
-func (e *Editor) MasterInputs() []string {
-	if e.doc.MasterIndex() < 0 || e.OnMaster() {
-		return nil
-	}
-	seen := map[string]bool{}
-	var out []string
-	for _, n := range e.doc.ShownMaster(e.doc.ActivePage()) {
-		for _, input := range n.Bind {
-			if !seen[input] {
-				seen[input] = true
-				out = append(out, input)
-			}
-		}
-	}
-	sort.Strings(out)
-	return out
-}
-
-// PageValue is the text the page being edited gives a master input, if it
-// gives one.
-func (e *Editor) PageValue(input string) (string, bool) {
-	if !e.doc.IsPaged() {
-		return "", false
-	}
-	v, ok := e.doc.Pages[e.doc.ActivePage()].Values[input]
-	return v, ok
-}
-
-// SetPageValue gives the page being edited its own text for a master input, as
-// one undo step; an empty value goes back to the master's.
-func (e *Editor) SetPageValue(input, value string) error {
-	if !design.ValidInputName(input) {
-		return fmt.Errorf("editor: %q is not an input name", input)
-	}
-	if !e.doc.IsPaged() || e.doc.MasterIndex() < 0 || e.OnMaster() {
-		return fmt.Errorf("editor: only a page of a design with a master has values for it")
-	}
-	if len(value) > 500 {
-		return fmt.Errorf("editor: a value is at most 500 characters")
-	}
-	if cur, ok := e.PageValue(input); ok && cur == value || !ok && value == "" {
-		return nil
-	}
-	e.apply(func() bool {
-		page := &e.doc.Pages[e.doc.ActivePage()]
-		values := make(map[string]string, len(page.Values)+1)
-		for k, v := range page.Values {
-			values[k] = v
-		}
-		if value == "" {
-			delete(values, input)
-		} else {
-			values[input] = value
-		}
-		if len(values) == 0 {
-			values = nil
-		}
-		page.Values = values
-		return true
-	})
-	return nil
 }

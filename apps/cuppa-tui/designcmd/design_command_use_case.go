@@ -22,11 +22,10 @@ const usage = `usage:
   cuppa design merge <a.cuppa> <b.cuppa>... -o <out.cuppa>   one design with a page per design
 
 A design is {"document": {"name", "width", "height", "background", "theme",
-"keys", "nodes": [...]}}. A node has "id", "component" (see "cuppa pack
-catalog"), "name", "rect" {"X","Y","W","H"}, "props" (string values), and for
-screens "bind" (property key -> input name), "showIf" and "event"; "layout"
-holds expressions such as {"w": "100% - 4", "y": "100% - 2"}. Unknown fields
-and unknown properties are refused.
+"nodes": [...]}}. A node has "id", "component" (see "cuppa pack catalog"),
+"name", "rect" {"X","Y","W","H"} and "props" (string values); "layout" holds
+expressions such as {"w": "100% - 4", "y": "100% - 2"}. Unknown fields and
+unknown properties are refused.
 `
 
 // Run executes "cuppa design" with the arguments after the word design and
@@ -162,11 +161,6 @@ func problemsOf(doc design.Document) []string {
 			for key := range n.Props {
 				if _, ok := def.Prop(key); !ok {
 					out = append(out, fmt.Sprintf("%s: %s has no property %q", n.Name, n.Component, key))
-				}
-			}
-			for key := range n.Bind {
-				if _, ok := def.Prop(key); !ok {
-					out = append(out, fmt.Sprintf("%s: cannot bind %q, %s has no such property", n.Name, key, n.Component))
 				}
 			}
 			if n.Rect.W < def.MinSize.W || n.Rect.H < def.MinSize.H {

@@ -1,6 +1,6 @@
 # 8. Row templates for bound lists
 
-Status: accepted and built (#176).
+Status: superseded by ADR 0017 (removed in #271)
 
 ## Context
 

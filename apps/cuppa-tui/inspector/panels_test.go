@@ -68,18 +68,18 @@ func TestPanelsStayPutWhenTheSelectionChanges(t *testing.T) {
 
 func TestClickingAHeaderClosesAndOpensItsPanel(t *testing.T) {
 	m, _, _ := setup(t, "lipgloss.box")
-	if rowOf(plainLines(m), "[ ] Draggable") < 0 {
-		t.Fatal("Behaviour starts open")
+	if rowOf(plainLines(m), "Border color") < 0 {
+		t.Fatal("Properties starts open")
 	}
-	clickText(t, m, "▾ Behaviour", "Behaviour")
+	clickText(t, m, "▾ Properties", "Properties")
 	m.Handle(pointer.Event{Phase: pointer.Up, Left: true})
 	lines := plainLines(m)
-	if rowOf(lines, "[ ] Draggable") >= 0 || rowOf(lines, "▸ Behaviour") < 0 {
-		t.Fatalf("Behaviour should be closed:\n%s", strings.Join(lines, "\n"))
+	if rowOf(lines, "Border color") >= 0 || rowOf(lines, "▸ Properties") < 0 {
+		t.Fatalf("Properties should be closed:\n%s", strings.Join(lines, "\n"))
 	}
-	clickText(t, m, "▸ Behaviour", "Behaviour")
+	clickText(t, m, "▸ Properties", "Properties")
 	m.Handle(pointer.Event{Phase: pointer.Up, Left: true})
-	if rowOf(plainLines(m), "[ ] Draggable") < 0 {
+	if rowOf(plainLines(m), "Border color") < 0 {
 		t.Fatal("clicking again opens it")
 	}
 }
@@ -91,13 +91,13 @@ func TestDraggingAHeaderResizesThePanelAboveIt(t *testing.T) {
 		m.state(id).want = panelDefaults[id].want
 	}
 	lines := plainLines(m)
-	props, arrange := rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Behaviour")
+	props, arrange := rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Layers")
 	before := arrange - props - 1
 	m.Handle(pointer.Event{X: 3, Y: arrange, Phase: pointer.Down, Left: true})
 	m.Handle(pointer.Event{X: 3, Y: arrange + 2, Phase: pointer.Move, Held: true})
 	m.Handle(pointer.Event{X: 3, Y: arrange + 2, Phase: pointer.Up, Left: true})
 	lines = plainLines(m)
-	props, arrange = rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Behaviour")
+	props, arrange = rowOf(lines, "▾ Properties"), rowOf(lines, "▾ Layers")
 	if got := arrange - props - 1; got != before+2 {
 		t.Fatalf("Properties is %d rows tall, want %d", got, before+2)
 	}
@@ -198,25 +198,5 @@ func TestAComponentCanGoToAnotherPageFromTheBehaviourPanel(t *testing.T) {
 	clickText(t, m, "Settings", "Settings")
 	if n, _ := ed.Document().Get(id); n.Goto != "Settings" {
 		t.Fatalf("goto = %q (message %q)", n.Goto, m.message)
-	}
-}
-
-func TestLayoutInputsReadByExpressionsGetSampleValues(t *testing.T) {
-	m, ed, id := setup(t, "lipgloss.box")
-	if err := ed.SetLayout(id, "w", "$LeftWidth"); err != nil {
-		t.Fatal(err)
-	}
-	ed.Clear()
-	m.Lines()
-	clickText(t, m, "LeftWidth", "0 (set)")
-	for _, r := range "38" {
-		m.Key(string(r), false, false, false)
-	}
-	m.Key("", false, true, false)
-	if got := ed.Samples()["LeftWidth"]; got != "38" {
-		t.Fatalf("samples = %v (message %q)", ed.Samples(), m.message)
-	}
-	if n, _ := ed.Document().Get(id); n.Rect.W != 38 {
-		t.Errorf("the box follows the sample: width %d", n.Rect.W)
 	}
 }

@@ -47,15 +47,6 @@ func (m *Model) themePanel(b *builder) {
 	b.text(" " + theme.Faded("they set their own.")).end()
 }
 
-// keysPanel is the keys the exported screen raises events for.
-func (m *Model) keysPanel(b *builder) {
-	keys := design.FormatKeys(m.ed.Document().Keys)
-	b.text(" ")
-	m.editable(b, "keys", keys, keys)
-	b.end()
-	b.text(" " + theme.Faded("key=Event:label, ...")).end()
-}
-
 // displayPanel is the effects over the canvas and how the terminal is shown.
 func (m *Model) displayPanel(b *builder) {
 	doc := m.ed.Document()

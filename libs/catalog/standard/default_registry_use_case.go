@@ -16,7 +16,7 @@ func All() []definition.Definition {
 	defs = append(defs, ntchartsEntries()...)
 	defs = append(defs, communityEntries()...)
 	defs = append(defs, communityWidgetEntries()...)
-	return withPorts(withRoles(defs))
+	return withRoles(defs)
 }
 
 // Default builds the registry of shipped components. It panics if the shipped

@@ -14,11 +14,7 @@ const (
 	panelCanvas     panelID = "canvas"
 	panelTheme      panelID = "theme"
 	panelColours    panelID = "colours"
-	panelKeys       panelID = "keys"
 	panelDisplay    panelID = "display"
-	panelInputs     panelID = "inputs"
-	panelMasterText panelID = "mastertext"
-	panelAppDefaults  panelID = "appdefaults"
 	panelLayers     panelID = "layers"
 )
 
@@ -43,11 +39,7 @@ var panelDefaults = map[panelID]panelDefault{
 	panelCanvas:     {want: 5, min: 2},
 	panelTheme:      {want: 8, min: 3},
 	panelColours:    {want: 6, min: 2, closed: true},
-	panelKeys:       {want: 3, min: 2, closed: true},
 	panelDisplay:    {want: 8, min: 3},
-	panelInputs:     {want: 4, min: 2},
-	panelMasterText: {want: 4, min: 2},
-	panelAppDefaults:  {want: 4, min: 2, closed: true},
 	panelLayers:     {want: 8, min: 3},
 }
 

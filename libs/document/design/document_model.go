@@ -2,7 +2,6 @@ package design
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 )
 
@@ -32,30 +31,13 @@ type Document struct {
 	// part of an export: an export keeps the terminal's own colours.
 	Light bool `json:"light,omitempty"`
 	Effects  Effects `json:"effects,omitempty"`
-	// Keys are the keys of the screen: each raises an event when the design is
-	// exported as a screen (ADR 0007).
-	Keys []KeyBinding `json:"keys,omitempty"`
 	// Embedded are copies of the user-made components the design uses, so it
 	// still draws on a computer without their packs.
 	Embedded []Embedded `json:"components,omitempty"`
 	// Pages split the design into the screens of an application; Page is the
 	// one being edited, whose components are Nodes. Empty for a design with
 	// one page. See ADR 0012.
-	// Samples give the inputs that only a layout expression or a condition
-	// reads a value to preview with, so the designer and the exported
-	// DefaultProps show the screen as it is meant to look: input name to a
-	// number ("38"). An input a property is bound to keeps that property's
-	// value.
-	Samples map[string]string `json:"samples,omitempty"`
-	// Defaults are the values the exported Default<Screen>Props starts from,
-	// input name to text, where the application wants another than the one the
-	// design shows (an optional part hidden, a layout-only input neutral). The
-	// designer keeps previewing the design's own values.
-	Defaults map[string]string `json:"defaults,omitempty"`
-	Pages    []Page            `json:"pages,omitempty"`
-	// PerPage says each page keeps its own samples and keys. A design saved
-	// without it had one set of each for every page.
-	PerPage bool `json:"perPage,omitempty"`
+	Pages []Page `json:"pages,omitempty"`
 	Page  int    `json:"page,omitempty"`
 	// Seq is the counter behind generated node ids; it only ever grows.
 	Seq int `json:"seq"`
@@ -166,25 +148,16 @@ func (d Document) Clone() Document {
 		nodes[i] = n.Clone()
 	}
 	d.Nodes = nodes
-	if d.Samples != nil {
-		samples := make(map[string]string, len(d.Samples))
-		for k, v := range d.Samples {
-			samples[k] = v
-		}
-		d.Samples = samples
-	}
-	d.Defaults = cloneSamples(d.Defaults)
 	if d.Pages != nil {
 		pages := make([]Page, len(d.Pages))
 		for i, p := range d.Pages {
-			pages[i] = Page{Name: p.Name, Samples: cloneSamples(p.Samples), Defaults: cloneSamples(p.Defaults), Keys: append([]KeyBinding(nil), p.Keys...), Master: p.Master, Hide: append([]NodeID(nil), p.Hide...), Values: cloneSamples(p.Values)}
+			pages[i] = Page{Name: p.Name, Master: p.Master, Hide: append([]NodeID(nil), p.Hide...)}
 			for _, n := range p.Nodes {
 				pages[i].Nodes = append(pages[i].Nodes, n.Clone())
 			}
 		}
 		d.Pages = pages
 	}
-	d.Keys = append([]KeyBinding(nil), d.Keys...)
 	d.Theme.Palette = append([]Swatch(nil), d.Theme.Palette...)
 	if d.Embedded != nil {
 		emb := make([]Embedded, len(d.Embedded))
@@ -277,27 +250,4 @@ func (d *Document) moveTo(id NodeID, to int) bool {
 	d.Nodes = append(d.Nodes[:from], d.Nodes[from+1:]...)
 	d.Nodes = append(d.Nodes[:to], append([]Node{n}, d.Nodes[to:]...)...)
 	return true
-}
-
-// SampleNumber reads a sample value: a number, or true and false as 1 and 0.
-func SampleNumber(value string) (float64, bool) {
-	switch strings.ToLower(strings.TrimSpace(value)) {
-	case "true":
-		return 1, true
-	case "false":
-		return 0, true
-	}
-	f, err := strconv.ParseFloat(strings.TrimSpace(value), 64)
-	return f, err == nil
-}
-
-func cloneSamples(m map[string]string) map[string]string {
-	if m == nil {
-		return nil
-	}
-	out := make(map[string]string, len(m))
-	for k, v := range m {
-		out[k] = v
-	}
-	return out
 }

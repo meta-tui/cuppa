@@ -128,28 +128,3 @@ func sameOrder(a, b []design.NodeID) bool {
 	}
 	return true
 }
-
-// SetDraggable lets the person using the exported program move the component
-// with the mouse (or not), as one undo step. A locked layer refuses.
-func (e *Editor) SetDraggable(id design.NodeID, on bool) bool {
-	n, ok := e.doc.Get(id)
-	if !ok || n.Locked || n.Draggable == on {
-		return false
-	}
-	return e.apply(func() bool {
-		return e.doc.Update(id, func(n *design.Node) { n.Draggable = on })
-	})
-}
-
-// SetResizable lets the person using the exported program resize the component
-// by dragging its bottom-right corner (or not), as one undo step. A locked
-// layer refuses.
-func (e *Editor) SetResizable(id design.NodeID, on bool) bool {
-	n, ok := e.doc.Get(id)
-	if !ok || n.Locked || n.Resizable == on {
-		return false
-	}
-	return e.apply(func() bool {
-		return e.doc.Update(id, func(n *design.Node) { n.Resizable = on })
-	})
-}

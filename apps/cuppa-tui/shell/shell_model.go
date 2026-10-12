@@ -144,7 +144,6 @@ func New(cat *registry.Registry) *Model {
 		}
 	})
 	m.ins.BindColorPicker(m.pickColor)
-	m.ins.BindAsker(m.askQuestion)
 	m.ins.BindThemePicker(m.pickTheme)
 	m.tb.BindColorPicker(m.pickColor)
 	m.pg.Bind(func(title, initial string, then func(string)) {
@@ -350,8 +349,6 @@ func (m *Model) perform(a menubar.Action) {
 		m.saveAsComponent()
 	case menubar.EditPacks:
 		m.openPacks()
-	case menubar.ViewVariables:
-		m.openVariables()
 	case menubar.ExportPNG:
 		m.flow.ExportImage(image.PNG)
 	case menubar.ExportSVG:

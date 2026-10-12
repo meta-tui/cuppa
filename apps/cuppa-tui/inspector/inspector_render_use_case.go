@@ -3,14 +3,12 @@ package inspector
 import (
 	"github.com/meta-ui-labs/cuppa/libs/document/container"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 
 	"charm.land/lipgloss/v2"
 	"github.com/charmbracelet/x/ansi"
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/theme"
-	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
@@ -181,27 +179,18 @@ func (m *Model) panelSpecs() []panelSpec {
 			{id: panelCanvas, title: "Canvas", fill: m.canvasPanel},
 			{id: panelTheme, title: "Theme", fill: m.themePanel},
 			{id: panelColours, title: "Named colours", fill: func(b *builder) { m.paletteRows(b, m.ed.Document()) }},
-			{id: panelKeys, title: "Screen keys", fill: m.keysPanel},
 			{id: panelDisplay, title: "Display", fill: m.displayPanel},
-		}
-		if len(m.layoutInputs()) > 0 {
-			specs = append(specs, panelSpec{id: panelInputs, title: "Layout inputs", fill: m.inputsPanel})
-		}
-		if len(m.ed.InputNames()) > 0 {
-			specs = append(specs, panelSpec{id: panelAppDefaults, title: "App defaults", fill: m.appDefaultsPanel})
-		}
-		if len(m.ed.MasterInputs()) > 0 {
-			specs = append(specs, panelSpec{id: panelMasterText, title: "Master text", fill: m.masterTextPanel})
 		}
 		return append(specs, layers)
 	case len(m.ed.Selected()) > 1:
 		return []panelSpec{layers}
 	}
-	return []panelSpec{
-		{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }},
-		{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }},
-		layers,
+	specs := []panelSpec{{id: panelProperties, title: "Properties", fill: func(b *builder) { m.properties(b, n) }}}
+	if len(m.ed.PageNames()) > 1 {
+		// What a click does is only a choice when there is a page to go to.
+		specs = append(specs, panelSpec{id: panelBehaviour, title: "Behaviour", fill: func(b *builder) { m.behaviourPanel(b, n) }})
 	}
+	return append(specs, layers)
 }
 
 // panelHeader is the line that names a panel: an arrow that says whether it
@@ -272,11 +261,8 @@ func (m *Model) messageRow(b *builder) {
 	}
 }
 
-// behaviourPanel is what the person using the exported program may do with
-// the component, and when it is shown and what a click on it raises.
+// behaviourPanel is what a click on the component does in the preview.
 func (m *Model) behaviourPanel(b *builder, n design.Node) {
-	m.behaviourRows(b, n)
-	m.screenRows(b, n)
 	m.gotoRow(b, n)
 }
 
@@ -294,7 +280,6 @@ func (m *Model) editable(b *builder, field, value, initial string) {
 
 // properties lists the component-specific properties from the catalog schema.
 func (m *Model) properties(b *builder, n design.Node) {
-	m.changeRow(b, n)
 	m.pageRows(b, n)
 	if n.Locked {
 		b.text(" " + theme.Faded("Locked: unlock it in Layers to edit")).end()
@@ -324,57 +309,7 @@ func (m *Model) properties(b *builder, n design.Node) {
 				m.swatchRow(b, n, p)
 			}
 		}
-		m.bindRow(b, n, p.Key)
 	}
-}
-
-// bindRow shows the screen input a property is bound to. Pressing it opens
-// the inputs the design already has, to bind to one of them, unbind, or type
-// a new name.
-func (m *Model) bindRow(b *builder, n design.Node, key string) {
-	field := "bind:" + key
-	b.text("  " + theme.Faded("⇄ "))
-	if m.editing == field {
-		b.text(m.buf + "█").end()
-		return
-	}
-	name := n.Bind[key]
-	shown := name
-	if shown == "" {
-		shown = "input…"
-	}
-	var items []menuItem
-	if name != "" {
-		items = append(items, menuItem{label: "(none)", act: func() { m.apply(field, "") }})
-	}
-	seen := map[string]bool{}
-	for _, v := range m.ed.Variables() {
-		if v.Kind != editor.VarInput || seen[v.Name] {
-			continue
-		}
-		seen[v.Name] = true
-		vn := v.Name
-		items = append(items, menuItem{label: vn, current: vn == name, act: func() { m.apply(field, vn) }})
-	}
-	label := "+ New input…"
-	if name != "" {
-		label = "✎ Rename…"
-	}
-	items = append(items, menuItem{label: label, act: func() { m.startEdit(field, name) }})
-	m.selectRow(b, shown, "Bind to input", items, nil)
-	b.end()
-}
-
-// screenRows are the two things a component says about the screen it is part
-// of when the design is exported as a screen: when it is shown and what a
-// click on it raises.
-func (m *Model) screenRows(b *builder, n design.Node) {
-	b.text(" ").add(theme.Dim("Show if "), nil)
-	m.editable(b, "showif", n.ShowIf, n.ShowIf)
-	b.end()
-	b.text(" ").add(theme.Dim("On click"), nil)
-	m.editable(b, "event", n.Event, n.Event)
-	b.end()
 }
 
 // textProp shows a text property wrapped to the pane; clicking any line edits it.
@@ -458,43 +393,6 @@ func (m *Model) themeMark(b *builder, id design.NodeID, p definition.PropSpec, o
 		return
 	}
 	b.text(" ").add(theme.Button("[theme]", true), func() { m.ed.ClearProp(id, p.Key) })
-}
-
-// behaviourRows are the two things the person using the exported program may
-// do with the component.
-func (m *Model) behaviourRows(b *builder, n design.Node) {
-	mark := func(on bool, label string) string {
-		if on {
-			return "[x] " + label
-		}
-		return "[ ] " + label
-	}
-	b.text(" ").add(theme.Button(mark(n.Draggable, "Draggable"), !n.Locked), func() { m.ed.SetDraggable(n.ID, !n.Draggable) }).end()
-	b.text(" ").add(theme.Button(mark(n.Resizable, "Resizable"), !n.Locked), func() { m.ed.SetResizable(n.ID, !n.Resizable) }).end()
-}
-
-// changeRow offers the components that can take this one's place without
-// losing the variables bound to it (a text input for a colour picker, tabs for
-// dialog buttons). Choosing one in the list changes the component; the change
-// is one undo step and keeps name, place, bindings and the values that are
-// valid for the new component.
-func (m *Model) changeRow(b *builder, n design.Node) {
-	options := m.ed.ChangeOptions(n.ID)
-	if len(options) == 0 || n.Locked {
-		return
-	}
-	items := make([]menuItem, len(options))
-	for i, d := range options {
-		id := d.ID
-		items[i] = menuItem{label: d.Name, act: func() {
-			_, err := m.ed.ChangeComponent(n.ID, id, false)
-			m.report(err)
-		}}
-	}
-	b.text(" ").add(theme.Dim("Change "), nil)
-	m.selectRow(b, "Replace with", "Replace with (keeps variables)", items, nil)
-	b.end()
-	b.text("  " + theme.Faded("keeps its variables")).end()
 }
 
 // swatchRow shows which named colour a colour property uses and lists the
@@ -616,89 +514,3 @@ func (m *Model) gotoRow(b *builder, n design.Node) {
 	b.end()
 }
 
-// layoutInputs are the names the panel lists: the inputs that expressions and
-// conditions read with no property bound to them, and the ones that already
-// have a sample.
-func (m *Model) layoutInputs() []string {
-	names := m.ed.ReadInputs()
-	seen := map[string]bool{}
-	for _, n := range names {
-		seen[n] = true
-	}
-	for name := range m.ed.Samples() {
-		if !seen[name] {
-			names = append(names, name)
-		}
-	}
-	sort.Strings(names)
-	return names
-}
-
-// inputsPanel gives each such input the value the designer previews it with,
-// and the exported screen starts from: a number, or true and false. Click one
-// to type it; an empty value takes it away.
-func (m *Model) inputsPanel(b *builder) {
-	samples := m.ed.Samples()
-	for _, name := range m.layoutInputs() {
-		field := "sample:" + name
-		value, has := samples[name]
-		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
-		switch {
-		case m.editing == field:
-			b.text(m.buf + "█")
-		case has:
-			b.add(theme.Bold(value), func() { m.startEdit(field, value) })
-		default:
-			b.add(theme.Faded("0 (set)"), func() { m.startEdit(field, "") })
-		}
-		b.end()
-	}
-	b.text(" " + theme.Faded("read by expressions, not bound")).end()
-	m.messageRow(b)
-}
-
-// appDefaultsPanel gives each input the value the exported Default props start
-// from, where the application wants another than the one the design shows (an
-// optional part hidden, a layout-only input neutral). The designer keeps
-// previewing the design's own value. Click one to type it; "(empty)" starts the
-// input empty, and an empty entry takes the default away.
-func (m *Model) appDefaultsPanel(b *builder) {
-	defaults := m.ed.Defaults()
-	for _, name := range m.ed.InputNames() {
-		field := "default:" + name
-		value, has := defaults[name]
-		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
-		switch {
-		case m.editing == field:
-			b.text(m.buf + "█")
-		case has:
-			b.add(theme.Bold(theme.Fit(value, max(m.content()-b.x, 1))), func() { m.startEdit(field, value) })
-		default:
-			b.add(theme.Faded("(as designed)"), func() { m.startEdit(field, "") })
-		}
-		b.end()
-	}
-	b.text(" " + theme.Faded("what the app's Default props start from")).end()
-	m.messageRow(b)
-}
-
-// masterTextPanel gives the page its own text for each input the master binds a
-// property to, so each page previews and starts from its own title.
-func (m *Model) masterTextPanel(b *builder) {
-	for _, name := range m.ed.MasterInputs() {
-		field := "mvalue:" + name
-		value, has := m.ed.PageValue(name)
-		b.text(" " + theme.Dim(theme.Fit(name, 16)) + " ")
-		switch {
-		case m.editing == field:
-			b.text(m.buf + "█")
-		case has:
-			b.add(theme.Bold(theme.Fit(value, max(m.content()-b.x, 1))), func() { m.startEdit(field, value) })
-		default:
-			b.add(theme.Faded("(master's text)"), func() { m.startEdit(field, "") })
-		}
-		b.end()
-	}
-	b.text(" " + theme.Faded("this page's own text for the master")).end()
-	m.messageRow(b)
-}

@@ -114,8 +114,6 @@ func (p *parser) atom() (node, error) {
 		return x, nil
 	case c >= '0' && c <= '9' || c == '.':
 		return p.quantity()
-	case c == '$':
-		return p.input()
 	case c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z':
 		return p.function()
 	default:
@@ -157,9 +155,6 @@ func (p *parser) function() (node, error) {
 		p.pos++
 	}
 	name := strings.ToLower(p.src[start:p.pos])
-	if (name == "w" || name == "h") && p.peek() != '(' {
-		return windowDim{axis: name[0]}, nil
-	}
 	if field, ok := rectFunctions[name]; ok {
 		return p.rectRef(name, field)
 	}
@@ -187,27 +182,6 @@ func (p *parser) function() (node, error) {
 			return nil, fmt.Errorf("expected , or ) at %d", p.pos+1)
 		}
 	}
-}
-
-// input reads $Name or $"A name with spaces": a number or yes/no input of the
-// screen the expression is in.
-func (p *parser) input() (node, error) {
-	p.pos++ // $
-	if p.pos < len(p.src) && p.src[p.pos] == '"' {
-		name, err := p.quoted()
-		if err != nil {
-			return nil, err
-		}
-		return inputRef{name: name}, nil
-	}
-	start := p.pos
-	for p.pos < len(p.src) && (letterAfter(p.src, p.pos) || p.src[p.pos] >= '0' && p.src[p.pos] <= '9' || p.src[p.pos] == '_') {
-		p.pos++
-	}
-	if start == p.pos {
-		return nil, fmt.Errorf("an input name must follow $ at %d", start)
-	}
-	return inputRef{name: p.src[start:p.pos]}, nil
 }
 
 // rectFunctions are the functions that read the place of a component, with

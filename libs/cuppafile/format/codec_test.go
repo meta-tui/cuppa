@@ -2,6 +2,8 @@ package format
 
 import (
 	"bytes"
+	"compress/gzip"
+	"encoding/binary"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -274,38 +276,6 @@ func TestLayoutExpressionsRoundTrip(t *testing.T) {
 	}
 }
 
-func TestScreenContractRoundTripAndCleaning(t *testing.T) {
-	d := design.NewDocument("Colours", 80, 24)
-	d.Add(design.Node{Component: "lipgloss.label", Name: "Title", Rect: design.Rect{W: 20, H: 1},
-		Bind: map[string]string{"text": "Title"}, ShowIf: "Show title", Event: "Open"})
-	d.Keys = []design.KeyBinding{{Key: "s", Event: "Save", Label: "save"}}
-	data, err := Encode(d)
-	if err != nil {
-		t.Fatal(err)
-	}
-	got, err := Decode(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !reflect.DeepEqual(got, d) {
-		t.Fatalf("screen contract lost:\n got %+v\nwant %+v", got, d)
-	}
-
-	bad := design.NewDocument("Bad", 80, 24)
-	bad.Add(design.Node{Component: "lipgloss.label", Name: "x", Rect: design.Rect{W: 5, H: 1},
-		Bind: map[string]string{"text": "9 no"}, ShowIf: "!", Event: "1"})
-	bad.Keys = []design.KeyBinding{{Key: "", Event: "Save"}, {Key: "a", Event: "?"}, {Key: "b", Event: "Go"}}
-	data, _ = Encode(bad)
-	got, err = Decode(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	n := got.Nodes[0]
-	if n.Bind != nil || n.ShowIf != "" || n.Event != "" || len(got.Keys) != 1 || got.Keys[0].Key != "b" {
-		t.Fatalf("not cleaned: %+v keys %+v", n, got.Keys)
-	}
-}
-
 
 func TestPaletteRoundTripAndCleaning(t *testing.T) {
 	d := design.NewDocument("Colours", 40, 10)
@@ -332,26 +302,24 @@ func TestPaletteRoundTripAndCleaning(t *testing.T) {
 	}
 }
 
-// A show-if written as a condition survives a save and a load; one that does
-// not parse is dropped like an invalid name.
-func TestShowIfConditionsSurviveTheFile(t *testing.T) {
-	doc := design.NewDocument("c", 40, 10)
-	doc.Add(design.Node{Component: "lipgloss.label", Name: "Wide", Rect: design.Rect{W: 10, H: 1}, ShowIf: "w >= 100 && $Flag == 1"})
-	doc.Add(design.Node{Component: "lipgloss.label", Name: "Bare", Rect: design.Rect{Y: 2, W: 10, H: 1}, ShowIf: "$Flag"})
-	doc.Add(design.Node{Component: "lipgloss.label", Name: "Name", Rect: design.Rect{Y: 4, W: 10, H: 1}, ShowIf: "Show keys"})
-	doc.Add(design.Node{Component: "lipgloss.label", Name: "Broken", Rect: design.Rect{Y: 6, W: 10, H: 1}, ShowIf: "w >="})
-	data, err := Encode(doc)
+// A file made before screens had inputs and events still opens: the fields that
+// no longer exist are ignored.
+func TestAFileWithFieldsThatNoLongerExistStillOpens(t *testing.T) {
+	body := `{"document":{"name":"Old","width":40,"height":10,"keys":[{"key":"s","event":"Save"}],` +
+		`"samples":{"Rows":"3"},"defaults":{"A":"1"},"nodes":[{"id":"n1","component":"lipgloss.label","name":"L",` +
+		`"rect":{"X":0,"Y":0,"W":10,"H":1},"props":{"text":"Hi"},"bind":{"text":"Title"},"showIf":"Show",` +
+		`"event":"Open","draggable":true,"resizable":true}]}}`
+	var out bytes.Buffer
+	out.WriteString(Magic)
+	_ = binary.Write(&out, binary.BigEndian, CurrentVersion)
+	zw := gzip.NewWriter(&out)
+	_, _ = zw.Write([]byte(body))
+	_ = zw.Close()
+	doc, err := Decode(out.Bytes())
 	if err != nil {
 		t.Fatal(err)
 	}
-	got, err := Decode(data)
-	if err != nil {
-		t.Fatal(err)
-	}
-	want := []string{"w >= 100 && $Flag == 1", "$Flag", "Show keys", ""}
-	for i, n := range got.Nodes {
-		if n.ShowIf != want[i] {
-			t.Errorf("%s: show-if %q, want %q", n.Name, n.ShowIf, want[i])
-		}
+	if doc.Name != "Old" || len(doc.Nodes) != 1 || doc.Nodes[0].Props["text"] != "Hi" {
+		t.Fatalf("got %+v", doc)
 	}
 }

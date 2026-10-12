@@ -1,6 +1,6 @@
 # 10. Layout that reads inputs and other components
 
-Status: accepted and built (#194), from the MVD migration.
+Status: superseded by ADR 0017 (removed in #271)
 
 ## Context
 

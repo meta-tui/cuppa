@@ -25,7 +25,6 @@ const (
 	EditBackward   Action = "edit.backward"
 	EditToBack     Action = "edit.toback"
 	ViewPreview    Action = "view.preview"
-	ViewVariables  Action = "view.variables"
 	ExportPNG      Action = "export.png"
 	ExportSVG      Action = "export.svg"
 	ExportWebP     Action = "export.webp"
@@ -85,7 +84,6 @@ var menus = []menu{
 	}},
 	{"View", 'v', []item{
 		{"Preview design", "Ctrl+P", ViewPreview},
-		{"Variables…", "", ViewVariables},
 	}},
 	{"Export", 'x', []item{
 		{"Image (PNG)…", "", ExportPNG},

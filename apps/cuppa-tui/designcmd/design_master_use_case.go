@@ -78,17 +78,8 @@ func liftMaster(pages []design.Page, min int, base *design.Document) ([]design.N
 		var rest []design.Node
 		for _, n := range pages[i].Nodes {
 			key := liftKey(n)
-			if master, ok := liftedNode[key]; ok && !n.IsContainer() && n.In == "" && len(n.Children) == 0 && !have[key] {
+			if _, ok := liftedNode[key]; ok && !n.IsContainer() && n.In == "" && len(n.Children) == 0 && !have[key] {
 				have[key] = true
-				// A bound property keeps this page's own text as the page's value.
-				for prop, input := range n.Bind {
-					if n.Props[prop] != master.Props[prop] {
-						if pages[i].Values == nil {
-							pages[i].Values = map[string]string{}
-						}
-						pages[i].Values[input] = n.Props[prop]
-					}
-				}
 				continue
 			}
 			rest = append(rest, n)
@@ -143,12 +134,6 @@ func liftMaster(pages []design.Page, min int, base *design.Document) ([]design.N
 // rectangle of a component that has layout expressions, and the value of a
 // bound property.
 func liftKey(n design.Node) string {
-	props := map[string]string{}
-	for k, v := range n.Props {
-		if _, bound := n.Bind[k]; !bound {
-			props[k] = v
-		}
-	}
 	rect := n.Rect
 	if !n.Layout.IsZero() {
 		rect = design.Rect{}
@@ -157,11 +142,10 @@ func liftKey(n design.Node) string {
 		Component, Name string
 		Layout          design.Layout
 		Rect            design.Rect
-		Props, Bind     map[string]string
-		ShowIf, Event   string
+		Props           map[string]string
 		Goto            string
 		Hidden          bool
-	}{n.Component, n.Name, n.Layout, rect, props, n.Bind, n.ShowIf, n.Event, n.Goto, n.Hidden})
+	}{n.Component, n.Name, n.Layout, rect, n.Props, n.Goto, n.Hidden})
 	return string(data)
 }
 
@@ -176,12 +160,6 @@ func differences(a, b design.Node) []string {
 	} else if a.Layout.IsZero() && a.Rect != b.Rect {
 		out = append(out, "rect")
 	}
-	if a.ShowIf != b.ShowIf {
-		out = append(out, "showIf")
-	}
-	if a.Event != b.Event {
-		out = append(out, "event")
-	}
 	if a.Goto != b.Goto {
 		out = append(out, "goto")
 	}
@@ -193,9 +171,7 @@ func differences(a, b design.Node) []string {
 		keys[k] = true
 	}
 	for k := range keys {
-		_, boundA := a.Bind[k]
-		_, boundB := b.Bind[k]
-		if boundA != boundB || !boundA && a.Props[k] != b.Props[k] || boundA && a.Bind[k] != b.Bind[k] {
+		if a.Props[k] != b.Props[k] {
 			out = append(out, "prop "+k)
 		}
 	}

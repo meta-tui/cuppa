@@ -36,6 +36,7 @@ var colourRoles = map[string]definition.Role{
 	"lipgloss.box": definition.RoleBorder, "lipgloss.tabs": definition.RoleBorder, "lipgloss.table": definition.RoleBorder,
 	"community.frame": definition.RoleBorder, "community.dialog": definition.RoleBorder, "community.overlay": definition.RoleBorder,
 	"community.flexbox": definition.RoleBorder, "community.boxer": definition.RoleBorder, "huh.form": definition.RoleBorder,
+	"cuppa.divider": definition.RoleBorder,
 	"lipgloss.label": definition.RoleText, "lipgloss.list": definition.RoleText, "lipgloss.tree": definition.RoleText,
 }
 

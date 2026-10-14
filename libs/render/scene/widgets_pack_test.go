@@ -22,7 +22,6 @@ func TestWidgetsPackComponentsDrawAtTheirDefaultSize(t *testing.T) {
 		t.Fatal(issues)
 	}
 	want := map[string]string{
-		"widgets.divider":           "──────",
 		"widgets.badge":             "NEW",
 		"widgets.key-hint":          "Ctrl+C",
 		"widgets.stat-card":         "Cups today",

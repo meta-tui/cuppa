@@ -130,6 +130,18 @@ func lipglossEntries() []definition.Definition {
 			},
 		},
 		{
+			ID: "cuppa.divider", Name: "Divider", Family: definition.FamilyLipgloss,
+			Description: "A rule that separates parts of a screen: horizontal or vertical, in a single, double, heavy, dashed or dotted line, with an optional label on a horizontal one. It is drawn across the middle of its box, so resize the box to make it longer.",
+			DefaultSize: size(30, 1), MinSize: size(1, 1), Import: lipglossImport, Status: definition.StatusSupported,
+			Props: []definition.PropSpec{
+				choiceProp("orientation", "Direction", "horizontal", "horizontal", "vertical"),
+				choiceProp("style", "Line", "single", "single", "double", "heavy", "dashed", "dotted"),
+				textProp("label", "Label (horizontal)", ""),
+				choiceProp("align", "Label place", "center", "left", "center", "right"),
+				colorProp("color", "Colour", "240"),
+			},
+		},
+		{
 			ID: "cuppa.menubar", Name: "Menu bar", Family: definition.FamilyLipgloss,
 			Description: "A bar of menus (File, Edit, Help) that drop down a box of entries, each with an optional shortcut, and separators between groups. Add, reorder and drag the entries in the details bar; show a menu open to design its box. From packages/components/menubar in the Cuppa repository, which any Bubble Tea v2 program can use.",
 			DefaultSize: size(48, 10), MinSize: size(12, 1), Import: "github.com/meta-ui-labs/cuppa/packages/components/menubar", Status: definition.StatusSupported,

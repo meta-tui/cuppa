@@ -107,6 +107,7 @@ func plain(s string) string { return s }
 // height that scrolls inside itself.
 func (m *Model) Lines() []string {
 	b := &builder{focus: m.focusStop()}
+	m.menuRows = map[int]menuRef{}
 	if b.focus >= 0 {
 		// The contextual bar comes first in the keyboard order.
 		b.focus -= m.ctxStops
@@ -132,6 +133,7 @@ func (m *Model) Lines() []string {
 		m.views[i] = v
 	}
 	m.regions, m.stops = b.regions, b.stops
+	m.followMenu()
 	m.reflow()
 	m.revealSelection()
 
@@ -209,7 +211,13 @@ func (m *Model) panelHeader(b *builder, sp panelSpec, closed bool) {
 	rule := strings.Repeat("─", max(width-lipgloss.Width(label)-2, 0))
 	id := sp.id
 	flip := func() { m.toggle(id, !m.state(id).closed) }
-	b.add(" "+theme.Bold(label)+" "+theme.Faded(rule), flip)
+	// The rule lights up while the pointer is on the header or drags it, as a
+	// divider between the panes does.
+	if m.hover == id || m.press != nil && m.press.id == id {
+		b.add(" "+theme.Title(label)+" "+theme.Title(rule), flip)
+	} else {
+		b.add(" "+theme.Bold(label)+" "+theme.Faded(rule), flip)
+	}
 	b.regions[len(b.regions)-1].header = id
 	if sp.trash {
 		b.text(" ")
@@ -296,6 +304,10 @@ func (m *Model) properties(b *builder, n design.Node) {
 		_, own := n.Props[p.Key]
 		value := effective[p.Key]
 		m.block(b, p.Label, 1, theme.Dim, nil)
+		if p.Kind == definition.PropMenu {
+			m.menuProp(b, n, p, value)
+			continue
+		}
 		if p.Kind == definition.PropText || p.Kind == definition.PropFloat {
 			m.textProp(b, "prop:"+p.Key, value)
 		} else {

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/menuvalue"
 	"github.com/meta-ui-labs/cuppa/libs/color/space"
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
@@ -109,6 +110,12 @@ func normalise(spec definition.PropSpec, value string) (string, error) {
 		if !slices.Contains(spec.Choices, value) {
 			return "", fmt.Errorf("editor: %s must be one of %s", spec.Label, strings.Join(spec.Choices, ", "))
 		}
+	case definition.PropMenu:
+		canon, err := menuvalue.Normalise(value)
+		if err != nil {
+			return "", fmt.Errorf("editor: %s: %w", spec.Label, err)
+		}
+		return canon, nil
 	}
 	return value, nil
 }

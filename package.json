@@ -27,7 +27,8 @@
     "cuppa-desktop:build": "nx run cuppa-desktop:build",
     "cuppa-desktop:start": "nx run cuppa-desktop:start",
     "cuppa-desktop:bundle": "nx run cuppa-desktop:bundle",
-    "color:qa": "nx run color:lint && nx run color:test"
+    "color:qa": "nx run color:lint && nx run color:test",
+    "components:qa": "nx run components:lint && nx run components:test"
   },
   "private": true,
   "devDependencies": {

@@ -1,13 +1,14 @@
 # The Cuppa component description
 
 Version 1. A Go module that offers a Bubble Tea component publishes a file named `cuppa.component.json` at
-the root of its repository. It says what the component is, how to use it from Go, which properties a designer
+the root of its repository (or, in a monorepo, in the folder of the component). It says what the component is, how to use it from Go, which properties a designer
 can set and which messages it sends. A design tool needs nothing else to list the component, show its
 properties and generate the Go that uses it.
 
 The reference implementation is `libs/catalog/component` in Cuppa; `cuppa component check <file | address |
-github.com/owner/repo[@ref]>` reads a description and lists what is wrong with it. The first module that
-publishes one is [bubble-colourpicker](https://github.com/meta-ui-labs/bubble-colourpicker).
+github.com/owner/repo[/folder][@ref]>` reads a description and lists what is wrong with it. Cuppa's own
+components publish one each: [colourpicker](../../packages/components/colourpicker), [panels](../../packages/components/panels)
+and [menubar](../../packages/components/menubar), in the `packages/components` module of this repository.
 
 ## Example
 
@@ -19,10 +20,10 @@ publishes one is [bubble-colourpicker](https://github.com/meta-ui-labs/bubble-co
   "description": "Tabs for the 16 and 256 terminal palettes and for RGB and HSL sliders.",
   "version": "0.1.2",
   "license": "MIT",
-  "homepage": "https://github.com/meta-ui-labs/bubble-colourpicker",
+  "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/colourpicker",
   "go": {
-    "module": "github.com/meta-ui-labs/bubble-colourpicker",
-    "import": "github.com/meta-ui-labs/bubble-colourpicker",
+    "module": "github.com/meta-ui-labs/cuppa/packages/components",
+    "import": "github.com/meta-ui-labs/cuppa/packages/components/colourpicker",
     "package": "colourpicker",
     "bubbletea": 2,
     "model": "Model", "constructor": "New",
@@ -79,9 +80,10 @@ The properties a designer sets. Each has:
 |---|---|
 | `key` | Required. Letters, digits and underscores; unique. |
 | `label` | Required. What the details bar shows. |
-| `kind` | `text`, `int`, `bool`, `color` or `choice`. |
+| `kind` | `text`, `int`, `float`, `bool`, `color`, `choice` or `menu`. |
 | `default` | The value in a new component, always a string. A choice's default is one of `choices`; an int's is within `min` and `max`; a bool's is `true` or `false`. |
 | `choices`, `min`, `max` | For `choice` (two or more) and `int`. |
+| `menu` | A list of menus, written as JSON text: `[{"name": "File", "entries": [{"name": "Open…", "shortcut": "Ctrl+O"}, {"separator": true}]}]`. A name is required for every menu and every entry that is not a separator; the shortcut is optional. The default must parse. The details bar edits it as a list, with entries that can be added, reordered and dragged between menus. |
 | `go.option` | The constructor option that sets it (`WithValue`). |
 | `go.setter`, `go.getter` | The methods that set it later and read it. One of option or setter is required. |
 | `go.variadic`, `go.split` | A list written in one text property (`"16,256,RGB"`): `split` is the separator, `variadic` says the option takes the items as separate arguments. |
@@ -110,8 +112,8 @@ changes keeps `name` and the property `key`s: saved designs refer to them.
 
 ## Publishing one
 
-1. Put `cuppa.component.json` at the root of the repository, next to the code.
+1. Put `cuppa.component.json` next to the code: at the root of the repository, or in the component's folder.
 2. Run `cuppa component check .` (or the file) until it says the description is in order.
 3. Keep it true: a test in the module that every `option`, `setter`, `getter` and `message` it names exists
-   (bubble-colourpicker's `TestComponentDescriptionMatchesTheCode` is an example).
-4. Tag a release; tools read the description at the tag (`github.com/owner/repo@v1.2.3`).
+   (`packages/components/panels`'s `TestComponentDescriptionMatchesTheCode` is an example).
+4. Tag a release; tools read the description at the tag (`github.com/owner/repo@v1.2.3`, or `github.com/owner/repo/folder@v1.2.3`).

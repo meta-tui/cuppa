@@ -89,6 +89,7 @@ columns, and Cuppa remembers the widths for next time.
 (a click picks one), **RGB** and **HSL** have sliders for any colour (click or drag the bar, `[-]`/`[+]` for single
 steps, true colour on terminals that support it). The **Themes** tab lists 342 terminal colour schemes (Dracula, Nord, Solarized and more, from [bubbletint](https://github.com/lrstanley/bubbletint)): step with `«` `◂` `▸` `»` or the wheel, jump by letter, and click one of its 16 colours, or its text, page, cursor or selection colour; the design stores that colour as plain hex. Type a palette number (`0` to `255`) or hex (`#ff5fd7`) in the
 value field and press Enter, or choose **None** for no colour. Long text values wrap inside the bar.
+- **Menus** (the *Menu bar* component): its menus are edited as a list, like a to-do list. Each menu is a heading with its entries under it in two columns, the **name** (required) and an optional **shortcut**; click a text to change it. `[+ Entry]` adds an entry to that menu, `[+ Separator]` adds a rule between groups, `[+ Menu]` adds a menu, and `[x]` removes a row. Hold the `≡` grip of a row and drag it to reorder: a menu moves among the menus, and an entry moves within its menu or into another one, with a `▸` marking where it will land (the list scrolls when you drag past its top or bottom). On the keyboard, stop on the grip and press Alt+Up or Alt+Down to move the row (an entry crosses into the next menu at the edge of its own) and Delete to remove it. *Menu shown open* draws one menu's box on the canvas, to design it; in the **Preview** a click on a menu opens it. The same component, `packages/components/menubar`, is a Go package any Bubble Tea v2 program can import.
 
 **Responsive layout.** A design is an interface, so a component's position and size can follow the canvas instead of being fixed. In the details bar, click the number of **X**, **Y**, **W** or **H** and type an expression instead of a number:
 
@@ -159,6 +160,7 @@ If Freeze is not installed, the image items are greyed out; clicking one explain
 | Enter or Space (details bar) | Press it: edit a field, press a button, tick a checkbox, open the colour dialog, select a layer |
 | Left / Right, or `-` / `+` (details bar) | Change a number or a choice by 1 (with Shift, 10) |
 | `h` / `l` / Alt+Up / Alt+Down / Delete (on a layer) | Hide, lock, move forward or back, delete |
+| Alt+Up / Alt+Down / Delete (on the `≡` grip of a menu or entry) | Move the menu or entry up or down (an entry crosses into the next menu), remove it |
 | Esc | Deselect, cancel a drag, close a menu or dialog; from the menu bar, palette or details bar it returns to the canvas first |
 | Ctrl+Q | Quit (Ctrl+C is Copy) |
 

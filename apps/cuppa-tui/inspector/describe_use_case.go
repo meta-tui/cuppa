@@ -6,6 +6,7 @@ import (
 
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/a11y"
 	"github.com/meta-ui-labs/cuppa/libs/canvas/editor"
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 	"github.com/meta-ui-labs/cuppa/libs/document/design"
 )
 
@@ -107,6 +108,9 @@ func (m *Model) describeNode(n design.Node) []a11y.Node {
 			value, set := n.Props[p.Key]
 			if !set {
 				value = p.Default
+			}
+			if p.Kind == definition.PropMenu {
+				value = describeMenus(value)
 			}
 			if value == "" {
 				value = "empty"

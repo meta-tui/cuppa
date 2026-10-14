@@ -1,0 +1,24 @@
+{
+  "name": "components",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/components",
+  "tags": [
+    "type:go-lib"
+  ],
+  "targets": {
+    "test": {
+      "executor": "@nx-go/nx-go:test"
+    },
+    "lint": {
+      "executor": "@nx-go/nx-go:lint",
+      "parallelism": false,
+      "options": {
+        "linter": "golangci-lint",
+        "args": [
+          "run"
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "cuppa": 1,
+  "name": "menubar",
+  "title": "Menu bar",
+  "description": "A bar of menus (File, Edit, Help) that drop down a box of entries, each with an optional shortcut, and separators between groups. Mouse and keyboard, with Alt and the first letter of a menu to open it.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/menubar",
+  "go": {
+    "module": "github.com/meta-ui-labs/cuppa/packages/components",
+    "import": "github.com/meta-ui-labs/cuppa/packages/components/menubar",
+    "package": "menubar",
+    "bubbletea": 2,
+    "model": "Model",
+    "constructor": "New",
+    "init": "Init",
+    "update": "Update",
+    "view": "View",
+    "width": "Width",
+    "height": "Height",
+    "origin": "SetOrigin"
+  },
+  "size": {
+    "default": { "w": 48, "h": 10 },
+    "min": { "w": 12, "h": 1 },
+    "note": "One row for the bar, and a row for each entry of the tallest menu plus two for the box edges, when a menu is open."
+  },
+  "props": [
+    {
+      "key": "menus", "label": "Menus", "kind": "menu",
+      "default": "[{\"name\":\"File\",\"entries\":[{\"name\":\"New\",\"shortcut\":\"Ctrl+N\"},{\"name\":\"Open…\",\"shortcut\":\"Ctrl+O\"},{\"separator\":true},{\"name\":\"Quit\",\"shortcut\":\"Ctrl+Q\"}]},{\"name\":\"Edit\",\"entries\":[{\"name\":\"Undo\",\"shortcut\":\"Ctrl+Z\"},{\"name\":\"Redo\",\"shortcut\":\"Ctrl+Y\"},{\"separator\":true},{\"name\":\"Copy\",\"shortcut\":\"Ctrl+C\"},{\"name\":\"Paste\",\"shortcut\":\"Ctrl+V\"}]},{\"name\":\"Help\",\"entries\":[{\"name\":\"About\"}]}]",
+      "go": { "option": "WithMenusJSON", "setter": "SetMenusJSON", "getter": "MenusJSON" }
+    },
+    {
+      "key": "title", "label": "Title before the menus", "kind": "text", "default": "",
+      "go": { "option": "WithTitle", "setter": "SetTitle" }
+    },
+    {
+      "key": "open", "label": "Menu shown open (from 0, -1 none)", "kind": "int", "default": "-1", "min": -1, "max": 40,
+      "go": { "option": "WithOpen", "setter": "SetOpen", "getter": "Open" }
+    },
+    {
+      "key": "color", "label": "Open menu / highlighted entry colour", "kind": "color", "default": "212",
+      "go": { "option": "WithAccent", "setter": "SetAccent" }
+    },
+    {
+      "key": "mutedColor", "label": "Other menus / shortcut colour", "kind": "color", "default": "245",
+      "go": { "option": "WithMuted", "setter": "SetMuted" }
+    },
+    {
+      "key": "ruleColor", "label": "Box colour", "kind": "color", "default": "240",
+      "go": { "option": "WithRule", "setter": "SetRule" }
+    }
+  ],
+  "events": [
+    {
+      "name": "selected",
+      "label": "Entry chosen",
+      "go": { "message": "SelectedMsg" },
+      "fields": [
+        { "name": "Menu", "type": "int" },
+        { "name": "Entry", "type": "int" },
+        { "name": "MenuName", "type": "string" },
+        { "name": "Name", "type": "string" },
+        { "name": "Shortcut", "type": "string" }
+      ]
+    }
+  ],
+  "preview": { "kind": "frame" }
+}

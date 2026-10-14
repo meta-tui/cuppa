@@ -425,6 +425,9 @@ func (m *Model) mouse(e pointer.Event) {
 	if e.Phase != pointer.Move || !e.Held {
 		m.pal.Leave()
 	}
+	if target != inInspector {
+		m.ins.Leave()
+	}
 	switch target {
 	case inPalette:
 		local := e.Translate(m.layout.palette.X, m.layout.palette.Y)

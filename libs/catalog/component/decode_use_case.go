@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/meta-ui-labs/cuppa/libs/catalog/menuvalue"
 )
 
 var (
@@ -14,7 +16,7 @@ var (
 	identifier  = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
 )
 
-var kinds = map[string]bool{"text": true, "int": true, "float": true, "bool": true, "color": true, "choice": true}
+var kinds = map[string]bool{"text": true, "int": true, "float": true, "bool": true, "color": true, "choice": true, "menu": true}
 
 var families = map[string]bool{"lipgloss": true, "bubbles": true, "huh": true, "glamour": true, "ntcharts": true, "community": true}
 
@@ -102,7 +104,7 @@ func (d Description) Check() []string {
 			bad("%s: label is empty", where)
 		}
 		if !kinds[p.Kind] {
-			bad("%s: kind %q is not one of text, int, float, bool, color, choice", where, p.Kind)
+			bad("%s: kind %q is not one of text, int, float, bool, color, choice, menu", where, p.Kind)
 			continue
 		}
 		switch p.Kind {
@@ -124,6 +126,10 @@ func (d Description) Check() []string {
 		case "bool":
 			if p.Default != "true" && p.Default != "false" {
 				bad("%s: default %q must be true or false", where, p.Default)
+			}
+		case "menu":
+			if _, err := menuvalue.Parse(p.Default); err != nil {
+				bad("%s: default is not a list of menus: %v", where, err)
 			}
 		}
 		for _, name := range []struct{ field, v string }{

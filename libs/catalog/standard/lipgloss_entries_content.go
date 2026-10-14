@@ -52,8 +52,8 @@ func lipglossEntries() []definition.Definition {
 		},
 		{
 			ID: "lipgloss.colourpicker", Name: "Colour picker", Family: definition.FamilyLipgloss,
-			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From github.com/meta-ui-labs/bubble-colourpicker, which any Bubble Tea v2 program can use. The width is 46; the 256 tab needs 23 rows.",
-			DefaultSize: size(46, 10), MinSize: size(46, 4), Import: "github.com/meta-ui-labs/bubble-colourpicker", Status: definition.StatusSupported,
+			Description: "Cuppa's colour dialog as a component: tabs for the 16 and 256 palettes and for RGB and HSL sliders, a preview and the value. From packages/components/colourpicker in the Cuppa repository, which any Bubble Tea v2 program can use. The width is 46; the 256 tab needs 23 rows.",
+			DefaultSize: size(46, 10), MinSize: size(46, 4), Import: "github.com/meta-ui-labs/cuppa/packages/components/colourpicker", Status: definition.StatusSupported,
 			Props: []definition.PropSpec{
 				colorProp("value", "Colour (empty for none)", "#ff007f"),
 				textProp("tabs", "Tabs (16, 256, RGB, HSL)", "16,256,RGB,HSL"),
@@ -127,6 +127,19 @@ func lipglossEntries() []definition.Definition {
 				colorProp("color", "Open header colour", "212"),
 				colorProp("mutedColor", "Closed header colour", "245"),
 				colorProp("ruleColor", "Rule colour", "240"),
+			},
+		},
+		{
+			ID: "cuppa.menubar", Name: "Menu bar", Family: definition.FamilyLipgloss,
+			Description: "A bar of menus (File, Edit, Help) that drop down a box of entries, each with an optional shortcut, and separators between groups. Add, reorder and drag the entries in the details bar; show a menu open to design its box. From packages/components/menubar in the Cuppa repository, which any Bubble Tea v2 program can use.",
+			DefaultSize: size(48, 10), MinSize: size(12, 1), Import: "github.com/meta-ui-labs/cuppa/packages/components/menubar", Status: definition.StatusSupported,
+			Props: []definition.PropSpec{
+				menuProp("menus", "Menus", defaultMenus),
+				textProp("title", "Title before the menus", ""),
+				intProp("open", "Menu shown open (from 0, -1 none)", -1, -1, 40),
+				colorProp("color", "Open menu / highlighted entry colour", "212"),
+				colorProp("mutedColor", "Other menus / shortcut colour", "245"),
+				colorProp("ruleColor", "Box colour", "240"),
 			},
 		},
 		{

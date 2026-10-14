@@ -200,3 +200,22 @@ func TestAComponentCanGoToAnotherPageFromTheBehaviourPanel(t *testing.T) {
 		t.Fatalf("goto = %q (message %q)", n.Goto, m.message)
 	}
 }
+
+func TestAPanelHeaderLightsUpWhileThePointerIsOnIt(t *testing.T) {
+	m, _, _ := setup(t, "lipgloss.box")
+	_, y := find(t, m, "Layers")
+	before := strings.Join(m.Lines(), "\n")
+	m.Handle(pointer.Event{X: 5, Y: y, Phase: pointer.Move})
+	if strings.Join(m.Lines(), "\n") == before {
+		t.Fatal("the header does not change colour under the pointer")
+	}
+	m.Handle(pointer.Event{X: 5, Y: y + 1, Phase: pointer.Move})
+	if strings.Join(m.Lines(), "\n") != before {
+		t.Error("the header stays lit after the pointer moved off it")
+	}
+	m.Handle(pointer.Event{X: 5, Y: y, Phase: pointer.Move})
+	m.Leave()
+	if strings.Join(m.Lines(), "\n") != before {
+		t.Error("the header stays lit after the pointer left the bar")
+	}
+}

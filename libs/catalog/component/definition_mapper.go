@@ -36,7 +36,7 @@ func (d Description) Definition() definition.Definition {
 	}
 	kinds := map[string]definition.PropKind{
 		"text": definition.PropText, "int": definition.PropInt, "float": definition.PropFloat, "bool": definition.PropBool,
-		"color": definition.PropColor, "choice": definition.PropChoice,
+		"color": definition.PropColor, "choice": definition.PropChoice, "menu": definition.PropMenu,
 	}
 	for _, p := range d.Props {
 		def.Props = append(def.Props, definition.PropSpec{

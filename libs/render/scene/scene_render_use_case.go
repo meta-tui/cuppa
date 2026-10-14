@@ -84,6 +84,7 @@ var painters = map[string]painter{
 	"lipgloss.slot":           paintSlot,
 	"cuppa.tabs":              paintTabPages,
 	"cuppa.panels":            paintPanelStack,
+	"cuppa.menubar":           paintMenuBar,
 	"lipgloss.colourpicker":   paintColourPicker,
 	"community.dropdown":      paintDropdown,
 	"community.promptinput":  paintPromptInput,

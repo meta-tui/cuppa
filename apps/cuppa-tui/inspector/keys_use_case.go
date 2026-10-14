@@ -92,6 +92,7 @@ func (m *Model) NavKey(name string) bool {
 	case name == "enter" || name == "space":
 		cur.act()
 	case cur.layer != "" && m.layerKey(name, cur.layer):
+	case cur.menu != nil && m.menuKey(name, *cur.menu):
 	default:
 		return false
 	}

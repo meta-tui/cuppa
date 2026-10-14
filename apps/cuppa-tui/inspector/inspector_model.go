@@ -36,6 +36,9 @@ type region struct {
 	// ctx is set on a span of the contextual bar, which the keyboard reaches
 	// before the panels.
 	ctx bool
+	// menu is set on the grip of a row of a menu property: pressing it can
+	// start a drag of that heading or entry.
+	menu *menuRef
 }
 
 // Model is the inspector pane.
@@ -80,6 +83,9 @@ type Model struct {
 	views   []panelView
 	press   *headerPress
 	lastSel design.NodeID
+	// hover is the panel whose header the pointer is on: its rule lights up,
+	// as the dividers between the panes do.
+	hover panelID
 	// menu is the dropdown that is open, if any.
 	menu *dropdown
 
@@ -89,6 +95,13 @@ type Model struct {
 	layerCount       int
 	layerIDs         []design.NodeID
 	trashX0, trashX1 int
+
+	// The rows of a menu property as they were drawn, by content line, and
+	// the grip being dragged. follow is the row to put the keyboard stop back
+	// on after it was moved with the keys.
+	menuRows map[int]menuRef
+	mdrag    *menuDrag
+	follow   *menuRef
 }
 
 // New returns an inspector editing through ed.
@@ -174,6 +187,8 @@ func (m *Model) Handle(e pointer.Event) {
 						m.pressLayer(r.layer, e.Y, r.act)
 					case r.header != "":
 						m.pressHeader(r.header, e.Y, r.act)
+					case r.menu != nil:
+						m.pressMenu(*r.menu, e.Y)
 					default:
 						r.act()
 					}
@@ -188,6 +203,13 @@ func (m *Model) Handle(e pointer.Event) {
 			m.dragHeader(e)
 		case m.drag != nil && e.Held:
 			m.dragTo(e)
+		case m.mdrag != nil && e.Held:
+			m.dragMenu(e)
+		default:
+			m.hover = ""
+			if v, ok := m.viewAt(e.Y); ok && e.Y == v.top {
+				m.hover = v.id
+			}
 		}
 	case pointer.Up:
 		if m.press != nil {
@@ -196,8 +218,14 @@ func (m *Model) Handle(e pointer.Event) {
 		if m.drag != nil {
 			m.drop(e)
 		}
+		if m.mdrag != nil {
+			m.dropMenu(e)
+		}
 	}
 }
+
+// Leave tells the bar the pointer went to another pane.
+func (m *Model) Leave() { m.hover = "" }
 
 // Key handles typing into the field being edited.
 func (m *Model) Key(text string, backspace, enter, escape bool) {
@@ -249,7 +277,7 @@ func (m *Model) Step(delta int) bool {
 		}
 		return true
 	}
-	if m.editing == "" || m.editing == "background" || m.editing == "name" {
+	if m.editing == "" || m.editing == "background" || m.editing == "name" || strings.HasPrefix(m.editing, "menutext:") {
 		return false
 	}
 	n, err := strconv.Atoi(strings.TrimSpace(m.buf))
@@ -293,6 +321,8 @@ func (m *Model) apply(field, value string) {
 	switch {
 	case field == "name":
 		m.ed.Rename(n.ID, value)
+	case strings.HasPrefix(field, "menutext:"):
+		m.commitMenuText(n.ID, field, value)
 	case strings.HasPrefix(field, "swatchname:"):
 		key := strings.TrimPrefix(field, "swatchname:")
 		current, _ := strings.CutPrefix(n.Props[key], design.TokenPrefix)

@@ -66,6 +66,9 @@ const (
 	PropBool   PropKind = "bool"
 	PropColor  PropKind = "color"
 	PropChoice PropKind = "choice"
+	// PropMenu is a list of menus with entries, stored as JSON text and edited
+	// as a list in the details bar (see libs/catalog/menuvalue).
+	PropMenu PropKind = "menu"
 )
 
 // PropSpec describes one editable property of a component. Values are stored

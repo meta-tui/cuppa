@@ -22,10 +22,12 @@ type layerDrag struct {
 }
 
 // Dragging reports whether a layer is being dragged.
-func (m *Model) Dragging() bool { return m.drag != nil && m.drag.moved }
+func (m *Model) Dragging() bool {
+	return m.drag != nil && m.drag.moved || m.mdrag != nil && m.mdrag.moved
+}
 
 // CancelDrag drops the drag without changing anything.
-func (m *Model) CancelDrag() { m.drag = nil }
+func (m *Model) CancelDrag() { m.drag, m.mdrag = nil, nil }
 
 // layers lists the layers front to back. Each row has an eye (show or hide) and
 // a padlock (lock or unlock); the name selects it and can be dragged to a new

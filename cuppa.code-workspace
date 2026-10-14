@@ -165,6 +165,13 @@
         "script": "color:qa",
         "problemMatcher": [],
         "group": "qa"
+      },
+      {
+        "label": "components: qa",
+        "type": "npm",
+        "script": "components:qa",
+        "problemMatcher": [],
+        "group": "qa"
       }
     ]
   },

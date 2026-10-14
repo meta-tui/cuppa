@@ -6,6 +6,7 @@ Monorepo generated and managed by `mnci` (Nx). See `docs/adr/` for decisions.
 ## Layout
 
 - `libs/<capability>/<slice>/` Go packages (one per outcome). Headless: never import Bubble Tea or apps. Only `libs/render` imports Lip Gloss. `libs/archcheck` enforces this.
+- `packages/components` the Bubble Tea components Cuppa designs with and anyone can import (`colourpicker`, `panels`, `menubar`), one Go package each with its `cuppa.component.json`. They use Bubble Tea and Lip Gloss, so they live outside `libs/`.
 - `apps/cuppa-tui` the Bubble Tea front end; slices `shell`, `palette`, `stage`, `inspector`, `menubar`.
 - Docs in `docs/`.
 

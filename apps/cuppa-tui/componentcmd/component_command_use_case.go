@@ -73,7 +73,9 @@ func summary(d component.Description, from string) string {
 
 // Location says where to read a description from: a file, or an address.
 // "github.com/owner/repo[@ref]" is the description at the root of the
-// repository; a github.com address of a repository page is the same.
+// repository, "github.com/owner/repo/dir/path[@ref]" the one in a folder of it
+// (a monorepo), and a github.com address of a repository page or folder
+// ("/tree/<ref>/dir") is the same.
 func Location(arg string) (address string, isFile bool) {
 	if _, err := os.Stat(arg); err == nil {
 		return arg, true
@@ -82,11 +84,19 @@ func Location(arg string) (address string, isFile bool) {
 	if strings.HasPrefix(rest, "github.com/") {
 		path, ref, _ := strings.Cut(strings.TrimPrefix(rest, "github.com/"), "@")
 		parts := strings.Split(strings.Trim(path, "/"), "/")
-		if len(parts) == 2 {
+		if len(parts) >= 2 {
+			dir := parts[2:]
+			if len(dir) >= 2 && (dir[0] == "tree" || dir[0] == "blob") {
+				if ref == "" {
+					ref = dir[1]
+				}
+				dir = dir[2:]
+			}
 			if ref == "" {
 				ref = "HEAD"
 			}
-			return "https://raw.githubusercontent.com/" + parts[0] + "/" + parts[1] + "/" + ref + "/" + component.FileName, false
+			file := append(append([]string{parts[0], parts[1], ref}, dir...), component.FileName)
+			return "https://raw.githubusercontent.com/" + strings.Join(file, "/"), false
 		}
 	}
 	if strings.HasPrefix(arg, "https://") || strings.HasPrefix(arg, "http://") {

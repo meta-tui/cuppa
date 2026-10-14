@@ -1,0 +1,59 @@
+{
+  "cuppa": 1,
+  "name": "colourpicker",
+  "title": "Colour picker",
+  "description": "Tabs for the 16 and 256 terminal palettes and for RGB and HSL sliders, a preview and the value; keyboard and mouse.",
+  "version": "0.1.3",
+  "license": "MIT",
+  "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/colourpicker",
+  "go": {
+    "module": "github.com/meta-ui-labs/cuppa/packages/components",
+    "import": "github.com/meta-ui-labs/cuppa/packages/components/colourpicker",
+    "package": "colourpicker",
+    "bubbletea": 2,
+    "model": "Model",
+    "constructor": "New",
+    "init": "Init",
+    "update": "Update",
+    "view": "View",
+    "width": "Width",
+    "height": "Height",
+    "origin": "SetOrigin"
+  },
+  "size": {
+    "default": { "w": 46, "h": 10 },
+    "min": { "w": 46, "h": 4 },
+    "note": "The width is fixed at 46 cells; the 256 tab needs 23 rows, the others 10."
+  },
+  "props": [
+    {
+      "key": "value", "label": "Colour (empty for none)", "kind": "color", "default": "#ff007f",
+      "go": { "option": "WithValue", "setter": "SetValue", "getter": "Value" }
+    },
+    {
+      "key": "tabs", "label": "Tabs (16, 256, RGB, HSL)", "kind": "text", "default": "16,256,RGB,HSL",
+      "go": { "option": "WithTabs", "variadic": true, "split": "," }
+    },
+    {
+      "key": "tab", "label": "Tab shown", "kind": "choice", "default": "RGB", "choices": ["16", "256", "RGB", "HSL"],
+      "go": { "option": "WithTab", "setter": "SetTab", "getter": "Tab" }
+    },
+    {
+      "key": "slide", "label": "Slider the keyboard is on (RGB, HSL)", "kind": "int", "default": "0", "min": 0, "max": 2,
+      "go": { "setter": "SetSlide", "getter": "Slide" }
+    },
+    {
+      "key": "color", "label": "Accent", "kind": "color", "default": "212",
+      "go": { "option": "WithAccent", "setter": "SetAccent" }
+    }
+  ],
+  "events": [
+    {
+      "name": "changed",
+      "label": "Colour changed",
+      "go": { "message": "ChangedMsg" },
+      "fields": [{ "name": "Value", "type": "string", "prop": "value" }]
+    }
+  ],
+  "preview": { "kind": "frame" }
+}

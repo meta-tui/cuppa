@@ -1,0 +1,74 @@
+{
+  "cuppa": 1,
+  "name": "panels",
+  "title": "Panels",
+  "description": "A stack of collapsible sections or a bar of tabs: the pages hold content, and pressing a header or a tab shows or hides it with no code of your own. Mouse and keyboard.",
+  "version": "0.1.0",
+  "license": "MIT",
+  "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/panels",
+  "go": {
+    "module": "github.com/meta-ui-labs/cuppa/packages/components",
+    "import": "github.com/meta-ui-labs/cuppa/packages/components/panels",
+    "package": "panels",
+    "bubbletea": 2,
+    "model": "Model",
+    "constructor": "New",
+    "init": "Init",
+    "update": "Update",
+    "view": "View",
+    "width": "Width",
+    "height": "Height",
+    "origin": "SetOrigin"
+  },
+  "size": {
+    "default": { "w": 40, "h": 16 },
+    "min": { "w": 12, "h": 3 },
+    "note": "Sections need a row per header plus rows for the open ones; tabs need two rows for the bar and its rule."
+  },
+  "props": [
+    {
+      "key": "mode", "label": "Mode", "kind": "choice", "default": "sections", "choices": ["sections", "tabs"],
+      "go": { "option": "WithModeName" }
+    },
+    {
+      "key": "pages", "label": "Pages (comma separated)", "kind": "text", "default": "Details,Properties,Layers",
+      "go": { "option": "WithTitles", "variadic": true, "split": "," }
+    },
+    {
+      "key": "active", "label": "Tab shown (from 0)", "kind": "int", "default": "0", "min": 0, "max": 40,
+      "go": { "option": "WithActive", "setter": "SetActive", "getter": "Active" }
+    },
+    {
+      "key": "open", "label": "Open sections (numbers from 0)", "kind": "text", "default": "0,1",
+      "go": { "option": "WithOpenText", "getter": "String" }
+    },
+    {
+      "key": "exclusive", "label": "Only one open (accordion)", "kind": "bool", "default": "false",
+      "go": { "option": "WithExclusive", "setter": "SetExclusive", "getter": "Exclusive" }
+    },
+    {
+      "key": "color", "label": "Shown tab / open header colour", "kind": "color", "default": "212",
+      "go": { "option": "WithAccent", "setter": "SetAccent" }
+    },
+    {
+      "key": "mutedColor", "label": "Other tabs / closed header colour", "kind": "color", "default": "245",
+      "go": { "option": "WithMuted", "setter": "SetMuted" }
+    },
+    {
+      "key": "ruleColor", "label": "Rule colour", "kind": "color", "default": "240",
+      "go": { "option": "WithRule", "setter": "SetRule" }
+    }
+  ],
+  "events": [
+    {
+      "name": "changed",
+      "label": "Page changed",
+      "go": { "message": "ChangedMsg" },
+      "fields": [
+        { "name": "Active", "type": "int", "prop": "active" },
+        { "name": "Open", "type": "[]int", "prop": "open" }
+      ]
+    }
+  ],
+  "preview": { "kind": "frame" }
+}

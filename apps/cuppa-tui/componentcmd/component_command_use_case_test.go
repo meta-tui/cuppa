@@ -29,6 +29,9 @@ func TestLocationUnderstandsFilesAddressesAndRepositories(t *testing.T) {
 		{"github.com/meta-ui-labs/bubble-colourpicker", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/HEAD/cuppa.component.json", false},
 		{"github.com/meta-ui-labs/bubble-colourpicker@v0.1.1", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/v0.1.1/cuppa.component.json", false},
 		{"https://github.com/meta-ui-labs/bubble-colourpicker/", "https://raw.githubusercontent.com/meta-ui-labs/bubble-colourpicker/HEAD/cuppa.component.json", false},
+		{"github.com/meta-ui-labs/cuppa/packages/components/colourpicker", "https://raw.githubusercontent.com/meta-ui-labs/cuppa/HEAD/packages/components/colourpicker/cuppa.component.json", false},
+		{"github.com/meta-ui-labs/cuppa/packages/components/panels@v0.2.0", "https://raw.githubusercontent.com/meta-ui-labs/cuppa/v0.2.0/packages/components/panels/cuppa.component.json", false},
+		{"https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/menubar", "https://raw.githubusercontent.com/meta-ui-labs/cuppa/main/packages/components/menubar/cuppa.component.json", false},
 		{"https://example.com/x/cuppa.component.json", "https://example.com/x/cuppa.component.json", false},
 	}
 	for _, c := range cases {

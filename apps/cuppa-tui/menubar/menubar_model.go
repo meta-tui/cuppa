@@ -17,6 +17,7 @@ const (
 	// two private-use characters, the left and right half of the cup, that the
 	// desktop app and the web page draw from a font they ship. They are one
 	// cell each, so the bar keeps its width.
+	// the two halves meet with no seam, like the box-drawing rules of the bar.
 	iconBrand = " \ue000\ue001 Cuppa "
 	gap      = 1
 	itemPadX = 2

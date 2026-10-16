@@ -25,6 +25,9 @@ type Description struct {
 	Homepage    string `json:"homepage"`
 	// Family groups the component in the palette (default "community").
 	Family string `json:"family"`
+	// Category says what the component is for: the palette groups by it
+	// (default "other").
+	Category string `json:"category"`
 
 	Go      GoBinding `json:"go"`
 	Size    Size      `json:"size"`

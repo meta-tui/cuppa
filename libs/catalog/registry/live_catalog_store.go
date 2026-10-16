@@ -25,6 +25,12 @@ func (l *Live) List() []definition.Definition { return l.r.List() }
 // Families returns the packs that have components.
 func (l *Live) Families() []definition.Family { return l.r.Families() }
 
+// Categories returns the categories with components.
+func (l *Live) Categories() []definition.Category { return l.r.Categories() }
+
+// ByCategory returns the definitions of one category.
+func (l *Live) ByCategory(c definition.Category) []definition.Definition { return l.r.ByCategory(c) }
+
 // ByFamily returns the definitions of one pack.
 func (l *Live) ByFamily(f definition.Family) []definition.Definition { return l.r.ByFamily(f) }
 

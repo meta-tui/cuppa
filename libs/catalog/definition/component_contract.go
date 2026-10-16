@@ -120,9 +120,11 @@ type Size struct {
 // Definition describes one component the designer can place.
 type Definition struct {
 	// ID is stable and unique, for example "bubbles.spinner".
-	ID          string
-	Name        string
-	Family      Family
+	ID     string
+	Name   string
+	Family Family
+	// Category is what the component is for; the palette groups by it.
+	Category    Category
 	Description string
 	DefaultSize Size
 	MinSize     Size

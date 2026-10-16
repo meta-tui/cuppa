@@ -20,7 +20,7 @@ func paletteText(m *Model) string {
 func TestSwitchingAPackOffRemovesItFromThePaletteOnly(t *testing.T) {
 	m := newShell(t)
 	m.pal.SetSize(m.layout.palette.W, 80)
-	if !strings.Contains(paletteText(m), "Bubbles") {
+	if !strings.Contains(paletteText(m), "bubbles") {
 		t.Fatal("Bubbles starts on")
 	}
 	m.perform(menubar.EditPacks)
@@ -29,10 +29,20 @@ func TestSwitchingAPackOffRemovesItFromThePaletteOnly(t *testing.T) {
 	}
 	m.packs.SetEnabled(definition.FamilyBubbles, false)
 	m.refreshPalette()
-	if strings.Contains(paletteText(m), "Bubbles") {
+	if strings.Contains(paletteText(m), "bubbles") {
 		t.Fatalf("a disabled pack must leave the palette:\n%s", paletteText(m))
 	}
 	if _, ok := m.cat.Get("bubbles.spinner"); !ok {
 		t.Fatal("designs that use the pack must still resolve its components")
+	}
+}
+
+func TestAboutNamesTheProvidersOfTheComponents(t *testing.T) {
+	m := newShell(t)
+	text := m.aboutText()
+	for _, want := range []string{"Components from:", "Lip Gloss (", "Bubbles ("} {
+		if !strings.Contains(text, want) {
+			t.Errorf("about lacks %q:\n%s", want, text)
+		}
 	}
 }

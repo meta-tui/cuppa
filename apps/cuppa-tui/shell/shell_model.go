@@ -362,12 +362,26 @@ func (m *Model) perform(a menubar.Action) {
 	case menubar.HelpShortcuts:
 		m.flow.Notice("Shortcuts", shortcutsText(m.command))
 	case menubar.HelpAbout:
-		m.flow.NoticeWithArt("About Cuppa", aboutText, logo.Dialog())
+		m.flow.NoticeWithArt("About Cuppa", m.aboutText(), logo.Dialog())
 	}
 }
 
-const aboutText = "A designer for Bubble Tea interfaces, made with Bubble Tea.\n" +
-	"Export images need Freeze: github.com/charmbracelet/freeze"
+// aboutText is the About window: what Cuppa is, and who provides the
+// components in the palette (the palette itself is grouped by what they are
+// for, so this is where the providers show).
+func (m *Model) aboutText() string {
+	text := "A designer for Bubble Tea interfaces, made with Bubble Tea.\n" +
+		"Export images need Freeze: github.com/charmbracelet/freeze"
+	reg := m.cat.Registry()
+	var providers []string
+	for _, f := range reg.Families() {
+		providers = append(providers, fmt.Sprintf("%s (%d)", reg.Title(f), len(reg.ByFamily(f))))
+	}
+	if len(providers) > 0 {
+		text += "\n\nComponents from: " + strings.Join(providers, ", ")
+	}
+	return text
+}
 
 func (m *Model) resize(w, h int) {
 	m.w, m.h = w, h

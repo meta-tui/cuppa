@@ -54,7 +54,8 @@ and [menubar](../../packages/components/menubar), in the `packages/components` m
 | `title`, `description` | Required. What the palette and its search show. |
 | `version`, `homepage` | Free text. |
 | `license` | Required. A generated program imports the code, so its licence must be known. Cuppa leaves out components that are not permissively licensed. |
-| `family` | Optional palette group: `lipgloss`, `bubbles`, `huh`, `glamour`, `ntcharts` or `community` (the default). |
+| `family` | Optional provider: `lipgloss`, `bubbles`, `huh`, `glamour`, `ntcharts` or `community` (the default). Shown beside the name and in About; it also makes the pack the component belongs to. |
+| `category` | Optional palette group, what the component is for: `layout`, `box`, `text`, `input`, `select`, `data`, `charts`, `feedback`, `navigation`, `files`, `colour`, `media` or `other` (the default). |
 
 ### `go`
 

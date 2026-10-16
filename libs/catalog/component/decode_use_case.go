@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/meta-ui-labs/cuppa/libs/catalog/definition"
 	"github.com/meta-ui-labs/cuppa/libs/catalog/menuvalue"
 )
 
@@ -59,6 +60,9 @@ func (d Description) Check() []string {
 	}
 	if d.Family != "" && !families[d.Family] {
 		bad("family %q is not one of lipgloss, bubbles, huh, glamour, ntcharts, community", d.Family)
+	}
+	if _, ok := definition.ParseCategory(d.Category); d.Category != "" && !ok {
+		bad("category %q is not one of layout, box, text, input, select, data, charts, feedback, navigation, files, colour, media, other", d.Category)
 	}
 	if d.Go.Import == "" {
 		bad("go.import is empty")

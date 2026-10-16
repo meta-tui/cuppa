@@ -30,7 +30,7 @@ func described(m *Model) string { return strings.Join(flatten(m.Describe().Nodes
 func TestTheScreenIsDescribedInReadingOrder(t *testing.T) {
 	m := newShell(t)
 	text := described(m)
-	order := []string{"list: Menus", "heading: Components", "listitem: Lip Gloss, pack", "heading: Canvas", "heading: Details", "textbox: Width = 120", "button: Shadows = off"}
+	order := []string{"list: Menus", "heading: Components", "listitem: Box, category", "heading: Canvas", "heading: Details", "textbox: Width = 120", "button: Shadows = off"}
 	last := -1
 	for _, want := range order {
 		i := strings.Index(text, want)

@@ -5,6 +5,7 @@
   "description": "A bar of menus (File, Edit, Help) that drop down a box of entries, each with an optional shortcut, and separators between groups. Mouse and keyboard, with Alt and the first letter of a menu to open it.",
   "version": "0.1.0",
   "license": "MIT",
+  "category": "navigation",
   "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/menubar",
   "go": {
     "module": "github.com/meta-ui-labs/cuppa/packages/components",

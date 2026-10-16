@@ -1,5 +1,5 @@
 // Package palette is the left bar: the catalog of components, grouped by
-// family, from which the designer drags components onto the canvas.
+// what they are for, from which the designer drags components onto the canvas.
 package palette
 
 import (
@@ -13,8 +13,8 @@ import (
 
 // Catalog is the part of the component registry the palette lists.
 type Catalog interface {
-	Families() []definition.Family
-	ByFamily(definition.Family) []definition.Definition
+	Categories() []definition.Category
+	ByCategory(definition.Category) []definition.Definition
 	Search(query string) []definition.Definition
 	Title(definition.Family) string
 }
@@ -23,7 +23,7 @@ type Catalog interface {
 const headerRows = 2
 
 type row struct {
-	family definition.Family // set on header rows
+	category definition.Category // set on header rows
 	def    definition.Definition
 	header bool
 }
@@ -31,7 +31,7 @@ type row struct {
 // Model is the palette pane.
 type Model struct {
 	cat       Catalog
-	collapsed map[definition.Family]bool
+	collapsed map[definition.Category]bool
 	rows      []row
 	scroll    int
 	hover     int // list index under the pointer, -1 if none
@@ -45,7 +45,7 @@ type Model struct {
 
 // New returns a palette listing every component of cat.
 func New(cat Catalog) *Model {
-	m := &Model{cat: cat, collapsed: map[definition.Family]bool{}, hover: -1}
+	m := &Model{cat: cat, collapsed: map[definition.Category]bool{}, hover: -1}
 	m.rebuild()
 	return m
 }
@@ -78,12 +78,12 @@ func (m *Model) rebuild() {
 		}
 		return
 	}
-	for _, f := range m.cat.Families() {
-		m.rows = append(m.rows, row{family: f, header: true})
-		if m.collapsed[f] {
+	for _, c := range m.cat.Categories() {
+		m.rows = append(m.rows, row{category: c, header: true})
+		if m.collapsed[c] {
 			continue
 		}
-		for _, d := range m.cat.ByFamily(f) {
+		for _, d := range m.cat.ByCategory(c) {
 			m.rows = append(m.rows, row{def: d})
 		}
 	}
@@ -127,7 +127,7 @@ func (m *Model) Handle(e pointer.Event) string {
 		}
 		r := m.rows[i]
 		if r.header {
-			m.collapsed[r.family] = !m.collapsed[r.family]
+			m.collapsed[r.category] = !m.collapsed[r.category]
 			m.rebuild()
 			m.clampScroll()
 			return ""
@@ -193,10 +193,10 @@ func (m *Model) renderRow(i int) string {
 	switch {
 	case r.header:
 		mark := "▾"
-		if m.collapsed[r.family] {
+		if m.collapsed[r.category] {
 			mark = "▸"
 		}
-		s = " " + theme.Bold(mark+" "+m.cat.Title(r.family))
+		s = " " + theme.Bold(mark+" "+r.category.Title())
 	default:
 		suffix := ""
 		if r.def.Status == definition.StatusPlaceholder {
@@ -206,10 +206,7 @@ func (m *Model) renderRow(i int) string {
 		if m.query != "" {
 			indent = " "
 		}
-		s = indent + r.def.Name + suffix
-		if m.query != "" {
-			s += " " + theme.Faded(strings.ToLower(m.cat.Title(r.def.Family)))
-		}
+		s = indent + r.def.Name + suffix + " " + theme.Faded(strings.ToLower(m.cat.Title(r.def.Family)))
 	}
 	if m.focused && i == m.cursor {
 		return theme.Selected(theme.Fit(s, m.w))
@@ -223,12 +220,12 @@ func (m *Model) renderRow(i int) string {
 // rowText is how a row is read out.
 func (m *Model) rowText(r row) string {
 	switch {
-	case r.header && m.collapsed[r.family]:
-		return m.cat.Title(r.family) + ", pack, folded"
+	case r.header && m.collapsed[r.category]:
+		return r.category.Title() + ", category, folded"
 	case r.header:
-		return m.cat.Title(r.family) + ", pack"
+		return r.category.Title() + ", category"
 	}
-	name := r.def.Name
+	name := r.def.Name + ", " + m.cat.Title(r.def.Family)
 	if r.def.Status == definition.StatusPlaceholder {
 		name += ", approximate preview"
 	}
@@ -243,7 +240,7 @@ func (m *Model) Current() string {
 	return m.rowText(m.rows[m.cursor])
 }
 
-// Describe lists the components by pack, with folded packs said as such.
+// Describe lists the components by category, with folded categories said as such.
 func (m *Model) Describe() []a11y.Node {
 	label := "Components"
 	if m.query != "" {

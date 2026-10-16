@@ -28,8 +28,9 @@ func (d Description) Definition() definition.Definition {
 	case "ntcharts":
 		family = definition.FamilyNtcharts
 	}
+	category, _ := definition.ParseCategory(d.Category)
 	def := definition.Definition{
-		ID: d.ID(), Name: d.Title, Family: family, Description: d.Description,
+		ID: d.ID(), Name: d.Title, Family: family, Category: category, Description: d.Description,
 		DefaultSize: definition.Size{W: d.Size.Default.W, H: d.Size.Default.H},
 		MinSize:     definition.Size{W: d.Size.Min.W, H: d.Size.Min.H},
 		Import:      d.Go.Import, Status: definition.StatusPlaceholder,

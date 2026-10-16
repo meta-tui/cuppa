@@ -1,8 +1,10 @@
 package palette
 
+import "github.com/meta-ui-labs/cuppa/libs/catalog/definition"
+
 // NavKey takes a key while the palette has the keyboard: up, down, home and
-// end move the cursor, left and right fold and unfold a pack, enter folds a
-// pack or returns the id of the component under the cursor, and "/" starts
+// end move the cursor, left and right fold and unfold a category, enter folds a
+// category or returns the id of the component under the cursor, and "/" starts
 // the search. The id is "" for every other key.
 func (m *Model) NavKey(name string) (place string) {
 	if len(m.rows) == 0 {
@@ -30,7 +32,7 @@ func (m *Model) NavKey(name string) (place string) {
 		if !r.header {
 			return r.def.ID
 		}
-		m.fold(!m.collapsed[r.family])
+		m.fold(!m.collapsed[r.category])
 	case "/":
 		m.searching = true
 	}
@@ -39,24 +41,27 @@ func (m *Model) NavKey(name string) (place string) {
 	return ""
 }
 
-// fold folds or unfolds the pack the cursor is in, and puts the cursor on its
+// fold folds or unfolds the category the cursor is in, and puts the cursor on its
 // header so it stays where it was.
 func (m *Model) fold(collapse bool) {
 	if m.query != "" {
 		return
 	}
 	r := m.rows[m.cursor]
-	family := r.family
+	category := r.category
 	if !r.header {
-		family = r.def.Family
+		category = r.def.Category
+		if category == "" {
+			category = definition.CategoryOther
+		}
 	}
-	if m.collapsed[family] == collapse {
+	if m.collapsed[category] == collapse {
 		return
 	}
-	m.collapsed[family] = collapse
+	m.collapsed[category] = collapse
 	m.rebuild()
 	for i, row := range m.rows {
-		if row.header && row.family == family {
+		if row.header && row.category == category {
 			m.cursor = i
 		}
 	}

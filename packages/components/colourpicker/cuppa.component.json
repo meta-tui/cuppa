@@ -5,6 +5,7 @@
   "description": "Tabs for the 16 and 256 terminal palettes and for RGB and HSL sliders, a preview and the value; keyboard and mouse.",
   "version": "0.1.3",
   "license": "MIT",
+  "category": "colour",
   "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/colourpicker",
   "go": {
     "module": "github.com/meta-ui-labs/cuppa/packages/components",

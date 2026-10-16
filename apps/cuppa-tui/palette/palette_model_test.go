@@ -1,6 +1,7 @@
 package palette
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/meta-ui-labs/cuppa/apps/cuppa-tui/pointer"
@@ -84,4 +85,36 @@ func TestSearchFiltersComponents(t *testing.T) {
 	if m.query != "" || len(m.rows) < 5 {
 		t.Fatal("escape should clear the search")
 	}
+}
+
+func TestComponentsAreGroupedByWhatTheyAreForWithTheirProviderBeside(t *testing.T) {
+	m := newPalette()
+	m.SetSize(40, 200)
+	var headers []string
+	for _, r := range m.rows {
+		if r.header {
+			headers = append(headers, r.category.Title())
+		}
+	}
+	if len(headers) < 5 || headers[0] != "Box" || headers[1] != "Layout" {
+		t.Fatalf("headers = %v", headers)
+	}
+	for _, r := range m.rows {
+		if r.header {
+			continue
+		}
+		line := m.renderRow(indexOf(m, r.def.ID))
+		if !strings.Contains(line, strings.ToLower(m.cat.Title(r.def.Family))) {
+			t.Errorf("%s: the row does not name its provider: %q", r.def.ID, line)
+		}
+	}
+}
+
+func indexOf(m *Model, id string) int {
+	for i, r := range m.rows {
+		if !r.header && r.def.ID == id {
+			return i
+		}
+	}
+	return -1
 }

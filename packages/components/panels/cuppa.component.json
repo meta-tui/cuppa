@@ -5,6 +5,7 @@
   "description": "A stack of collapsible sections or a bar of tabs: the pages hold content, and pressing a header or a tab shows or hides it with no code of your own. Mouse and keyboard.",
   "version": "0.1.0",
   "license": "MIT",
+  "category": "box",
   "homepage": "https://github.com/meta-ui-labs/cuppa/tree/main/packages/components/panels",
   "go": {
     "module": "github.com/meta-ui-labs/cuppa/packages/components",

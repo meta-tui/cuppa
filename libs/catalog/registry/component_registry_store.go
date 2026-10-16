@@ -147,6 +147,37 @@ func (r *Registry) ByFamily(f definition.Family) []definition.Definition {
 	return out
 }
 
+// Categories returns the categories that have at least one listed component,
+// in display order.
+func (r *Registry) Categories() []definition.Category {
+	var out []definition.Category
+	for _, c := range definition.CategoryOrder {
+		if len(r.ByCategory(c)) > 0 {
+			out = append(out, c)
+		}
+	}
+	return out
+}
+
+// ByCategory returns the listed components of one category ordered by name,
+// then by provider. A component with no category is in Other.
+func (r *Registry) ByCategory(c definition.Category) []definition.Definition {
+	var out []definition.Definition
+	for _, d := range r.list {
+		dc := d.Category
+		if dc == "" {
+			dc = definition.CategoryOther
+		}
+		if dc == c && !d.Hidden {
+			out = append(out, d)
+		}
+	}
+	sort.SliceStable(out, func(i, j int) bool {
+		return strings.ToLower(out[i].Name) < strings.ToLower(out[j].Name)
+	})
+	return out
+}
+
 // Search returns the definitions whose name, id or description contain query,
 // ignoring case. An empty query returns everything.
 func (r *Registry) Search(query string) []definition.Definition {
